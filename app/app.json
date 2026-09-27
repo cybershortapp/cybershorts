@@ -33,6 +33,12 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "65ebff1f-c421-4fd0-a54e-870ce95a53e6"
+      }
+    },
+    "owner": "cybershortappexpo"
   }
 }
