@@ -1,0 +1,143 @@
+CYBERSID - GO LIVE ON ANDROID
+Do the parts in order. Tick each line. If anything shows red text, stop and send it to Claude.
+Project folder: C:\Projects\cybershorts
+
+WHAT LIVES WHERE (nothing is moving off your PC)
+  Your PC + VS Code : where you edit and test. The master copy stays here.
+  GitHub            : an online copy of the code. It also runs the news robot every hour for free,
+                      so your PC can be switched off.
+  Supabase          : the database in the cloud. The robot saves news here, the app reads it.
+  Expo (EAS)        : builds the real Android app file in the cloud.
+  Google Play       : gets the app to people's phones.
+  When you change code on your PC: git add . / git commit / git push  -> GitHub gets the new copy.
+
+=====================================================================
+PART 1 - INSTALL THE CYBERSID UPDATE (20 min)
+=====================================================================
+[ ] 1.1  Save cybershorts-cybersid-v3.zip to D:\Cyber Security, then in PowerShell:
+         Expand-Archive "D:\Cyber Security\cybershorts-cybersid-v3.zip" -DestinationPath "C:\Projects\cybershorts" -Force
+[ ] 1.2  In app\.env change the last line to:  EXPO_PUBLIC_SOURCE_IMAGES=true
+[ ] 1.3  cd C:\Projects\cybershorts\app
+         npm install
+         npx expo start -c
+         Check: CyberSid logo in the header, blue colours, new font, article photos with "Image: <site>", new chain screen.
+[ ] 1.4  AI pictures, part 1 (the picture folder). Supabase > SQL Editor > New query.
+         Open pipeline\update_all.sql in VS Code, copy ALL of it, paste, Run. Should say "Success".
+[ ] 1.5  AI pictures, part 2 (free Cloudflare key, about 150 pictures a day):
+         dash.cloudflare.com > sign up free (use the app Gmail) > left menu "AI" > "Workers AI"
+         > "Use REST API" > copy the Account ID > click "Create a Workers AI API Token" > Create > copy the token.
+         Add 2 lines to the ROOT .env (C:\Projects\cybershorts\.env, NOT app\.env):
+           CF_ACCOUNT_ID=paste_account_id
+           CF_API_TOKEN=paste_token
+         (Skip this and it still works with the free no-key service, just slower.)
+[ ] 1.6  cd C:\Projects\cybershorts\pipeline
+         pip install -r requirements.txt
+         $env:COVERS_BACKFILL=3; python pipeline.py --covers
+         Should end with "Made 3 pictures". Reload the app: those cards now have a picture marked "AI illustration".
+         Then give all recent cards a picture:   $env:COVERS_BACKFILL=40; python pipeline.py --covers
+
+=====================================================================
+PART 2 - MAKE GITHUB PUBLIC SAFELY (10 min)
+=====================================================================
+[ ] 2.1  Make sure no key was ever uploaded. In PowerShell:
+           cd C:\Projects\cybershorts
+           git log -p --all | Select-String -Pattern 'sb_secret_\w{10}|AIza[\w-]{20}|gsk_\w{20}|csk-\w{20}|sk-ant-[\w-]{20}'
+         Nothing should print. If ANYTHING prints, STOP and tell Claude (keys must be changed first).
+[ ] 2.2  Check .env files were never uploaded:
+           git log --all --oneline -- .env app/.env pipeline/.env
+         Nothing should print.
+[ ] 2.3  Hide your email on future commits:
+         github.com > profile picture > Settings > Emails >
+         tick "Keep my email addresses private" and "Block command line pushes that expose my email".
+         Copy the address shown (like 12345+name@users.noreply.github.com), then:
+           git config --global user.email "PASTE_THAT_ADDRESS"
+[ ] 2.4  Stop strangers running your automation:
+         repo > Settings > Actions > General > "Fork pull request workflows from outside collaborators"
+         > choose "Require approval for all external contributors" > Save
+[ ] 2.5  Push the latest code:
+           git status          (no .env files in the list)
+           git add .
+           git commit -m "CyberSid: branding, article images, new chain screen, privacy policy"
+           git push
+[ ] 2.6  repo > Settings > General > scroll to "Danger Zone" > Change visibility > Public > confirm
+[ ] 2.7  Privacy policy website (free): repo > Settings > Pages >
+         Source: "Deploy from a branch", Branch: main, Folder: /docs > Save.
+         After 1-2 minutes your policy is at:  https://YOUR-GITHUB-NAME.github.io/cybershorts/
+         Open docs\index.html in VS Code first and replace REPLACE_WITH_APP_GMAIL (2 places) with the app Gmail, then push again.
+
+=====================================================================
+PART 3 - SWITCH ON HOURLY AUTOMATION (10 min, then 48 hours)
+=====================================================================
+[ ] 3.1  repo > Settings > Secrets and variables > Actions > New repository secret. Add:
+           SUPABASE_URL, SUPABASE_SERVICE_KEY, GEMINI_API_KEY, GROQ_API_KEY, CEREBRAS_API_KEY,
+           CF_ACCOUNT_ID, CF_API_TOKEN
+[ ] 3.2  repo > Actions tab > news-pipeline > Run workflow. Wait for the green tick.
+[ ] 3.3  Failure emails: profile picture > Settings > Notifications > Actions:
+         tick Email and "Only notify for failed workflows"
+[ ] 3.4  Leave it 48 hours. Check: about 48 green runs, new cards appear in the app by themselves.
+
+=====================================================================
+PART 4 - BUILD THE REAL ANDROID APP (30 min, mostly waiting)
+=====================================================================
+[ ] 4.1  cd C:\Projects\cybershorts\app
+[ ] 4.2  npx eas-cli@latest login          (use your Expo account)
+[ ] 4.3  npx eas-cli@latest init           (answer Yes to create the project)
+         Note: the Android ID is app.cybersid.news. Once the app is on Google Play this can never change.
+[ ] 4.4  Open app\eas.json in VS Code. In BOTH "preview" and "production" replace:
+           PASTE_SUPABASE_URL      with your Supabase URL
+           PASTE_PUBLISHABLE_KEY   with the sb_publishable_ key (NEVER the secret key)
+         Save.
+[ ] 4.5  Test build (an .apk you can install directly):
+           npx eas-cli@latest build -p android --profile preview
+         Say Yes when it offers to create an Android keystore (Expo keeps it safe for you).
+         When done (10-20 min) it shows a link / QR code. Open it on your phone and install.
+[ ] 4.6  Test the installed app (not Expo Go) for a day. Send Claude anything odd.
+
+=====================================================================
+PART 5 - GOOGLE PLAY CONSOLE (the one-time fee, about GBP 20)
+=====================================================================
+[ ] 5.1  play.google.com/console > sign in with the app Gmail > create a PERSONAL developer account
+         > pay the one-time fee > complete identity verification (photo ID). Approval can take a few days.
+[ ] 5.2  Create app: App name "CyberSid", Default language English (United Kingdom),
+         App (not game), Free. Accept the declarations.
+[ ] 5.3  App content (left menu > Policy > App content). Answer each section:
+           Privacy policy: your GitHub Pages link from 2.7
+           Ads: No
+           App access: All functionality is available without special access
+           Content rating: fill the questionnaire (news app, no violence/user content) 
+           Target audience: 18 and over
+           News app: Yes (it is a news app) and fill the publisher details
+           Data safety: No user data collected or shared (see privacy policy)
+           Government app: No    Financial features: None    Health: No
+[ ] 5.4  Store listing (Grow > Store presence > Main store listing):
+           Short description (max 80):  Cyber security news in 60 words. Threats, breaches and attack chains.
+           Full description: ask Claude for the text when you reach this step
+           App icon: brand\play-icon-512.png
+           Feature graphic: brand\play-feature-graphic.png
+           Phone screenshots: 4 to 8 screenshots from your phone (brief, card, chain, saved)
+           Category: News & Magazines. Contact email: the app Gmail.
+
+=====================================================================
+PART 6 - CLOSED TEST: 12 TESTERS FOR 14 DAYS (Google rule)
+=====================================================================
+[ ] 6.1  Production build (Play Store format):
+           npx eas-cli@latest build -p android --profile production
+         Download the .aab file when it finishes.
+[ ] 6.2  Play Console > Test and release > Testing > Closed testing > Create track
+         > Testers: create an email list with at least 12 Gmail addresses (friends, family, colleagues)
+         > Create release > upload the .aab > release name 1.0.0 > Save > Review > Start rollout
+[ ] 6.3  Copy the "Join on Android" link and send it to all testers.
+         Each tester must: open the link, accept, install from Play, and open the app most days.
+[ ] 6.4  Wait 14 full days with at least 12 testers opted in.
+
+=====================================================================
+PART 7 - GO PUBLIC
+=====================================================================
+[ ] 7.1  Play Console > Dashboard > "Apply for production" > answer the questions about your test
+[ ] 7.2  Google reviews it (usually a few days, can be up to 7)
+[ ] 7.3  Production > Create release > add the same .aab (or a newer one) > Start rollout
+[ ] 7.4  CyberSid is live on Google Play.
+
+LATER UPDATES
+- Style/text changes: Claude can send them straight to phones with "EAS Update" (no new Play review)
+- Bigger changes: increase "versionCode" in app.json by 1, build production again, upload a new release

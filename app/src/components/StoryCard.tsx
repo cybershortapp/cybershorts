@@ -1,83 +1,310 @@
-import { useState } from 'react';
-import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
+import { actionFor } from '../lib/actions';
+import { SHOW_SOURCE_IMAGES } from '../lib/config';
+import { sendReport } from '../lib/report';
+import { REPORT_REASONS, type ReportReason } from '../lib/types';
+import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
-import type { Mode, Story } from '../lib/types';
-import { useCategoryColors, useTheme } from '../theme';
+import type { Story } from '../lib/types';
+import { C, F, severityOf } from '../theme';
+import { AttackChain } from './AttackChain';
+import { Cover } from './Cover';
+import { Sheet, SheetRow } from './Sheet';
 
-type Props = { story: Story; mode: Mode; height: number };
+// shared across all cards: the slide hint plays once per app session
+let peekShownThisSession = false;
 
-export function StoryCard({ story, mode, height }: Props) {
-  const t = useTheme();
-  const [catBg, catText] = useCategoryColors(story.category);
+type Props = { story: Story; height: number; active: boolean; saved: boolean; onToggleSave: (id: string) => void };
+
+function StoryCardBase({ story, height, active, saved, onToggleSave }: Props) {
+  const L = useCardLayout(height);
+  const sev = severityOf(story.severity);
   const [imageFailed, setImageFailed] = useState(false);
-  const showImage = !!story.image_url && !imageFailed;
+  const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
+  const [sheet, setSheet] = useState<null | 'report'>(null);
+  const [chainOpen, setChainOpen] = useState(false);
+  // the chain page is only built when the reader opens it (tap CHAIN or swipe), so scrolling stays fast
+  const [chainReady, setChainReady] = useState(false);
+  const aiImage = !!story.image_url && story.image_url.includes('/object/public/covers/');
+  const [reportState, setReportState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
+  const action = actionFor(story);
+  const hasChain = (story.attack_chain?.length ?? 0) >= 3;
+  const pager = useRef<ScrollView>(null);
+  const pulse = useRef(new Animated.Value(0)).current;
+  const nudge = useRef(new Animated.Value(0)).current;
+  const scale = L.isTablet ? 1.35 : 1;
 
-  return (
-    <View style={[styles.page, { height }]}>
-      <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
-        <View style={[styles.imageBox, { backgroundColor: catBg }]}>
-          {showImage ? (
+  // Hint that a chain is there, without words:
+  // the first chain card in a session gently slides towards the chain and back (once),
+  // every chain card after that just blinks the CHAIN tab.
+  useEffect(() => {
+    if (!hasChain || !active) return;
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    let anim: Animated.CompositeAnimation | null = null;
+    if (!peekShownThisSession) {
+      peekShownThisSession = true;
+      const peek = Math.round(L.cardWidth * 0.2);
+      anim = Animated.sequence([
+        Animated.delay(700),
+        Animated.timing(nudge, { toValue: -peek, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.delay(280),
+        Animated.spring(nudge, { toValue: 0, friction: 6, tension: 60, useNativeDriver: true }),
+      ]);
+      anim.start();
+    } else {
+      anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, { toValue: 1, duration: 280, useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 0, duration: 280, useNativeDriver: true }),
+        ]),
+        { iterations: 3 },
+      );
+      timers.push(setTimeout(() => anim?.start(), 400));
+    }
+    return () => {
+      timers.forEach(clearTimeout);
+      anim?.stop();
+      pulse.setValue(0);
+      nudge.setValue(0);
+    };
+  }, [active, hasChain, pulse, L.cardWidth]);
+
+  const openArticle = () => Linking.openURL(story.url);
+  const showChain = () => {
+    setChainReady(true);
+    pager.current?.scrollToEnd({ animated: true });
+    setChainOpen(true);
+  };
+  const hideChain = () => {
+    pager.current?.scrollTo({ x: 0, animated: true });
+    setChainOpen(false);
+  };
+  const share = () =>
+    Share.share({
+      message:
+        `[${story.severity ?? 'Info'}] ${story.headline}\n\n` +
+        (story.why_it_matters ? `${story.why_it_matters}\n\n` : '') +
+        `${story.url}\n\nShared from CyberSid`,
+    }).catch(() => {});
+
+  const cardFace = (
+    <View style={{ width: L.cardWidth, flex: 1 }}>
+      <Pressable onPress={openArticle} style={{ height: L.imageHeight, backgroundColor: C.imageBg }} accessibilityLabel="Open article">
+        {showImage ? (
+          <>
+            <View style={[StyleSheet.absoluteFill, styles.center]}>
+              <Image source={require('../../assets/logo-mark.png')} style={{ width: 44, height: 44, opacity: 0.25 }} contentFit="contain" />
+            </View>
             <Image
               source={{ uri: story.image_url! }}
               style={StyleSheet.absoluteFill}
-              resizeMode="cover"
+              contentFit="cover"
+              transition={200}
+              priority={active ? 'high' : 'normal'}
+              recyclingKey={story.id}
+              cachePolicy="memory-disk"
               onError={() => setImageFailed(true)}
+              accessibilityIgnoresInvertColors
             />
-          ) : (
-            <Text style={[styles.imageFallback, { color: catText }]}>{story.category}</Text>
+            <View style={styles.credit} pointerEvents="none">
+              <Text style={styles.creditText} numberOfLines={1}>{aiImage ? 'AI illustration' : `Image: ${story.source}`}</Text>
+            </View>
+          </>
+        ) : (
+          <Cover story={story} height={L.imageHeight} width={L.cardWidth} iconSize={L.iconSize} />
+        )}
+      </Pressable>
+
+      <View style={{ flex: 1, paddingHorizontal: L.pad, paddingTop: L.pad * 0.85 }}>
+        <View style={[styles.tagRow, hasChain && { paddingRight: 52 * scale }]}>
+          {story.severity && (
+            <View style={[styles.pill, { backgroundColor: sev.bg }]}>
+              <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
+            </View>
           )}
-        </View>
-
-        <View style={styles.body}>
-          <View style={[styles.pill, { backgroundColor: catBg }]}>
-            <Text style={[styles.pillText, { color: catText }]}>{story.category}</Text>
+          <View style={[styles.pill, { backgroundColor: C.imageBg }]}>
+            <Text style={{ color: C.brandText, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
           </View>
-
-          <Text style={[styles.headline, { color: t.text }]}>{story.headline}</Text>
-
-          <Text style={[styles.summary, { color: t.muted }]}>
-            {mode === 'simple' ? story.simple : story.technical}
-          </Text>
         </View>
+        <Text style={{ color: C.muted, fontSize: L.metaSize, marginTop: 6, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
+          {story.source} · {timeAgo(story.published_at)}
+        </Text>
 
-        <View style={[styles.footer, { borderTopColor: t.border }]}>
-          <Text style={[styles.meta, { color: t.faint }]} numberOfLines={1}>
-            {story.source} · {timeAgo(story.published_at)}
+        <Pressable onPress={openArticle}>
+          <Text style={{ color: C.text, fontFamily: F.head, fontSize: L.headlineSize, lineHeight: L.headlineLine, marginVertical: L.pad * 0.5 }}>
+            {story.headline}
           </Text>
+        </Pressable>
+
+        <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }}>{story.technical}</Text>
+
+        <View style={{ flexGrow: 1, minHeight: 4 }} />
+
+        {!!story.why_it_matters && (
+          <View style={[styles.why, { padding: L.pad * 0.7, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
+            <View style={[styles.whyDot, { marginTop: L.bodyLine / 2 - 4 }]} />
+            <Text style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontWeight: '600', flex: 1 }}>
+              {story.why_it_matters}
+            </Text>
+          </View>
+        )}
+
+        {action && (
           <Pressable
-            onPress={() => Linking.openURL(story.url)}
-            hitSlop={10}
+            onPress={() => Linking.openURL(action.url)}
+            style={[styles.actionBtn, { marginTop: L.pad * 0.6, marginBottom: L.pad * 0.8 }]}
             accessibilityRole="link"
-            accessibilityLabel={`Read full story on ${story.source}`}
           >
-            <Text style={[styles.link, { color: t.accent }]}>Read full story</Text>
+            <MaterialCommunityIcons name={action.icon} size={L.metaSize + 3} color={C.brandDark} />
+            <Text style={{ color: C.brandDark, fontSize: L.metaSize + 0.5, fontFamily: F.label }}>{action.label}</Text>
+          </Pressable>
+        )}
+      </View>
+
+      <View style={[styles.footer, { paddingHorizontal: L.pad }]}>
+        <View style={styles.iconRow}>
+          <Pressable onPress={() => onToggleSave(story.id)} hitSlop={12} accessibilityLabel={saved ? 'Remove from saved' : 'Save story'}>
+            <MaterialCommunityIcons name={saved ? 'bookmark' : 'bookmark-outline'} size={L.buttonIcon} color={saved ? C.brandDark : C.muted} />
+          </Pressable>
+          <Pressable onPress={share} hitSlop={12} accessibilityLabel="Share story">
+            <MaterialCommunityIcons name="share-variant-outline" size={L.buttonIcon} color={C.muted} />
+          </Pressable>
+          <Pressable onPress={() => { setReportState('idle'); setSheet('report'); }} hitSlop={12} accessibilityLabel="Report an error">
+            <MaterialCommunityIcons name="flag-outline" size={L.buttonIcon} color={C.muted} />
           </Pressable>
         </View>
+        <Pressable onPress={openArticle} hitSlop={12} accessibilityRole="link" accessibilityLabel={`Read full story on ${story.source}`}>
+          <Text style={{ color: C.brandDark, fontSize: L.metaSize + 1.5, fontFamily: F.label }}>Read full story</Text>
+        </Pressable>
       </View>
+
+      {hasChain && (
+        <Animated.View
+          style={[
+            styles.tabWrap,
+            {
+              // just below the picture, beside the tags, never covering the image
+              top: L.imageHeight + L.pad * 0.85 - 2,
+              opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.25] }),
+            },
+          ]}
+        >
+          <Pressable onPress={showChain} style={[styles.tab, { paddingVertical: 7 * scale, width: 46 * scale }]} accessibilityLabel="Show attack chain">
+            <MaterialCommunityIcons name="link-variant" size={18 * scale} color={C.onBrand} />
+            <Text style={[styles.tabText, { fontSize: 9.5 * scale }]}>CHAIN</Text>
+          </Pressable>
+        </Animated.View>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={[styles.page, { height }]}>
+      <View style={[styles.card, { width: L.cardWidth, borderRadius: L.isTablet ? 24 : 18 }]}>
+        {hasChain && (
+          // revealed for a moment when the card slides to hint at the chain
+          <View style={[styles.peekPanel, { width: L.cardWidth * 0.3 }]}>
+            <MaterialCommunityIcons name="link-variant" size={26 * scale} color={C.onBrand} />
+          </View>
+        )}
+        <Animated.View style={{ flex: 1, backgroundColor: C.card, transform: [{ translateX: nudge }] }}>
+          {hasChain ? (
+            <ScrollView
+              ref={pager}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              nestedScrollEnabled
+              directionalLockEnabled
+              scrollEventThrottle={64}
+              onScrollBeginDrag={() => setChainReady(true)}
+              onScroll={(e) => setChainOpen(e.nativeEvent.contentOffset.x > L.cardWidth / 2)}
+            >
+              {cardFace}
+              <View style={{ width: L.cardWidth, flex: 1 }}>
+                {chainReady ? (
+                  <AttackChain story={story} scale={scale} width={L.cardWidth} visible={chainOpen} onBack={hideChain} />
+                ) : (
+                  <View style={{ flex: 1, backgroundColor: '#221C1D' }} />
+                )}
+              </View>
+            </ScrollView>
+          ) : (
+            cardFace
+          )}
+        </Animated.View>
+      </View>
+
+      {sheet === 'report' && (
+      <Sheet visible title="Report an error" onClose={() => setSheet(null)}>
+        {reportState === 'sent' ? (
+          <Text style={styles.sheetMsg}>Thanks. We'll check this story.</Text>
+        ) : reportState === 'failed' ? (
+          <Text style={styles.sheetMsg}>Couldn't send that. Check your connection and try again.</Text>
+        ) : (
+          REPORT_REASONS.map((r: ReportReason) => (
+            <SheetRow
+              key={r}
+              label={r}
+              onPress={async () => {
+                if (reportState === 'sending') return;
+                setReportState('sending');
+                setReportState((await sendReport(story.id, r)) ? 'sent' : 'failed');
+              }}
+            />
+          ))
+        )}
+      </Sheet>
+      )}
     </View>
   );
 }
 
+export const StoryCard = memo(StoryCardBase);
+
 const styles = StyleSheet.create({
-  page: { paddingHorizontal: 12, paddingVertical: 8 },
-  card: { flex: 1, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
-  imageBox: { height: '32%', alignItems: 'center', justifyContent: 'center' },
-  imageFallback: { fontSize: 22, fontWeight: '600', opacity: 0.8 },
-  body: { flex: 1, paddingHorizontal: 18, paddingTop: 16 },
-  pill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
-  pillText: { fontSize: 12, fontWeight: '600' },
-  headline: { fontSize: 21, fontWeight: '700', lineHeight: 27, marginTop: 10, marginBottom: 10 },
-  summary: { fontSize: 16, lineHeight: 24 },
+  page: { alignItems: 'center', paddingVertical: 8 },
+  card: { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
+  why: { flexDirection: 'row', gap: 9, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, borderRadius: 12 },
+  whyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.brandDark },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: C.brandDark,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
   },
-  meta: { fontSize: 13, flexShrink: 1 },
-  link: { fontSize: 14, fontWeight: '600' },
+  iconRow: { flexDirection: 'row', gap: 22 },
+  sheetMsg: { fontSize: 15, color: C.body, paddingVertical: 16, paddingHorizontal: 6 },
+  tabWrap: { position: 'absolute', right: 0 },
+  credit: { position: 'absolute', left: 8, bottom: 8, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, maxWidth: '70%' },
+  creditText: { color: '#fff', fontSize: 10.5, fontWeight: '600' },
+  peekPanel: { position: 'absolute', right: 0, top: 0, bottom: 0, backgroundColor: C.brand, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 },
+  tab: {
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: C.brand,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  tabText: { color: C.onBrand, fontFamily: F.brand, letterSpacing: 0.8, marginTop: 1 },
 });

@@ -1,18 +1,19 @@
-# secrets
+﻿# CyberSid - files that must never be uploaded
 .env
 .env.*
-
-# python
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+node_modules/
 __pycache__/
 *.pyc
-.venv/
-venv/
-
-# node / expo
-node_modules/
 .expo/
 dist/
-
-# system
-.DS_Store
-Thumbs.db
+web-build/
+*.zip
+*.apk
+*.aab
+*.jks
+*.keystore
+credentials.json

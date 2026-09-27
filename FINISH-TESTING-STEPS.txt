@@ -1,0 +1,140 @@
+CYBERSHORTS - FINISH TESTING IN ONE GO (Android)
+Do the parts in order. Tick each line. If anything shows red text or FAIL, stop and send it to Claude.
+Project folder: C:\Projects\cybershorts     Zip saved in: D:\Cyber Security
+
+=====================================================================
+PART A - GET 2 FREE AI KEYS (10 min, use the app's Gmail)
+=====================================================================
+[ ] A1  Go to aistudio.google.com and sign in with the app Gmail
+[ ] A2  Click "Get API key" then "Create API key". Copy it (starts with AIza...)
+[ ] A3  Go to console.groq.com and sign up with the app Gmail
+[ ] A4  Click "API Keys" then "Create API Key", name it cybershorts. Copy it (starts with gsk_...)
+        Keep both keys in your password manager. Never in Notepad++.
+
+=====================================================================
+PART B - PUT THE NEW FILES IN PLACE (2 min)
+=====================================================================
+[ ] B1  If the app is running, press Ctrl+C in that PowerShell
+[ ] B2  In PowerShell run:
+        Expand-Archive "D:\Cyber Security\cybershorts-final.zip" -DestinationPath "C:\Projects\cybershorts" -Force
+[ ] B3  Check it worked (must say True):
+        Test-Path C:\Projects\cybershorts\pipeline\ai.py
+
+=====================================================================
+PART C - SETTINGS FILES (5 min, in VS Code)
+=====================================================================
+[ ] C1  Open the .env in the TOP folder (C:\Projects\cybershorts\.env, next to .gitignore) and make it look like this (your real values, no spaces, no quotes):
+          SUPABASE_URL=https://xxxx.supabase.co
+          SUPABASE_SERVICE_KEY=sb_secret_...
+          SUPABASE_PUBLISHABLE_KEY=sb_publishable_...     (same key as in app\.env)
+          GEMINI_API_KEY=AIza...
+          GROQ_API_KEY=gsk_...
+          CEREBRAS_API_KEY=csk-...
+          AI_PROVIDER=gemini,cerebras,groq,mistral
+          TEST_MODE=true
+          USE_AI=true
+        The ANTHROPIC_API_KEY line can stay or be deleted. It is not used any more.
+        Save with Ctrl+S.
+[ ] C2  Open app\.env. It should have these 3 lines:
+          EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+          EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_...
+          EXPO_PUBLIC_SOURCE_IMAGES=false
+        Save with Ctrl+S.
+
+=====================================================================
+PART D - DATABASE (2 min)
+=====================================================================
+[ ] D1  supabase.com > cybershorts-dev > SQL Editor > New query
+[ ] D2  In VS Code open pipeline\update_all.sql, Ctrl+A, Ctrl+C
+[ ] D3  Paste into Supabase, click Run. Must say Success. (Safe to run even if you ran parts before)
+
+=====================================================================
+PART E - NEWS ENGINE TESTS (15 min)
+In a PowerShell with (.venv). If you don't see (.venv), first run:
+  cd C:\Projects\cybershorts
+  .venv\Scripts\Activate.ps1
+=====================================================================
+[ ] E1  cd C:\Projects\cybershorts\pipeline
+[ ] E2  python pipeline.py --groups
+        Expect: "Saved 17x threat group profiles."
+[ ] E3  python pipeline.py
+        Expect: top line "AI: gemini:... -> groq:..." and a Health report with no [fail] lines
+[ ] E4  Source check with all 63 sources:
+        in the top-folder .env set TEST_MODE=false, save, then run:
+        python pipeline.py
+        COPY THE WHOLE HEALTH REPORT for Claude.
+        Then set TEST_MODE=true again and save.
+[ ] E5  python pipeline.py --chains
+        Expect some [CHAIN n] lines if any articles describe attack steps
+[ ] E6  Duplicate check: python pipeline.py
+        Expect: 0 new (or only 1-2 brand new stories), everything else "already seen"
+
+=====================================================================
+PART F - SECURITY TEST (2 min)
+=====================================================================
+[ ] F1  python security_test.py
+        Expect: every line PASS and "All good." at the end
+        COPY THE RESULT for Claude.
+
+=====================================================================
+PART G - APP TEST ON ANDROID (15 min)
+In a NEW PowerShell (no .venv needed)
+=====================================================================
+[ ] G1  cd C:\Projects\cybershorts\app
+[ ] G2  npm install
+[ ] G3  npx expo start -c      then scan the QR code in Expo Go
+Check each one on the tablet AND on a phone if you have one:
+[ ] G4  Opens on "Today's threat level" brief, teal colours
+[ ] G5  Tap a top story in the brief, it jumps to that card
+[ ] G6  Swipe up/down through cards. Text fits, nothing cut off
+[ ] G7  Card artwork shows (pattern + icon), severity badge, why-it-matters box
+[ ] G8  "View CVE-..." or "Check if your email was leaked" buttons open the right official page
+[ ] G9  First chain card slides left once and back. Later chain cards blink the CHAIN tab
+[ ] G10 Swipe left on a chain card: snake draws itself, steps pop in, source chips open pages
+[ ] G11 Attacker profile shows when a known group is named
+[ ] G12 Bookmark a card, tap "Saved" chip, it is there
+[ ] G13 Share opens WhatsApp etc with headline + link
+[ ] G14 Flag icon > pick a reason > "Thanks. We'll check this story."
+        Then in Supabase Table Editor > reports: your report is there
+[ ] G15 Critical chip shows only Critical stories
+[ ] G16 Turn Wi-Fi off, pull down to refresh: friendly "Couldn't load" message, no crash
+
+=====================================================================
+PART H - SWITCH ON AUTOMATION (10 min, then wait 48 hours)
+=====================================================================
+[ ] H1  github.com > your cybershorts repo > Settings > Secrets and variables > Actions
+        Add (or update) these 4 repository secrets:
+          SUPABASE_URL
+          SUPABASE_SERVICE_KEY
+          GEMINI_API_KEY
+          GROQ_API_KEY
+          CEREBRAS_API_KEY
+        (MISTRAL_API_KEY only if you set one up. ANTHROPIC_API_KEY secret can be deleted)
+[ ] H2  In PowerShell:
+          cd C:\Projects\cybershorts
+          git status
+        Make sure NO .env file is in the list. Then:
+          git add .
+          git commit -m "Free AI engine, snake chain, launch prep"
+          git push
+[ ] H3  GitHub > Actions tab > news-pipeline > Run workflow. Wait for the green tick.
+        Click into it to see the Health report.
+[ ] H4  Failure emails: github.com > your profile picture > Settings > Notifications >
+        Actions: tick Email, and "Only notify for failed workflows"
+[ ] H5  Leave it 48 hours. It runs every hour by itself.
+[ ] H6  After 48 hours check:
+          - Actions tab: about 48 runs, all green
+          - github.com > Settings > Billing and plans: Actions minutes used stays on track for under 2,000 a month
+          - App: new cards appeared without you doing anything
+          - aistudio.google.com: usage is within the free limit
+
+=====================================================================
+PART I - SEND CLAUDE
+=====================================================================
+[ ] Health report from E4
+[ ] Security result from F1
+[ ] Any G checks that failed (with a screenshot if possible)
+[ ] Result of H3 (green tick or error)
+
+After this: app name + logo, Google Play account (one-time fee),
+closed test with 12 testers for 14 days, then public launch on Android.

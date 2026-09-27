@@ -1,0 +1,27 @@
+{
+  "cli": {
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "PASTE_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_KEY": "PASTE_PUBLISHABLE_KEY",
+        "EXPO_PUBLIC_SOURCE_IMAGES": "true"
+      }
+    },
+    "production": {
+      "android": { "buildType": "app-bundle" },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "PASTE_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_KEY": "PASTE_PUBLISHABLE_KEY",
+        "EXPO_PUBLIC_SOURCE_IMAGES": "true"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -1,83 +1,75 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { CATEGORIES, type Category, type Mode } from '../lib/types';
-import { useTheme } from '../theme';
+import { FILTERS, type Filter } from '../lib/types';
+import { C, F } from '../theme';
 
 type Props = {
-  mode: Mode;
-  onModeChange: (m: Mode) => void;
-  category: Category;
-  onCategoryChange: (c: Category) => void;
+  view: 'brief' | 'feed';
+  onBrief: () => void;
+  filter: Filter;
+  onFilterChange: (f: Filter) => void;
+  counter: string;
 };
 
-export function Header({ mode, onModeChange, category, onCategoryChange }: Props) {
-  const t = useTheme();
-
-  const toggleBtn = (value: Mode, label: string) => {
-    const on = mode === value;
-    return (
-      <Pressable
-        onPress={() => onModeChange(value)}
-        style={[styles.toggleBtn, on && { backgroundColor: t.invertBg }]}
-        accessibilityRole="button"
-        accessibilityState={{ selected: on }}
-      >
-        <Text style={[styles.toggleText, { color: on ? t.invertText : t.text }]}>{label}</Text>
-      </Pressable>
-    );
-  };
+export function Header({ view, onBrief, filter, onFilterChange, counter }: Props) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+  const contentWidth = Math.min(width - (isTablet ? 48 : 24), 760);
+  const k = isTablet ? 1.3 : 1;
+  const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 
   return (
-    <View style={{ backgroundColor: t.bg }}>
+    <View style={{ width: contentWidth, alignSelf: 'center' }}>
       <View style={styles.topRow}>
-        <Text style={[styles.brand, { color: t.text }]}>CyberShorts</Text>
-        <View style={[styles.toggle, { borderColor: t.border }]}>
-          {toggleBtn('simple', 'Simple')}
-          {toggleBtn('technical', 'Technical')}
+        <View style={styles.brandRow}>
+          <Image source={require('../../assets/logo-mark.png')} style={{ width: 30 * k, height: 30 * k }} resizeMode="contain" accessibilityIgnoresInvertColors />
+          <Text style={[styles.brand, { fontSize: 21 * k }]}>
+            Cyber<Text style={{ color: '#149BFF' }}>S</Text><Text style={{ color: '#3A6FFF' }}>i</Text><Text style={{ color: '#6A4DF8' }}>d</Text>
+          </Text>
         </View>
+        {view === 'feed' ? (
+          <View style={styles.brandRow}>
+            <Text style={{ fontSize: 12.5 * k, color: C.muted }}>{counter}</Text>
+            <Pressable onPress={onBrief} hitSlop={10} style={styles.briefBtn} accessibilityLabel="Open today's brief">
+              <MaterialCommunityIcons name="radar" size={15 * k} color={C.brandDark} />
+              <Text style={{ fontSize: 12.5 * k, color: C.brandDark, fontFamily: F.label }}>Brief</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Text style={{ fontSize: 12.5 * k, color: C.muted }}>{date}</Text>
+        )}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
-      >
-        {CATEGORIES.map((c) => {
-          const on = c === category;
-          return (
-            <Pressable
-              key={c}
-              onPress={() => onCategoryChange(c)}
-              style={[
-                styles.chip,
-                { borderColor: on ? t.invertBg : t.border, backgroundColor: on ? t.invertBg : 'transparent' },
-              ]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-            >
-              <Text style={[styles.chipText, { color: on ? t.invertText : t.text }]}>{c}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      {view === 'feed' && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {FILTERS.map((f) => {
+            const on = f === filter;
+            return (
+              <Pressable
+                key={f}
+                onPress={() => onFilterChange(f)}
+                style={[styles.chip, on ? { backgroundColor: C.brand, borderColor: C.brand } : { borderColor: C.chipBorder, backgroundColor: C.white }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+              >
+                {f === 'Saved' && <MaterialCommunityIcons name="bookmark-outline" size={14 * k} color={on ? C.onBrand : C.text} />}
+                <Text style={{ fontSize: 13 * k, color: on ? C.onBrand : C.text, fontFamily: on ? F.label : F.medium }}>{f}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 10,
-  },
-  brand: { fontSize: 20, fontWeight: '800' },
-  toggle: { flexDirection: 'row', borderWidth: 1, borderRadius: 999, overflow: 'hidden' },
-  toggleBtn: { paddingHorizontal: 12, paddingVertical: 6 },
-  toggleText: { fontSize: 13, fontWeight: '600' },
-  chips: { paddingHorizontal: 12, paddingBottom: 8, gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
-  chipText: { fontSize: 13, fontWeight: '500' },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2, paddingTop: 8, paddingBottom: 10 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logo: { borderRadius: 8, backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center' },
+  brand: { fontFamily: F.brand, color: C.text, letterSpacing: -0.3 },
+  briefBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.white, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  chips: { paddingBottom: 10, gap: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
 });
