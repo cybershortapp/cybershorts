@@ -40,13 +40,16 @@ export type Story = {
   category: string;
   image_url: string | null;
   published_at: string;
+  created_at: string;
+  products: string[] | null;
+  zero_day: boolean | null;
 };
 
-export const FILTERS = ['All', 'Critical', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'Saved'] as const;
+export const FILTERS = ['All', 'For you', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'Saved'] as const;
 export type Filter = (typeof FILTERS)[number];
 
 export const STORY_FIELDS =
-  'id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,incident,actor_group,category,image_url,published_at';
+  'id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,incident,actor_group,category,image_url,published_at,created_at,products,zero_day';
 
 export const REPORT_REASONS = ['Wrong facts', 'Wrong severity', 'Broken link', 'Duplicate story', 'Not cyber news', 'Other'] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];

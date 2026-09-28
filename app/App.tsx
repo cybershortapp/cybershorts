@@ -19,8 +19,11 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { BriefScreen } from './src/components/BriefScreen';
 import { Header } from './src/components/Header';
+import { Preferences } from './src/components/Preferences';
 import { StoryCard } from './src/components/StoryCard';
 import { buildBrief } from './src/lib/brief';
+import { enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
+import { cleanTerm, getPrefs, usePrefs } from './src/lib/prefs';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
 import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
@@ -29,11 +32,32 @@ import { C, F } from './src/theme';
 const PAGE_SIZE = 60;
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
 const BRIEF_KEY = 'last-brief-day';
+const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
 const todayKey = () => new Date().toISOString().slice(0, 10);
+
+const EMPTY_TEXT: Partial<Record<Filter, string>> = {
+  'Zero-day': "No zero-days right now. Stay tuned: we'll flag the next one the moment it's reported.",
+  'For you': "Nothing about your products yet. Stay tuned: we'll show it here the moment it's reported.",
+  Critical: 'No critical stories right now. Stay tuned.',
+  Saved: 'Tap the bookmark on any story to save it here.',
+};
+
+/** "For you": stories tagged with the reader's products, or mentioning their own keywords. */
+function forYouFilter() {
+  const p = getPrefs();
+  const conds: string[] = [];
+  if (p.products.length) conds.push(`products.ov.{${p.products.map((x) => `"${x.replace(/"/g, '')}"`).join(',')}}`);
+  for (const t of p.terms) {
+    const v = cleanTerm(t);
+    if (v) conds.push(`headline.ilike."*${v}*"`, `technical.ilike."*${v}*"`);
+  }
+  return conds.join(',');
+}
 
 function Main() {
   const { savedIds, toggleSaved } = useSaved();
-  const [view, setView] = useState<'brief' | 'feed'>('brief');
+  const prefs = usePrefs();
+  const [view, setView] = useState<'brief' | 'feed' | 'prefs'>('brief');
   const [filter, setFilter] = useState<Filter>('All');
   const [all, setAll] = useState<Story[]>([]); // latest stories, used for the brief and the All view
   const [stories, setStories] = useState<Story[]>([]);
@@ -46,6 +70,9 @@ function Main() {
   const listRef = useRef<FlatList<Story>>(null);
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
+  const prefsKey = filter === 'For you' ? [...prefs.products, ...prefs.terms].join('|') : '';
+  const seenBefore = useRef<string | null>(null); // stories newer than this get a NEW tag
+  const firstLoad = useRef(true);
 
   // brief shows on the first open of each day
   useEffect(() => {
@@ -56,7 +83,7 @@ function Main() {
       .catch(() => {});
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { markSeen?: boolean }) => {
     if (configMissing) {
       setError('App settings are missing. Check the .env file in the app folder.');
       return;
@@ -66,10 +93,20 @@ function Main() {
       setStories([]);
       return;
     }
-    let query = supabase.from('stories').select(STORY_FIELDS).order('published_at', { ascending: false }).limit(PAGE_SIZE);
+    // newest ADDED first, so anything the robot just found is always at the top
+    let query = supabase.from('stories').select(STORY_FIELDS).order('created_at', { ascending: false }).limit(PAGE_SIZE);
     if (filter === 'Saved') query = query.in('id', savedIds);
     else if (filter === 'Critical') query = query.eq('severity', 'Critical');
-    else if (filter !== 'All') query = query.eq('category', filter);
+    else if (filter === 'Zero-day') query = query.eq('zero_day', true);
+    else if (filter === 'For you') {
+      const f = forYouFilter();
+      if (!f) {
+        setError(null);
+        setStories([]);
+        return;
+      }
+      query = query.or(f);
+    } else if (filter !== 'All') query = query.eq('category', filter);
 
     const { data, error: err } = await query;
     if (err) {
@@ -78,28 +115,56 @@ function Main() {
     }
     const rows = (data as Story[]) ?? [];
     lastLoaded.current = Date.now();
+    if (opts?.markSeen && filter === 'All' && rows.length) {
+      // remember what they've been shown; stories newer than the previous visit get a NEW tag
+      seenBefore.current = await AsyncStorage.getItem(SEEN_KEY).catch(() => null);
+      AsyncStorage.setItem(SEEN_KEY, rows[0].created_at).catch(() => {});
+    }
     setError(null);
     setStories(rows);
     if (filter === 'All') setAll(rows);
-  }, [filter, savedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, savedKey, prefsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toTop = () => {
+    setIndex(0);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  };
 
   useEffect(() => {
     setLoading(true);
-    setIndex(0);
-    load().finally(() => setLoading(false));
+    toTop();
+    const markSeen = firstLoad.current;
+    firstLoad.current = false;
+    load({ markSeen }).finally(() => setLoading(false));
   }, [load]);
 
+  // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && Date.now() - lastLoaded.current > REFRESH_AFTER_MS) load();
+      if (state === 'active' && Date.now() - lastLoaded.current > REFRESH_AFTER_MS) {
+        load({ markSeen: true }).then(toTop);
+      }
     });
     return () => sub.remove();
   }, [load]);
+
+  // phone alerts: refresh the push address quietly, and open the story when an alert is tapped
+  useEffect(() => {
+    refreshAlerts();
+    return onAlertTapped(async (id) => {
+      pendingJump.current = id;
+      setView('feed');
+      setFilter('All');
+      const { data } = await supabase.from('stories').select(STORY_FIELDS).eq('id', id).maybeSingle();
+      if (data) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [data as Story, ...cur]));
+    });
+  }, []);
 
   const brief = useMemo(() => buildBrief(all), [all]);
 
   const openFeed = (story?: Story) => {
     AsyncStorage.setItem(BRIEF_KEY, todayKey()).catch(() => {});
+    if (!getPrefs().alertsAsked) enableAlerts(); // first time only: Android asks "Allow CyberSid to send notifications?"
     pendingJump.current = story?.id ?? null;
     if (filter !== 'All') setFilter('All');
     setView('feed');
@@ -131,13 +196,24 @@ function Main() {
 
   // stable list props, so only the cards that actually changed are redrawn
   const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
+  // NEW tags, and a "caught up" note on the first story they had already seen
+  const marker = seenBefore.current;
+  const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
   const renderItem = useCallback(
     ({ item, index: i }: { item: Story; index: number }) => (
-      <StoryCard story={item} height={pageHeight} active={index === i} saved={savedSet.has(item.id)} onToggleSave={toggleSaved} />
+      <StoryCard
+        story={item}
+        height={pageHeight}
+        active={index === i}
+        saved={savedSet.has(item.id)}
+        onToggleSave={toggleSaved}
+        isNew={!!marker && item.created_at > marker}
+        caughtUp={i === firstOld && i > 0}
+      />
     ),
-    [pageHeight, index, savedSet, toggleSaved],
+    [pageHeight, index, savedSet, toggleSaved, marker, firstOld],
   );
-  const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}`;
+  const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}|${marker}|${firstOld}`;
 
   const counter = stories.length ? `${String(index + 1).padStart(2, '0')} / ${String(stories.length).padStart(2, '0')}` : '';
 
@@ -153,14 +229,24 @@ function Main() {
         </Pressable>
       </View>
     );
+  } else if (view === 'prefs') {
+    content = <Preferences onDone={() => { setView('feed'); if (prefs.products.length + prefs.terms.length) setFilter('For you'); }} />;
   } else if (view === 'brief') {
     content = <BriefScreen brief={brief} onOpen={openFeed} />;
   } else if (stories.length === 0) {
+    const noPrefs = filter === 'For you' && prefs.products.length + prefs.terms.length === 0;
     content = (
       <View style={styles.center}>
         <Text style={styles.message}>
-          {filter === 'Saved' ? 'Tap the bookmark on any story to save it here.' : `No ${filter === 'All' ? '' : filter + ' '}stories yet.`}
+          {noPrefs
+            ? 'Tell us which products you use (Defender, Mimecast, Fortinet...) and their news will show up here.'
+            : EMPTY_TEXT[filter] ?? `No ${filter === 'All' ? '' : filter + ' '}stories right now. Stay tuned.`}
         </Text>
+        {noPrefs && (
+          <Pressable onPress={() => setView('prefs')} style={[styles.retry, { backgroundColor: C.brand, borderColor: C.brand }]}>
+            <Text style={{ color: C.onBrand, fontFamily: F.label }}>Choose my products</Text>
+          </Pressable>
+        )}
       </View>
     );
   } else if (pageHeight > 0) {
@@ -189,7 +275,15 @@ function Main() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <Header view={view} onBrief={() => setView('brief')} filter={filter} onFilterChange={setFilter} counter={counter} />
+      <Header
+        view={view}
+        onBrief={() => setView('brief')}
+        onPrefs={() => setView('prefs')}
+        hasPrefs={prefs.products.length + prefs.terms.length > 0}
+        filter={filter}
+        onFilterChange={setFilter}
+        counter={counter}
+      />
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
       </View>

@@ -18,9 +18,17 @@ import { Sheet, SheetRow } from './Sheet';
 // shared across all cards: the slide hint plays once per app session
 let peekShownThisSession = false;
 
-type Props = { story: Story; height: number; active: boolean; saved: boolean; onToggleSave: (id: string) => void };
+type Props = {
+  story: Story;
+  height: number;
+  active: boolean;
+  saved: boolean;
+  onToggleSave: (id: string) => void;
+  isNew?: boolean; // added since the reader last opened the app
+  caughtUp?: boolean; // first story they have already seen
+};
 
-function StoryCardBase({ story, height, active, saved, onToggleSave }: Props) {
+function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
   const L = useCardLayout(height);
   const sev = severityOf(story.severity);
   const [imageFailed, setImageFailed] = useState(false);
@@ -120,10 +128,27 @@ function StoryCardBase({ story, height, active, saved, onToggleSave }: Props) {
       </Pressable>
 
       <View style={{ flex: 1, paddingHorizontal: L.pad, paddingTop: L.pad * 0.85 }}>
+        {caughtUp && (
+          <View style={styles.caught}>
+            <MaterialCommunityIcons name="check-circle" size={L.metaSize + 2} color={C.brand} />
+            <Text style={{ color: C.brandText, fontSize: L.metaSize - 0.5, fontFamily: F.label }}>You're all caught up. Earlier stories below.</Text>
+          </View>
+        )}
         <View style={[styles.tagRow, hasChain && { paddingRight: 52 * scale }]}>
+          {isNew && (
+            <View style={[styles.pill, { backgroundColor: C.brand }]}>
+              <Text style={{ color: C.onBrand, fontSize: L.metaSize - 1, fontFamily: F.brand, letterSpacing: 0.5 }}>NEW</Text>
+            </View>
+          )}
           {story.severity && (
             <View style={[styles.pill, { backgroundColor: sev.bg }]}>
               <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
+            </View>
+          )}
+          {story.zero_day && (
+            <View style={[styles.pill, styles.zeroPill]}>
+              <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color="#C62F2E" />
+              <Text style={{ color: '#C62F2E', fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
             </View>
           )}
           <View style={[styles.pill, { backgroundColor: C.imageBg }]}>
@@ -272,6 +297,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
+  zeroPill: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 7, backgroundColor: '#FDECEC', borderWidth: 1, borderColor: '#F3C1C0' },
+  caught: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.imageBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 8 },
   why: { flexDirection: 'row', gap: 9, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, borderRadius: 12 },
   whyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.brandDark },
   actionBtn: {

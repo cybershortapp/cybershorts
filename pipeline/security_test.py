@@ -95,6 +95,14 @@ try:
 except Exception:
     pass
 
+# phone alerts and email subscribers: private lists the app can't read
+check("App cannot read phone list", blocked(lambda: app.table("devices").select("token").limit(1).execute()))
+check("App cannot read email subscribers", blocked(lambda: app.table("subscribers").select("email").limit(1).execute()))
+check("App cannot register a fake phone", blocked(lambda: app.rpc("register_device", {
+    "p_token": "not-a-token", "p_products": [], "p_terms": [], "p_alerts": True}).execute()))
+check("App cannot subscribe a bad email", blocked(lambda: app.rpc("subscribe_email", {
+    "p_email": "not-an-email", "p_products": [], "p_terms": []}).execute()))
+
 # tidy up anything that slipped through
 admin.table("stories").delete().eq("id", fake_id).execute()
 admin.table("threat_groups").delete().eq("id", "GX").execute()

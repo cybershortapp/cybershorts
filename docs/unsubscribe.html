@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CyberSid - Unsubscribe</title>
+<style>
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #F5F7FC; color: #0A0F1F; }
+  .box { max-width: 460px; margin: 12vh auto; background: #fff; border: 1px solid #DCE3F2; border-radius: 16px; padding: 28px; text-align: center; }
+  h1 { font-size: 24px; margin: 0 0 12px; } h1 span { color: #2563F5; }
+  p { font-size: 16px; line-height: 1.5; color: #3A4256; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Cyber<span>Sid</span></h1>
+  <p id="msg">Unsubscribing...</p>
+</div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  (async function () {
+    var msg = document.getElementById('msg');
+    var t = new URLSearchParams(location.search).get('t') || '';
+    if (!/^[0-9a-f-]{36}$/i.test(t)) { msg.textContent = 'This link is not complete. Please open it straight from the email.'; return; }
+    try {
+      var db = supabase.createClient(window.CYBERSID.url, window.CYBERSID.key);
+      var res = await db.rpc('unsubscribe_email', { p_token: t });
+      if (res.error) throw res.error;
+      msg.textContent = res.data ? "You're unsubscribed and your email has been deleted. You won't get any more emails from CyberSid." : "This email is already unsubscribed.";
+    } catch (e) {
+      msg.textContent = 'Something went wrong. Please try the link again in a minute.';
+    }
+  })();
+</script>
+</body>
+</html>

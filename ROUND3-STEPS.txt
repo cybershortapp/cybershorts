@@ -1,0 +1,83 @@
+CYBERSID ROUND 3 - ALERTS, PREFERENCES, EMAIL, ZERO-DAY, FRESH FEED
+Do the steps in order. Tick each line. Stop and send Claude any red text.
+This zip does NOT include app.json, eas.json or any .env file, so your Expo link and keys are safe.
+
+=====================================================================
+PART A - INSTALL THE UPDATE (10 min)
+=====================================================================
+[ ] A1  Save cybershorts-round3.zip to D:\Cyber Security, then in PowerShell:
+          Expand-Archive "D:\Cyber Security\cybershorts-round3.zip" -DestinationPath "C:\Projects\cybershorts" -Force
+[ ] A2  Supabase > SQL Editor > New query. Open pipeline\update_all.sql in VS Code, copy ALL of it, paste, Run.
+        Should say "Success". (Safe to run again; it only adds what is new.)
+[ ] A3  cd C:\Projects\cybershorts\pipeline
+          pip install -r requirements.txt
+          python pipeline.py --tag          (tags existing stories with products and zero-days, no AI cost)
+          python pipeline.py --dedupe       (merges duplicate cards; paste the output to Claude)
+[ ] A4  cd C:\Projects\cybershorts\app
+          npm install
+          node scripts/setup-notifications.js
+        Should say "Done: phone alerts added to app.json."
+
+=====================================================================
+PART B - WEBSITE PAGES FOR EMAIL (5 min)
+=====================================================================
+[ ] B1  Open docs\config.js in VS Code. Replace:
+          PASTE_SUPABASE_URL     with your Supabase URL (same as in app\.env)
+          PASTE_PUBLISHABLE_KEY  with the sb_publishable_ key (NEVER the secret key)
+        Save.
+[ ] B2  Open docs\index.html (privacy policy, now updated for alerts and email).
+        Ctrl + H: replace REPLACE_WITH_APP_GMAIL with the app Gmail (2 places). Save.
+
+=====================================================================
+PART C - GMAIL "APP PASSWORD" SO THE ROBOT CAN SEND EMAILS (10 min)
+=====================================================================
+[ ] C1  Sign in to the app Gmail > myaccount.google.com > Security.
+        Turn ON "2-Step Verification" if it is off (needed for app passwords).
+[ ] C2  Search "App passwords" at the top of myaccount.google.com > create one named CyberSid.
+        Google shows a 16-letter password once. Copy it into Notepad for a minute.
+[ ] C3  GitHub repo > Settings > Secrets and variables > Actions > New repository secret. Add 2 secrets:
+          SMTP_USER   the app Gmail address
+          SMTP_PASS   the 16-letter app password (spaces are fine)
+        Then delete it from Notepad.
+
+=====================================================================
+PART D - FIREBASE, SO ANDROID CAN DELIVER ALERTS (15 min, free)
+=====================================================================
+[ ] D1  console.firebase.google.com > sign in with the app Gmail > "Create a project" > name: CyberSid
+        > Google Analytics: turn it OFF > Create.
+[ ] D2  In the project: click the Android icon ("Add app").
+          Android package name:  app.cybersid.news   (exactly this)
+          App nickname: CyberSid > Register app.
+        Download google-services.json and put it in C:\Projects\cybershorts\app\
+        (the same folder as app.json). Click Next / Continue to the end, skip the code steps.
+[ ] D3  Firebase: gear icon > Project settings > "Service accounts" tab > "Generate new private key" > Generate.
+        A .json file downloads to your Downloads folder. This one IS secret:
+        never put it in the project folder, never upload it to GitHub.
+[ ] D4  cd C:\Projects\cybershorts\app
+          npx eas-cli@latest credentials -p android
+        Choose: production > Google Service Account >
+        "Manage your Google Service Account Key for Push Notifications (FCM V1)" > Set up / Upload a new key >
+        pick the .json file from Downloads.
+        Then do the same once more choosing "preview" if it asks per profile.
+[ ] D5  Delete that private key .json from Downloads (Expo keeps its own copy safely).
+
+=====================================================================
+PART E - UPLOAD AND BUILD (30 min, mostly waiting)
+=====================================================================
+[ ] E1  cd C:\Projects\cybershorts
+          git add .
+          git status
+        Check the list: NO .env, NO "firebase-adminsdk" or private key file. (google-services.json is fine.)
+          git commit -m "Round 3: alerts, preferences, email digest, zero-day, fresh feed"
+          git push
+[ ] E2  Test the app quickly in Expo Go first (Preferences, Zero-day, For you, NEW tags):
+          cd app
+          npx expo start -c
+        (Alerts can't be tested in Expo Go. They need the real build in E3.)
+[ ] E3  Real build with alerts:
+          npx eas-cli@latest build -p android --profile preview
+        Install it on your phone (it replaces the old one), open it, tap "Allow" when it asks about notifications.
+[ ] E4  Open Preferences (the sliders icon at the top), add your products, subscribe your email.
+        Check your inbox for the confirmation email (it is sent at the next hourly run), tap Confirm.
+[ ] E5  Within 1-2 hours you should get your first alert. Tap it: it should open that story.
+        The first digest email arrives at about 8am the next morning.

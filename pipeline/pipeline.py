@@ -20,6 +20,7 @@ import feedparser
 from dotenv import load_dotenv
 
 from sources import SOURCES
+from tags import tag_products, is_zero_day
 from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, usable_image
 
 load_dotenv()
@@ -91,7 +92,7 @@ def clean_chain(raw, source_text):
 
 PROMPT = f"""You write short cyber security news cards for a UK mobile app read by IT and security people.
 Given an article title and excerpt, reply with ONLY a JSON object:
-{{"is_news": true or false. false if this is an advert, webinar, product launch, promotion, podcast, event, job post, opinion piece with no new facts, or not about cyber security,
+{{"is_news": true or false. false if this is an advert, webinar, product launch, promotion, podcast, event, job post, opinion piece with no new facts, a roundup of several unrelated stories, an open thread or off-topic blog post, or not about cyber security,
   "headline": "max 12 words, your own wording",
   "technical": "about 55 words for a security professional. Include CVE IDs, threat actors, affected products and versions if present",
   "why": "max 15 words. One practical line telling the reader what to do or why it matters, e.g. 'Patch FortiOS now if your VPN is internet-facing'",
@@ -104,6 +105,8 @@ Given an article title and excerpt, reply with ONLY a JSON object:
   "actor": "name of the attacker group exactly as written in the text, else empty",
   "actor_country": "country the attackers are linked to, ONLY if the text says an agency or security firm attributed it, else empty",
   "attributed_by": "who made that attribution (e.g. NCSC, FBI, Microsoft), else empty",
+  "products": ["up to 5 affected software products or vendors named in the text, e.g. 'Microsoft Exchange', 'Fortinet FortiGate'. Empty list if none"],
+  "zero_day": true only if the text says a flaw was exploited before a fix existed, or is being actively exploited in the wild, else false,
   "scene": "max 20 words: one simple visual scene that illustrates this story as a picture, using objects only (servers, locks, phones, shields, buildings, data). No people, no brand names, no logos, no text" }}
 
 Chain rules:
@@ -420,6 +423,8 @@ def summarise_ai(client, title, excerpt):
     if not isinstance(data.get("why"), str):
         data["why"] = ""
     data["is_news"] = data.get("is_news") is not False
+    data["products"] = [str(x) for x in data.get("products") or [] if isinstance(x, str)][:5]
+    data["zero_day"] = data.get("zero_day") is True
     data["chain"] = clean_chain(data.get("chain"), f"{title} {excerpt}")
     data["incident"] = clean_incident(data, f"{title} {excerpt}")
     return data
@@ -428,13 +433,15 @@ def summarise_ai(client, title, excerpt):
 def summarise_free(title, excerpt):
     text = shorten(excerpt or title, 60)
     return {"headline": shorten(title, 12), "technical": text, "why": "", "severity": "Info",
-            "action": "none", "category": "Other", "chain": None, "is_news": True, "incident": None}
+            "action": "none", "category": "Other", "chain": None, "is_news": True, "incident": None,
+            "products": [], "zero_day": False}
 
 
 NOT_NEWS_TITLE = re.compile(
     r"\b(webinar|podcast|sponsored|partner content|register now|join us|live demo|on-demand|whitepaper|"
     r"e-?book|we'?re hiring|job opening|press release|awards?\b|conference|summit|top \d+ |best .* tools|"
-    r"newsletter|round ?\d+|roundup|round-up|week in review|weekly update|this week in|recap)",
+    r"newsletter|round ?\d+|roundup|round-up|week in review|weekly update|this week in|recap|"
+    r"in other news|squid blogging|news digest|weekly digest|daily digest|links? of the week|open thread)",
     re.I,
 )
 CYBER_WORDS = re.compile(
@@ -465,34 +472,53 @@ def overlap(a, b):
     return len(a & b) / min(len(a), len(b))
 
 
-SAME_EVENT_PROMPT = """You check if a new cyber security news story is about the SAME specific event as an existing story
-(same incident, same breach, same vulnerability, same campaign, same arrest). Different events about the same company or topic are NOT the same.
+SAME_EVENT_PROMPT = """You check if a new cyber security news story reports the SAME real-world event as one of the existing stories.
+Different news sites cover the same event with different headlines, wording, angles and details (one mentions the attacker,
+another the software flaw, another the victims). If the victim AND the incident match (e.g. the same breach of the same
+organisation, the same flaw being exploited, the same arrest, the same report), it IS the same event, even if the headlines differ.
+It is NOT the same event if the victim is different, or it is a separate incident by the same attacker, or only the topic is similar.
 Reply with ONLY a JSON object: {"match": <number of the matching existing story> or null}"""
 
 
 def same_event(ai, title, excerpt, candidates):
-    listing = "\n".join(f"{i + 1}. {c['orig_title']}" for i, c in enumerate(candidates))
-    data = ai.json(SAME_EVENT_PROMPT, f"NEW: {title}\n{excerpt[:400]}\n\nEXISTING:\n{listing}", 60)
+    listing = "\n".join(f"{i + 1}. {c['orig_title']} :: {(c.get('technical') or '')[:220]}" for i, c in enumerate(candidates))
+    data = ai.json(SAME_EVENT_PROMPT, f"NEW: {title}\n{excerpt[:500]}\n\nEXISTING:\n{listing}", 60)
     n = data.get("match")
     if isinstance(n, str) and n.isdigit():
         n = int(n)
     return candidates[n - 1] if isinstance(n, int) and 1 <= n <= len(candidates) else None
 
 
-def find_duplicate(title, excerpt, cves, recent):
+def rare_words(recent):
+    """Words that appear in only a few recent stories, e.g. 'shinyhunter', 'peoplesoft', 'fbijob'.
+    Sharing several of these is a strong sign two stories are about the same event; words like 'data' or 'breach' are not."""
+    from collections import Counter
+    df = Counter(x for r in recent for x in r["_words"])
+    limit = max(3, int(len(recent) * 0.04))
+    return {x for x, n in df.items() if n <= limit}
+
+
+def find_duplicate(title, excerpt, cves, recent, rare=None):
     """Cheap checks first. Returns (story, None) for a sure match, (None, candidates) when the AI should decide."""
     t = title.lower()
     w = words(f"{title} {excerpt[:300]}")
+    rare = rare_words(recent) if rare is None else rare
     scored = []
     for r in recent:
         if cves and set(cves) & set(r.get("cves") or []):
             return r, None
         if SequenceMatcher(None, t, r["orig_title"].lower()).ratio() > SIMILARITY_LIMIT:
             return r, None
-        shared = len(w & r["_words"])
+        common = w & r["_words"]
+        shared = len(common)
+        rare_shared = len(common & rare)
+        # very strong overlap (rare names in both headlines AND the text): the same event without asking the AI
+        title_rare = len(words(title) & words(r["orig_title"]) & rare)
+        if rare_shared >= 5 and title_rare >= 2:
+            return r, None
         score = overlap(w, r["_words"])
-        if shared >= 3 or (shared >= 2 and score >= 0.3):
-            scored.append((shared + score, r))
+        if rare_shared >= 2 or shared >= 3 or (shared >= 2 and score >= 0.3):
+            scored.append((rare_shared * 3 + shared + score, r))
     scored.sort(key=lambda x: -x[0])
     return None, [r for _, r in scored[:5]]
 
@@ -520,7 +546,7 @@ def main():
     group_index = load_group_index(db) if db else []
     if db:
         since = (started - timedelta(days=3)).isoformat()
-        recent = (db.table("stories").select("id,orig_title,technical,cves,source,url,also_reported")
+        recent = (db.table("stories").select("id,orig_title,technical,cves,source,url,also_reported,published_at")
                   .gte("created_at", since).execute().data)
         day_start = started.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         runs = db.table("pipeline_runs").select("ai_calls,research").gte("started_at", day_start).execute().data
@@ -623,7 +649,7 @@ def main():
 
         try:
             # 2. same story already on another card? merge it as "also reported by"
-            match, similar = find_duplicate(title, excerpt, cves, recent)
+            match, similar = find_duplicate(title, excerpt, cves, recent, rare_words(recent))
             if not match and similar and USE_AI:
                 if ai_calls >= ai_budget:
                     stopped = True
@@ -687,14 +713,16 @@ def main():
                 "incident": incident, "actor_group": group,
                 "category": s["category"], "country": src["country"], "language": "en",
                 "image_url": image, "published_at": published_of(e).isoformat(),
+                "products": tag_products(title, s["headline"], s["technical"], body[:3000], ai_products=s.get("products")),
+                "zero_day": is_zero_day(title, s["technical"], excerpt, ai_flag=s.get("zero_day")),
             }
             if db:
                 db.table("stories").upsert(story).execute()
             seen_ids.add(sid)
             if not image:
                 need_cover.append((sid, cover_prompt(s.get("scene"), s["category"]), s["headline"]))
-            recent.append({"id": sid, "orig_title": title, "cves": cves, "source": src["name"],
-                           "url": link, "also_reported": [], "_words": words(f"{title} {excerpt[:300]}")})
+            recent.append({"id": sid, "orig_title": title, "cves": cves, "source": src["name"], "technical": s["technical"],
+                           "url": link, "also_reported": [], "_words": words(f"{title} {s['technical'][:300]}")})
             row["added"] += 1
             print(f"[ok]  {src['name']}: {s['headline']}")
             if DRY_RUN or TEST_MODE:
@@ -738,6 +766,20 @@ def main():
         except Exception as ex:
             print(f"[warn] old picture clean-up failed: {ex}")
 
+    # ---- 4. phone alerts (max one per phone per hour) and email ----
+    alerts_note = email_note = "off"
+    if db and not TEST_MODE:
+        try:
+            from notify import send_alerts
+            alerts_note = send_alerts(db)
+        except Exception as ex:
+            alerts_note = f"problem: {str(ex)[:100]}"
+        try:
+            from mailer import run_email
+            email_note = run_email(db)
+        except Exception as ex:
+            email_note = f"problem: {str(ex)[:100]}"
+
     health = [rows[s["name"]] for s in sources]
     for r in health:
         for k in ("added", "merged", "seen", "old", "skipped", "failed"):
@@ -756,6 +798,8 @@ def main():
     if ai and ai.used:
         print("AI used: " + ", ".join(f"{k} x{v}" for k, v in ai.used.items()))
     print(f"AI pictures: {covers_note}")
+    print(f"Phone alerts: {alerts_note}")
+    print(f"Email: {email_note}")
     print()
 
     # a run is "broken" if no source worked, or most attempted stories failed
@@ -928,6 +972,70 @@ def backfill_covers():
     print()
 
 
+def dedupe_existing():
+    """Merge duplicate cards already in the feed (last 4 days). The oldest card stays; later copies are removed
+    and their links remembered, so they are never added again. Run: python pipeline.py --dedupe"""
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    ai = None
+    if USE_AI:
+        from ai import AI
+        ai = AI()
+    since = (datetime.now(timezone.utc) - timedelta(days=4)).isoformat()
+    rows = (db.table("stories").select("id,orig_title,technical,cves,source,url,also_reported,published_at,headline,image_url")
+            .gte("published_at", since).order("published_at").execute().data)
+    for r in rows:
+        r["_words"] = words(f"{r['orig_title']} {(r.get('technical') or '')[:300]}")
+    rare = rare_words(rows)
+    kept, removed, calls = [], 0, 0
+    print(f"\n=== Duplicate check: {len(rows)} stories from the last 4 days ===\n")
+    for r in rows:
+        match, similar = find_duplicate(r["orig_title"], r.get("technical") or "", r.get("cves") or [], kept, rare)
+        if not match and similar and ai and calls < MAX_AI_CALLS:
+            calls += 1
+            try:
+                match = same_event(ai, r["orig_title"], r.get("technical") or "", similar)
+            except Exception as ex:
+                print(f"[warn] AI check failed: {ex}")
+        if not match:
+            kept.append(r)
+            continue
+        also = match.get("also_reported") or []
+        if match["source"] != r["source"] and all(a.get("source") != r["source"] for a in also):
+            also = also + [{"source": r["source"], "url": r["url"]}]
+        also += [a for a in (r.get("also_reported") or []) if all(b.get("url") != a.get("url") for b in also)]
+        match["also_reported"] = also
+        db.table("stories").update({"also_reported": also}).eq("id", match["id"]).execute()
+        db.table("seen_links").upsert({"id": r["id"], "reason": "duplicate", "story_id": match["id"]}).execute()
+        if r.get("image_url") and "/object/public/covers/" in r["image_url"]:
+            try:   # its AI picture is no longer needed
+                db.storage.from_("covers").remove([r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0]])
+            except Exception:
+                pass
+        db.table("stories").delete().eq("id", r["id"]).execute()
+        removed += 1
+        print(f"[merged] {r['source']}: {r['orig_title'][:60]}\n         -> kept: {match['source']}: {match['orig_title'][:60]}")
+    print(f"\nDone. Removed {removed} duplicate cards ({calls} AI checks).\n")
+
+
+def backfill_tags():
+    """Tag recent stories with products and zero-days (no AI cost). Run: python pipeline.py --tag"""
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    rows = (db.table("stories").select("id,orig_title,headline,technical")
+            .order("published_at", desc=True).limit(int(os.getenv("TAG_LIMIT", "500"))).execute().data)
+    zero = tagged = 0
+    for r in rows:
+        prods = tag_products(r["orig_title"], r["headline"], r["technical"])
+        z = is_zero_day(r["orig_title"], r["technical"])
+        db.table("stories").update({"products": prods, "zero_day": z}).eq("id", r["id"]).execute()
+        tagged += bool(prods)
+        zero += z
+        if prods or z:
+            print(f"[tag] {r['headline'][:55]:<56} {', '.join(prods)[:60]}{'  ZERO-DAY' if z else ''}")
+    print(f"\nDone. {tagged} of {len(rows)} stories name a product, {zero} are zero-days.\n")
+
+
 def update_groups():
     """Refresh MITRE threat group profiles now. Run: python pipeline.py --groups"""
     from supabase import create_client
@@ -941,6 +1049,10 @@ if __name__ == "__main__":
         update_groups()
     elif "--cves" in sys.argv:
         backfill_cves()
+    elif "--tag" in sys.argv:
+        backfill_tags()
+    elif "--dedupe" in sys.argv:
+        dedupe_existing()
     elif "--covers" in sys.argv:
         backfill_covers()
     elif "--images" in sys.argv:

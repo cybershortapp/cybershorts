@@ -3,6 +3,9 @@ on:
   schedule:
     - cron: "7 * * * *"   # every hour at 7 minutes past (UTC)
   workflow_dispatch:         # lets you run it by hand from the Actions tab
+permissions:
+  contents: read
+  actions: write        # only used to keep this hourly schedule switched on (see the first step)
 concurrency:
   group: news-pipeline
   cancel-in-progress: false
@@ -14,6 +17,17 @@ jobs:
       run:
         working-directory: pipeline
     steps:
+      # GitHub pauses scheduled robots in public repos after 60 days with no code changes.
+      # Once a day this re-confirms the schedule so the news never silently stops.
+      - name: Keep the hourly schedule switched on
+        if: github.event_name == 'schedule'
+        working-directory: .
+        run: |
+          if [ "$(date -u +%H)" = "03" ]; then
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/pipeline.yml/enable" && echo "Schedule re-confirmed" || echo "Could not re-confirm (not a problem today)"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
@@ -32,6 +46,8 @@ jobs:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
           COVERS: "true"
           COVERS_PER_RUN: "12"
           TEST_MODE: "false"

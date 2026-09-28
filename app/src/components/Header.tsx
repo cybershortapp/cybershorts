@@ -5,14 +5,16 @@ import { FILTERS, type Filter } from '../lib/types';
 import { C, F } from '../theme';
 
 type Props = {
-  view: 'brief' | 'feed';
+  view: 'brief' | 'feed' | 'prefs';
   onBrief: () => void;
+  onPrefs: () => void;
+  hasPrefs: boolean;
   filter: Filter;
   onFilterChange: (f: Filter) => void;
   counter: string;
 };
 
-export function Header({ view, onBrief, filter, onFilterChange, counter }: Props) {
+export function Header({ view, onBrief, onPrefs, hasPrefs, filter, onFilterChange, counter }: Props) {
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const contentWidth = Math.min(width - (isTablet ? 48 : 24), 760);
@@ -35,6 +37,9 @@ export function Header({ view, onBrief, filter, onFilterChange, counter }: Props
               <MaterialCommunityIcons name="radar" size={15 * k} color={C.brandDark} />
               <Text style={{ fontSize: 12.5 * k, color: C.brandDark, fontFamily: F.label }}>Brief</Text>
             </Pressable>
+            <Pressable onPress={onPrefs} hitSlop={10} style={styles.iconBtn} accessibilityLabel="Preferences">
+              <MaterialCommunityIcons name="tune-variant" size={17 * k} color={C.brandDark} />
+            </Pressable>
           </View>
         ) : (
           <Text style={{ fontSize: 12.5 * k, color: C.muted }}>{date}</Text>
@@ -54,6 +59,8 @@ export function Header({ view, onBrief, filter, onFilterChange, counter }: Props
                 accessibilityState={{ selected: on }}
               >
                 {f === 'Saved' && <MaterialCommunityIcons name="bookmark-outline" size={14 * k} color={on ? C.onBrand : C.text} />}
+                {f === 'For you' && <MaterialCommunityIcons name={hasPrefs ? 'star' : 'star-outline'} size={14 * k} color={on ? C.onBrand : C.brand} />}
+                {f === 'Zero-day' && <MaterialCommunityIcons name="lightning-bolt" size={14 * k} color={on ? C.onBrand : '#C62F2E'} />}
                 <Text style={{ fontSize: 13 * k, color: on ? C.onBrand : C.text, fontFamily: on ? F.label : F.medium }}>{f}</Text>
               </Pressable>
             );
@@ -69,6 +76,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logo: { borderRadius: 8, backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center' },
   brand: { fontFamily: F.brand, color: C.text, letterSpacing: -0.3 },
+  iconBtn: { borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.white, borderRadius: 999, padding: 5 },
   briefBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.white, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   chips: { paddingBottom: 10, gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },

@@ -18,7 +18,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       [
@@ -28,6 +29,14 @@
           "imageWidth": 240,
           "resizeMode": "contain",
           "backgroundColor": "#05070F"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2563F5",
+          "defaultChannel": "news"
         }
       ]
     ],

@@ -53,3 +53,85 @@ create policy "public read" on stories for select using (true);
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('covers', 'covers', true, 1048576, array['image/jpeg'])
 on conflict (id) do update set public = true, file_size_limit = 1048576, allowed_mime_types = array['image/jpeg'];
+
+-- ===== Round 3: products, zero-days, phone alerts, email digest =====
+alter table stories add column if not exists products text[] not null default '{}';
+alter table stories add column if not exists zero_day boolean not null default false;
+create index if not exists stories_products_idx on stories using gin (products);
+create index if not exists stories_created_idx on stories (created_at desc);
+create index if not exists stories_zero_day_idx on stories (zero_day, created_at desc) where zero_day;
+update stories set zero_day = true
+where not zero_day and (orig_title || ' ' || coalesce(technical, '')) ~* '(zero[- ]?day|actively exploited|exploited in the wild|under active exploitation|known exploited vulnerabilit)';
+
+-- phones that want alerts. Private: the app can only add/update/remove its own phone through the functions below.
+create table if not exists devices (
+  token text primary key,
+  products text[] not null default '{}',
+  terms text[] not null default '{}',
+  alerts boolean not null default true,
+  last_push_at timestamptz,
+  updated_at timestamptz default now()
+);
+alter table devices enable row level security;
+
+create or replace function register_device(p_token text, p_products text[], p_terms text[], p_alerts boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_token is null or p_token !~ '^Expo(nent)?PushToken\[[A-Za-z0-9_-]{10,100}\]$' then raise exception 'invalid token'; end if;
+  if coalesce(array_length(p_products, 1), 0) > 50 or coalesce(array_length(p_terms, 1), 0) > 20 then raise exception 'too many preferences'; end if;
+  if exists (select 1 from unnest(coalesce(p_products, '{}') || coalesce(p_terms, '{}')) x where length(x) > 40) then raise exception 'preference too long'; end if;
+  insert into devices (token, products, terms, alerts, updated_at)
+  values (p_token, coalesce(p_products, '{}'), coalesce(p_terms, '{}'), coalesce(p_alerts, true), now())
+  on conflict (token) do update set products = excluded.products, terms = excluded.terms, alerts = excluded.alerts, updated_at = now();
+end $$;
+
+create or replace function remove_device(p_token text) returns void
+language sql security definer set search_path = public as $$ delete from devices where token = p_token $$;
+
+-- email digest subscribers. Private: nothing is sent until the person clicks the confirmation link.
+create table if not exists subscribers (
+  email text primary key,
+  products text[] not null default '{}',
+  terms text[] not null default '{}',
+  confirmed boolean not null default false,
+  token uuid not null default gen_random_uuid() unique,
+  confirm_sent_at timestamptz,
+  last_sent_at timestamptz,
+  created_at timestamptz default now()
+);
+alter table subscribers enable row level security;
+
+create or replace function subscribe_email(p_email text, p_products text[], p_terms text[])
+returns void language plpgsql security definer set search_path = public as $$
+declare e text := lower(trim(p_email));
+begin
+  if e is null or length(e) > 254 or e !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$' then raise exception 'invalid email'; end if;
+  if coalesce(array_length(p_products, 1), 0) > 50 or coalesce(array_length(p_terms, 1), 0) > 20 then raise exception 'too many preferences'; end if;
+  insert into subscribers (email, products, terms) values (e, coalesce(p_products, '{}'), coalesce(p_terms, '{}'))
+  on conflict (email) do update set products = excluded.products, terms = excluded.terms;
+end $$;
+
+create or replace function confirm_email(p_token uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update subscribers set confirmed = true where token = p_token;
+  return found;
+end $$;
+
+create or replace function unsubscribe_email(p_token uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from subscribers where token = p_token;
+  return found;
+end $$;
+
+revoke all on function register_device(text, text[], text[], boolean) from public;
+revoke all on function remove_device(text) from public;
+revoke all on function subscribe_email(text, text[], text[]) from public;
+revoke all on function confirm_email(uuid) from public;
+revoke all on function unsubscribe_email(uuid) from public;
+grant execute on function register_device(text, text[], text[], boolean) to anon, authenticated;
+grant execute on function remove_device(text) to anon, authenticated;
+grant execute on function subscribe_email(text, text[], text[]) to anon, authenticated;
+grant execute on function confirm_email(uuid) to anon, authenticated;
+grant execute on function unsubscribe_email(uuid) to anon, authenticated;
