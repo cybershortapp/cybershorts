@@ -49,7 +49,7 @@ const iconFor = (stage: string): IconName => STAGE_ICON[stage] ?? 'shield-outlin
 /** A short rusty chain between two steps: simple rounded links, clipped to whatever height the row has. */
 const ChainLinks = memo(function ChainLinks({ s }: { s: number }) {
   const links: React.ReactNode[] = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 10; i++) {
     links.push(
       i % 2 === 0 ? (
         <View key={i} style={{ width: 11 * s, height: 17 * s, borderRadius: 6 * s, borderWidth: 2.5 * s, borderColor: K.rust, marginVertical: -2 * s }} />
@@ -123,12 +123,26 @@ function StepRow({ step, index, last, s, anim, articleUrl }: {
   );
 }
 
+// attacker profiles rarely change: fetch each one once per app session
+const groupCache = new Map<string, ThreatGroup | null>();
+
 function GroupCard({ id, s }: { id: string; s: number }) {
-  const [g, setG] = useState<ThreatGroup | null>(null);
+  const [g, setG] = useState<ThreatGroup | null>(groupCache.get(id) ?? null);
   useEffect(() => {
+    if (groupCache.has(id)) return;
     let live = true;
-    supabase.from('threat_groups').select('*').eq('id', id).maybeSingle().then(({ data }) => live && setG(data as ThreatGroup | null));
-    return () => { live = false; };
+    supabase
+      .from('threat_groups')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        groupCache.set(id, (data as ThreatGroup | null) ?? null);
+        if (live) setG((data as ThreatGroup | null) ?? null);
+      });
+    return () => {
+      live = false;
+    };
   }, [id]);
   if (!g) return null;
   const others = g.aliases.filter((a) => a !== g.name).slice(0, 4);

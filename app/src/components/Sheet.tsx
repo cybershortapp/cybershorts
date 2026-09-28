@@ -1,11 +1,13 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { C, F } from '../theme';
+import { F, type Palette, useTheme } from '../theme';
 
 /** Simple bottom sheet used for "Report an error". */
 export function Sheet({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
@@ -19,6 +21,8 @@ export function Sheet({ visible, title, onClose, children }: { visible: boolean;
 }
 
 export function SheetRow({ label, onPress, icon }: { label: string; onPress: () => void; icon?: ReactNode }) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { backgroundColor: C.card }]}>
       {icon}
@@ -27,9 +31,10 @@ export function SheetRow({ label, onPress, icon }: { label: string; onPress: () 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(9,1,1,0.35)' },
-  sheet: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 12 },
+  sheet: { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 12 },
   handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, marginTop: 8, marginBottom: 10 },
   title: { fontSize: 17, fontFamily: F.head, color: C.text, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 6, borderRadius: 10 },

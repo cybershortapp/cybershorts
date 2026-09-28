@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState, useMemo } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
@@ -10,7 +10,7 @@ import { REPORT_REASONS, type ReportReason } from '../lib/types';
 import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
-import { C, F, severityOf } from '../theme';
+import { F, type Palette, severityOf, tabColour, useTheme } from '../theme';
 import { AttackChain } from './AttackChain';
 import { Cover } from './Cover';
 import { Sheet, SheetRow } from './Sheet';
@@ -29,8 +29,10 @@ type Props = {
 };
 
 function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const L = useCardLayout(height);
-  const sev = severityOf(story.severity);
+  const sev = severityOf(story.severity, C);
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
   const [sheet, setSheet] = useState<null | 'report'>(null);
@@ -80,6 +82,25 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
       nudge.setValue(0);
     };
   }, [active, hasChain, pulse, L.cardWidth]);
+
+  // build the chain page quietly while the reader is on this card (after scrolling has finished),
+  // so tapping CHAIN opens instantly instead of building it on the tap
+  useEffect(() => {
+    if (!hasChain || !active || chainReady) return;
+    const g = globalThis as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    let idle: number | undefined;
+    const t = setTimeout(() => {
+      if (g.requestIdleCallback) idle = g.requestIdleCallback(() => setChainReady(true), { timeout: 2000 });
+      else setChainReady(true);
+    }, 900);
+    return () => {
+      clearTimeout(t);
+      if (idle !== undefined) g.cancelIdleCallback?.(idle);
+    };
+  }, [active, hasChain, chainReady]);
 
   const openArticle = () => Linking.openURL(story.url);
   const showChain = () => {
@@ -147,12 +168,12 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           )}
           {story.zero_day && (
             <View style={[styles.pill, styles.zeroPill]}>
-              <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color="#C62F2E" />
-              <Text style={{ color: '#C62F2E', fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
+              <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color={C.zeroText} />
+              <Text style={{ color: C.zeroText, fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
             </View>
           )}
-          <View style={[styles.pill, { backgroundColor: C.imageBg }]}>
-            <Text style={{ color: C.brandText, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
+          <View style={[styles.pill, { backgroundColor: tabColour(story.category, C) + (C.dark ? '26' : '17') }]}>
+            <Text style={{ color: tabColour(story.category, C), fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
           </View>
         </View>
         <Text style={{ color: C.muted, fontSize: L.metaSize, marginTop: 6, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
@@ -291,15 +312,16 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
 export const StoryCard = memo(StoryCardBase);
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   page: { alignItems: 'center', paddingVertical: 8 },
   card: { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
-  zeroPill: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 7, backgroundColor: '#FDECEC', borderWidth: 1, borderColor: '#F3C1C0' },
+  zeroPill: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 7, backgroundColor: C.zeroBg, borderWidth: 1, borderColor: C.zeroBorder },
   caught: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.imageBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 8 },
-  why: { flexDirection: 'row', gap: 9, backgroundColor: C.white, borderWidth: 1, borderColor: C.borderSoft, borderRadius: 12 },
+  why: { flexDirection: 'row', gap: 9, backgroundColor: C.surface, borderWidth: 1, borderColor: C.borderSoft, borderRadius: 12 },
   whyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.brandDark },
   actionBtn: {
     flexDirection: 'row',

@@ -1,16 +1,20 @@
+import { useMemo } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import type { Brief } from '../lib/brief';
 import type { Story } from '../lib/types';
-import { C, F, severityOf } from '../theme';
+import { F, type Palette, severityOf, useTheme } from '../theme';
 
 type Props = { brief: Brief; onOpen: (story?: Story) => void };
 
 const LEVEL_COLOR = ['#12B8FF', '#2563F5', '#EF9F27', '#C62F2E'];
-const LEVEL_TEXT = ['#0E86C4', '#1F55D8', '#C77A0E', '#C62F2E'];
+const LEVEL_TEXT = ['#0E86C4', '#1F55D8', '#B45309', '#B42318'];
+const LEVEL_TEXT_DARK = ['#5FC8FF', '#7EA0FF', '#F5B75F', '#FF8A80'];
 
 export function BriefScreen({ brief, onOpen }: Props) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const w = Math.min(width - (isTablet ? 48 : 24), 680);
@@ -22,14 +26,14 @@ export function BriefScreen({ brief, onOpen }: Props) {
         <View style={[styles.panel, { padding: 16 * s }]}>
           <Text style={[styles.label, { fontSize: 12.5 * s }]}>Today's threat level</Text>
           <View style={styles.levelRow}>
-            <Text style={{ color: LEVEL_TEXT[brief.levelIndex - 1], fontSize: 30 * s, fontFamily: F.brand }}>{brief.level}</Text>
+            <Text style={{ color: (C.dark ? LEVEL_TEXT_DARK : LEVEL_TEXT)[brief.levelIndex - 1], fontSize: 30 * s, fontFamily: F.brand }}>{brief.level}</Text>
             <Text style={[styles.label, { fontSize: 12.5 * s }]}>
               {brief.critical} critical · {brief.high} high
             </Text>
           </View>
           <View style={styles.bar}>
             {[1, 2, 3, 4].map((n) => (
-              <View key={n} style={[styles.seg, { backgroundColor: n <= brief.levelIndex ? LEVEL_COLOR[n - 1] : '#E3E8E7' }]} />
+              <View key={n} style={[styles.seg, { backgroundColor: n <= brief.levelIndex ? LEVEL_COLOR[n - 1] : C.border }]} />
             ))}
           </View>
         </View>
@@ -41,7 +45,7 @@ export function BriefScreen({ brief, onOpen }: Props) {
             onPress={() => onOpen(story)}
             style={({ pressed }) => [styles.item, { padding: 13 * s, borderColor: pressed ? C.brand : C.border }]}
           >
-            <Text style={{ color: severityOf(story.severity).accent, fontSize: 15 * s, fontWeight: '800' }}>
+            <Text style={{ color: severityOf(story.severity, C).accent, fontSize: 15 * s, fontFamily: F.brand }}>
               {String(i + 1).padStart(2, '0')}
             </Text>
             <View style={{ flex: 1 }}>
@@ -72,12 +76,13 @@ export function BriefScreen({ brief, onOpen }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   label: { color: C.muted },
-  panel: { backgroundColor: C.white, borderColor: C.border, borderWidth: 1, borderRadius: 16, marginTop: 6 },
+  panel: { backgroundColor: C.surface, borderColor: C.border, borderWidth: 1, borderRadius: 16, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 6, marginBottom: 10 },
   bar: { flexDirection: 'row', gap: 4 },
   seg: { flex: 1, height: 8, borderRadius: 3 },
-  item: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.white, borderWidth: 1, borderRadius: 12, marginBottom: 10 },
+  item: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderRadius: 12, marginBottom: 10 },
   start: { marginTop: 6, backgroundColor: C.brand, borderRadius: 12, alignItems: 'center' },
 });

@@ -45,7 +45,7 @@ export type Story = {
   zero_day: boolean | null;
 };
 
-export const FILTERS = ['All', 'For you', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'Saved'] as const;
+export const FILTERS = ['For you', 'All', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'Saved'] as const;
 export type Filter = (typeof FILTERS)[number];
 
 export const STORY_FIELDS =

@@ -1,8 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { FILTERS, type Filter } from '../lib/types';
-import { C, F } from '../theme';
+import { F, type Palette, tabColour, useTheme } from '../theme';
+
+type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type Props = {
   view: 'brief' | 'feed' | 'prefs';
@@ -14,54 +17,72 @@ type Props = {
   counter: string;
 };
 
+const TAB_ICON: Partial<Record<Filter, IconName>> = {
+  'For you': 'star-four-points',
+  Critical: 'alert-octagon',
+  'Zero-day': 'lightning-bolt',
+  Saved: 'bookmark',
+};
+
 export function Header({ view, onBrief, onPrefs, hasPrefs, filter, onFilterChange, counter }: Props) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const contentWidth = Math.min(width - (isTablet ? 48 : 24), 760);
   const k = isTablet ? 1.3 : 1;
-  const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 
   return (
     <View style={{ width: contentWidth, alignSelf: 'center' }}>
       <View style={styles.topRow}>
-        <View style={styles.brandRow}>
+        {/* the brand never shrinks, so "CyberSid" is always shown in full */}
+        <View style={[styles.row, { flexShrink: 0 }]}>
           <Image source={require('../../assets/logo-mark.png')} style={{ width: 30 * k, height: 30 * k }} resizeMode="contain" accessibilityIgnoresInvertColors />
-          <Text style={[styles.brand, { fontSize: 21 * k }]}>
-            Cyber<Text style={{ color: '#149BFF' }}>S</Text><Text style={{ color: '#3A6FFF' }}>i</Text><Text style={{ color: '#6A4DF8' }}>d</Text>
+          <Text style={[styles.brand, { fontSize: 21 * k }]} numberOfLines={1}>
+            Cyber<Text style={{ color: C.dark ? '#3FB6FF' : '#149BFF' }}>S</Text>
+            <Text style={{ color: C.dark ? '#6F95FF' : '#3A6FFF' }}>i</Text>
+            <Text style={{ color: C.dark ? '#9C86FF' : '#6A4DF8' }}>d</Text>
           </Text>
         </View>
-        {view === 'feed' ? (
-          <View style={styles.brandRow}>
-            <Text style={{ fontSize: 12.5 * k, color: C.muted }}>{counter}</Text>
-            <Pressable onPress={onBrief} hitSlop={10} style={styles.briefBtn} accessibilityLabel="Open today's brief">
-              <MaterialCommunityIcons name="radar" size={15 * k} color={C.brandDark} />
-              <Text style={{ fontSize: 12.5 * k, color: C.brandDark, fontFamily: F.label }}>Brief</Text>
+        <View style={[styles.row, { flexShrink: 1, justifyContent: 'flex-end' }]}>
+          {view === 'feed' && !!counter && (
+            <Text style={{ fontSize: 12 * k, color: C.muted }} numberOfLines={1}>
+              {counter}
+            </Text>
+          )}
+          {view !== 'prefs' && (
+            <Pressable onPress={onBrief} hitSlop={8} style={[styles.iconBtn, view === 'brief' && styles.iconOn]} accessibilityLabel="Today's brief">
+              <MaterialCommunityIcons name="radar" size={17 * k} color={view === 'brief' ? C.onBrand : C.brandDark} />
             </Pressable>
-            <Pressable onPress={onPrefs} hitSlop={10} style={styles.iconBtn} accessibilityLabel="Preferences">
-              <MaterialCommunityIcons name="tune-variant" size={17 * k} color={C.brandDark} />
-            </Pressable>
-          </View>
-        ) : (
-          <Text style={{ fontSize: 12.5 * k, color: C.muted }}>{date}</Text>
-        )}
+          )}
+          <Pressable onPress={onPrefs} hitSlop={8} style={[styles.iconBtn, view === 'prefs' && styles.iconOn]} accessibilityLabel="Preferences">
+            <MaterialCommunityIcons name="tune-variant" size={17 * k} color={view === 'prefs' ? C.onBrand : C.brandDark} />
+          </Pressable>
+        </View>
       </View>
 
       {view === 'feed' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {FILTERS.map((f) => {
             const on = f === filter;
+            const tint = tabColour(f, C);
+            const icon = TAB_ICON[f];
+            // selected tab: white text on the deep light-mode colours, dark text on the softer dark-mode colours
+            const onText = C.dark ? '#0A0E17' : '#FFFFFF';
             return (
               <Pressable
                 key={f}
                 onPress={() => onFilterChange(f)}
-                style={[styles.chip, on ? { backgroundColor: C.brand, borderColor: C.brand } : { borderColor: C.chipBorder, backgroundColor: C.white }]}
+                style={[styles.chip, on ? { backgroundColor: tint, borderColor: tint } : { borderColor: C.chipBorder, backgroundColor: C.surface }]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
               >
-                {f === 'Saved' && <MaterialCommunityIcons name="bookmark-outline" size={14 * k} color={on ? C.onBrand : C.text} />}
-                {f === 'For you' && <MaterialCommunityIcons name={hasPrefs ? 'star' : 'star-outline'} size={14 * k} color={on ? C.onBrand : C.brand} />}
-                {f === 'Zero-day' && <MaterialCommunityIcons name="lightning-bolt" size={14 * k} color={on ? C.onBrand : '#C62F2E'} />}
-                <Text style={{ fontSize: 13 * k, color: on ? C.onBrand : C.text, fontFamily: on ? F.label : F.medium }}>{f}</Text>
+                {icon ? (
+                  <MaterialCommunityIcons name={f === 'For you' && !hasPrefs ? 'star-four-points-outline' : icon} size={13 * k} color={on ? onText : tint} />
+                ) : (
+                  <View style={[styles.dot, { backgroundColor: on ? onText : tint }]} />
+                )}
+                <Text style={{ fontSize: 13 * k, color: on ? onText : C.text, fontFamily: on ? F.label : F.medium }}>{f}</Text>
               </Pressable>
             );
           })}
@@ -71,13 +92,14 @@ export function Header({ view, onBrief, onPrefs, hasPrefs, filter, onFilterChang
   );
 }
 
-const styles = StyleSheet.create({
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2, paddingTop: 8, paddingBottom: 10 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { borderRadius: 8, backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center' },
-  brand: { fontFamily: F.brand, color: C.text, letterSpacing: -0.3 },
-  iconBtn: { borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.white, borderRadius: 999, padding: 5 },
-  briefBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.white, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  chips: { paddingBottom: 10, gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
-});
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
+    topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 2, paddingTop: 8, paddingBottom: 10 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    brand: { fontFamily: F.brand, color: C.text, paddingRight: 2 },
+    iconBtn: { borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.surface, borderRadius: 999, padding: 6 },
+    iconOn: { backgroundColor: C.brand, borderColor: C.brand },
+    chips: { paddingBottom: 10, gap: 8 },
+    chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
+    dot: { width: 7, height: 7, borderRadius: 4 },
+  });

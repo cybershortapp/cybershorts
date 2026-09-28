@@ -1,26 +1,38 @@
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { getPrefs, setPrefs } from './prefs';
 import { supabase } from './supabase';
 
-const supported = Platform.OS === 'android' || Platform.OS === 'ios';
+type NotificationsModule = typeof import('expo-notifications');
+
+// Expo Go can't do phone alerts and crashes if the alerts module is even loaded there,
+// so it is only loaded inside the real app (the one built with EAS).
+const inExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+const supported = (Platform.OS === 'android' || Platform.OS === 'ios') && !inExpoGo;
+let N: NotificationsModule | null = null;
 let token: string | null = null;
 
-if (supported) {
-  // show alerts even while the app is open
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
-  });
+function notif(): NotificationsModule | null {
+  if (!supported) return null;
+  if (!N) {
+    N = require('expo-notifications') as NotificationsModule;
+    // show alerts even while the app is open
+    N.setNotificationHandler({
+      handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+    });
+  }
+  return N;
 }
 
-async function channel() {
+export const alertsAvailable = supported;
+
+async function channel(n: NotificationsModule) {
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('news', {
+    await n.setNotificationChannelAsync('news', {
       name: 'Cyber news alerts',
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: n.AndroidImportance.HIGH,
       lightColor: '#2563F5',
     });
   }
@@ -28,18 +40,19 @@ async function channel() {
 
 /** Ask permission (once) and get this phone's push address. Returns null if not allowed. */
 export async function enableAlerts(): Promise<string | null> {
-  if (!supported || !Device.isDevice) return null;
+  const n = notif();
+  if (!n || !Device.isDevice) return null;
   try {
-    await channel();
-    let { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') status = (await Notifications.requestPermissionsAsync()).status;
+    await channel(n);
+    let { status } = await n.getPermissionsAsync();
+    if (status !== 'granted') status = (await n.requestPermissionsAsync()).status;
     setPrefs({ alertsAsked: true });
     if (status !== 'granted') {
       setPrefs({ alerts: false });
       return null;
     }
     const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-    token = (await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data;
+    token = (await n.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data;
     await syncAlerts();
     return token;
   } catch {
@@ -70,21 +83,23 @@ export async function disableAlerts() {
 
 /** When the app opens: if alerts were allowed before, refresh the push address quietly (no popup). */
 export async function refreshAlerts() {
-  if (!supported || !Device.isDevice || !getPrefs().alerts || !getPrefs().alertsAsked) return;
+  const n = notif();
+  if (!n || !Device.isDevice || !getPrefs().alerts || !getPrefs().alertsAsked) return;
   try {
-    const { status } = await Notifications.getPermissionsAsync();
+    const { status } = await n.getPermissionsAsync();
     if (status === 'granted') await enableAlerts();
   } catch {}
 }
 
 /** Call `open(storyId)` when the reader taps an alert (also when the tap opened the app). */
 export function onAlertTapped(open: (storyId: string) => void) {
-  if (!supported) return () => {};
-  const handle = (r: Notifications.NotificationResponse | null) => {
+  const n = notif();
+  if (!n) return () => {};
+  const handle = (r: { notification: { request: { content: { data?: Record<string, unknown> | null } } } } | null) => {
     const id = r?.notification.request.content.data?.storyId;
     if (typeof id === 'string') open(id);
   };
-  Notifications.getLastNotificationResponseAsync().then(handle).catch(() => {});
-  const sub = Notifications.addNotificationResponseReceivedListener(handle);
+  n.getLastNotificationResponseAsync().then(handle).catch(() => {});
+  const sub = n.addNotificationResponseReceivedListener(handle);
   return () => sub.remove();
 }

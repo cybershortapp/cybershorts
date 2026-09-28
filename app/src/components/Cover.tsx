@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Story } from '../lib/types';
-import { C, F } from '../theme';
+import { F, type Palette, useTheme } from '../theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -26,6 +27,8 @@ function hash(s: string) {
 
 /** Our own card artwork: no photo licensing needed. */
 export function Cover({ story, height, width, iconSize }: { story: Story; height: number; width: number; iconSize: number }) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const h = hash(story.id);
   const set = ICONS[story.category] ?? ICONS.Other;
   const main = set[h % set.length];
@@ -34,22 +37,23 @@ export function Cover({ story, height, width, iconSize }: { story: Story; height
   return (
     <View style={[StyleSheet.absoluteFill, styles.wrap]}>
       {/* one picture for the background pattern (much lighter than drawing hundreds of small icons) */}
-      <Image source={require('../../assets/cover-pattern.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={C.pattern === 'dark' ? require('../../assets/cover-pattern-dark.jpg') : require('../../assets/cover-pattern.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
       <View
         style={[
           styles.badge,
-          { width: iconSize * 1.7, height: iconSize * 1.7, borderRadius: iconSize, borderColor: critical ? '#C62F2E' : C.borderSoft },
+          { width: iconSize * 1.7, height: iconSize * 1.7, borderRadius: iconSize, borderColor: critical ? C.danger : C.borderSoft },
         ]}
       >
-        <MaterialCommunityIcons name={main} size={iconSize * 0.9} color={critical ? '#C62F2E' : C.brandDark} />
+        <MaterialCommunityIcons name={main} size={iconSize * 0.9} color={critical ? C.danger : C.brandDark} />
       </View>
       <Text style={[styles.label, { color: C.brandText }]}>{story.category.toUpperCase()}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   wrap: { backgroundColor: C.imageBg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  badge: { backgroundColor: C.white, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  badge: { backgroundColor: C.surface, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   label: { marginTop: 8, fontSize: 11, fontFamily: F.label, letterSpacing: 1.5, backgroundColor: C.imageBg, paddingHorizontal: 8, borderRadius: 4, overflow: 'hidden' },
 });

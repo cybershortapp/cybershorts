@@ -2,6 +2,7 @@ import { Oswald_500Medium, Oswald_700Bold } from '@expo-google-fonts/oswald';
 import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, useFonts } from '@expo-google-fonts/poppins';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -22,18 +23,16 @@ import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
 import { StoryCard } from './src/components/StoryCard';
 import { buildBrief } from './src/lib/brief';
-import { enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
-import { cleanTerm, getPrefs, usePrefs } from './src/lib/prefs';
+import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
+import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
 import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
-import { C, F } from './src/theme';
+import { F, type Palette, useTheme } from './src/theme';
 
 const PAGE_SIZE = 60;
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
-const BRIEF_KEY = 'last-brief-day';
 const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
-const todayKey = () => new Date().toISOString().slice(0, 10);
 
 const EMPTY_TEXT: Partial<Record<Filter, string>> = {
   'Zero-day': "No zero-days right now. Stay tuned: we'll flag the next one the moment it's reported.",
@@ -55,10 +54,14 @@ function forYouFilter() {
 }
 
 function Main() {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const { savedIds, toggleSaved } = useSaved();
   const prefs = usePrefs();
-  const [view, setView] = useState<'brief' | 'feed' | 'prefs'>('brief');
+  // the app opens straight on the news; the daily brief is one tap away (radar icon)
+  const [view, setView] = useState<'brief' | 'feed' | 'prefs'>('feed');
   const [filter, setFilter] = useState<Filter>('All');
+  const [ready, setReady] = useState(prefsLoaded());
   const [all, setAll] = useState<Story[]>([]); // latest stories, used for the brief and the All view
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,16 +75,25 @@ function Main() {
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
   const prefsKey = filter === 'For you' ? [...prefs.products, ...prefs.terms].join('|') : '';
   const seenBefore = useRef<string | null>(null); // stories newer than this get a NEW tag
+  // each tab remembers its cards and position while the app stays open; cleared on a fresh start
+  const tabMemory = useRef(new Map<Filter, { stories: Story[]; index: number }>());
+  const shownFilter = useRef<Filter | null>(null);
+  const indexRef = useRef(0);
+  const storiesRef = useRef<Story[]>([]);
   const firstLoad = useRef(true);
 
-  // brief shows on the first open of each day
+  // once saved preferences are read: start on "For you" if they follow products, otherwise "All"
   useEffect(() => {
-    AsyncStorage.getItem(BRIEF_KEY)
-      .then((day) => {
-        if (day === todayKey()) setView('feed');
-      })
-      .catch(() => {});
-  }, []);
+    if (ready || !prefsLoaded()) return;
+    if (prefs.products.length + prefs.terms.length > 0) setFilter('For you');
+    setReady(true);
+  }, [prefs, ready]);
+  useEffect(() => {
+    if (!ready && prefsLoaded()) {
+      if (getPrefs().products.length + getPrefs().terms.length > 0) setFilter('For you');
+      setReady(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async (opts?: { markSeen?: boolean }) => {
     if (configMissing) {
@@ -115,10 +127,14 @@ function Main() {
     }
     const rows = (data as Story[]) ?? [];
     lastLoaded.current = Date.now();
-    if (opts?.markSeen && filter === 'All' && rows.length) {
-      // remember what they've been shown; stories newer than the previous visit get a NEW tag
-      seenBefore.current = await AsyncStorage.getItem(SEEN_KEY).catch(() => null);
-      AsyncStorage.setItem(SEEN_KEY, rows[0].created_at).catch(() => {});
+    if (opts?.markSeen) {
+      // remember the newest story that exists now; anything newer than the previous visit gets a NEW tag
+      const { data: newest } = await supabase.from('stories').select('created_at').order('created_at', { ascending: false }).limit(1);
+      const top = (newest as { created_at: string }[] | null)?.[0]?.created_at;
+      if (top) {
+        seenBefore.current = await AsyncStorage.getItem(SEEN_KEY).catch(() => null);
+        AsyncStorage.setItem(SEEN_KEY, top).catch(() => {});
+      }
     }
     setError(null);
     setStories(rows);
@@ -129,19 +145,76 @@ function Main() {
     setIndex(0);
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+  useEffect(() => {
+    storiesRef.current = stories;
+  }, [stories]);
+
+  // a remembered tab is out of date once its contents change (new bookmark, new products)
+  useEffect(() => {
+    tabMemory.current.delete('Saved');
+  }, [savedIds]);
+  useEffect(() => {
+    tabMemory.current.delete('For you');
+  }, [prefs.products, prefs.terms]);
+
+  // switching tabs: remember where the reader was on the tab they are leaving
+  const changeFilter = useCallback(
+    (f: Filter) => {
+      if (shownFilter.current && storiesRef.current.length) {
+        tabMemory.current.set(shownFilter.current, { stories: storiesRef.current, index: indexRef.current });
+      }
+      setFilter(f);
+    },
+    [],
+  );
 
   useEffect(() => {
+    if (!ready) return;
+    const tabChanged = shownFilter.current !== filter;
+    shownFilter.current = filter;
+    const saved = tabChanged ? tabMemory.current.get(filter) : undefined;
+    if (saved) {
+      // back to a tab visited earlier: same cards, same position, no reload
+      setStories(saved.stories);
+      setIndex(saved.index);
+      setLoading(false);
+      setTimeout(() => listRef.current?.scrollToIndex({ index: saved.index, animated: false }), 0);
+      return;
+    }
     setLoading(true);
     toTop();
     const markSeen = firstLoad.current;
     firstLoad.current = false;
     load({ markSeen }).finally(() => setLoading(false));
-  }, [load]);
+  }, [load, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // first open only: after a moment, Android asks "Allow CyberSid to send notifications?"
+  useEffect(() => {
+    if (!ready || getPrefs().alertsAsked || !alertsAvailable) return;
+    const t = setTimeout(() => enableAlerts(), 2500);
+    return () => clearTimeout(t);
+  }, [ready]);
+
+  // the brief needs the latest stories even when the reader is on another tab
+  useEffect(() => {
+    if (view !== 'brief' || all.length) return;
+    supabase
+      .from('stories')
+      .select(STORY_FIELDS)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE)
+      .then(({ data }) => data && setAll(data as Story[]));
+  }, [view, all.length]);
 
   // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && Date.now() - lastLoaded.current > REFRESH_AFTER_MS) {
+        // away 5+ minutes: every tab starts fresh, newest first
+        tabMemory.current.clear();
         load({ markSeen: true }).then(toTop);
       }
     });
@@ -154,7 +227,7 @@ function Main() {
     return onAlertTapped(async (id) => {
       pendingJump.current = id;
       setView('feed');
-      setFilter('All');
+      changeFilter('All');
       const { data } = await supabase.from('stories').select(STORY_FIELDS).eq('id', id).maybeSingle();
       if (data) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [data as Story, ...cur]));
     });
@@ -163,10 +236,8 @@ function Main() {
   const brief = useMemo(() => buildBrief(all), [all]);
 
   const openFeed = (story?: Story) => {
-    AsyncStorage.setItem(BRIEF_KEY, todayKey()).catch(() => {});
-    if (!getPrefs().alertsAsked) enableAlerts(); // first time only: Android asks "Allow CyberSid to send notifications?"
     pendingJump.current = story?.id ?? null;
-    if (filter !== 'All') setFilter('All');
+    if (filter !== 'All') changeFilter('All');
     setView('feed');
   };
 
@@ -191,6 +262,7 @@ function Main() {
   const onRefresh = async () => {
     setRefreshing(true);
     await load();
+    toTop();
     setRefreshing(false);
   };
 
@@ -230,7 +302,7 @@ function Main() {
       </View>
     );
   } else if (view === 'prefs') {
-    content = <Preferences onDone={() => { setView('feed'); if (prefs.products.length + prefs.terms.length) setFilter('For you'); }} />;
+    content = <Preferences onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
   } else if (view === 'brief') {
     content = <BriefScreen brief={brief} onOpen={openFeed} />;
   } else if (stories.length === 0) {
@@ -268,7 +340,7 @@ function Main() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         getItemLayout={(_, i) => ({ length: pageHeight, offset: pageHeight * i, index: i })}
         onScrollToIndexFailed={() => {}}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.brand]} progressBackgroundColor={C.white} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.brand]} progressBackgroundColor={C.surface} />}
       />
     );
   }
@@ -281,7 +353,7 @@ function Main() {
         onPrefs={() => setView('prefs')}
         hasPrefs={prefs.products.length + prefs.terms.length > 0}
         filter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={changeFilter}
         counter={counter}
       />
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
@@ -291,21 +363,35 @@ function Main() {
   );
 }
 
+// keep the splash screen up until the logo fonts are ready, so text is never measured with the wrong font
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function App() {
-  // logo font (Poppins) + chain screen font (Oswald); the app still works with the normal font while they load
-  useFonts({ Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Oswald_500Medium, Oswald_700Bold });
+  const [fontsLoaded, fontError] = useFonts({ Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Oswald_500Medium, Oswald_700Bold });
+  const [timedOut, setTimedOut] = useState(false);
+  const C = useTheme();
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000); // never wait more than 3 seconds
+    return () => clearTimeout(t);
+  }, []);
+  const ready = fontsLoaded || !!fontError || timedOut;
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+  if (!ready) return null;
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
+    <SafeAreaProvider style={{ backgroundColor: C.bg }}>
+      <StatusBar style={C.dark ? 'light' : 'dark'} />
       <Main />
     </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   feed: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted },
-  retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.white },
+  retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
 });

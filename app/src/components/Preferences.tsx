@@ -1,19 +1,22 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
-import { disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
+import { alertsAvailable, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
 import { supabase } from '../lib/supabase';
-import { C, F } from '../theme';
+import { F, type Palette, setThemeChoice, type ThemeChoice, useTheme, useThemeChoice } from '../theme';
 
 const POPULAR = ['Microsoft Defender', 'Mimecast', 'Microsoft 365', 'Windows', 'Fortinet', 'Cisco', 'Okta', 'Google Chrome', 'VMware ESXi', 'Citrix NetScaler'];
 
 type Props = { onDone: () => void };
 
 export function Preferences({ onDone }: Props) {
+  const C = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const prefs = usePrefs();
+  const themeChoice = useThemeChoice();
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const w = Math.min(width - (isTablet ? 48 : 24), 680);
@@ -60,13 +63,20 @@ export function Preferences({ onDone }: Props) {
   };
   const remove = (x: string) => save(prefs.products.filter((p) => p !== x), prefs.terms.filter((t) => t !== x));
 
+  const [blocked, setBlocked] = useState(false);
+  // the switch always keeps the reader's choice; if Android has blocked notifications we offer the settings page
   const toggleAlerts = async (on: boolean) => {
-    if (on) {
-      setPrefs({ alerts: true });
-      const ok = await enableAlerts();
-      if (!ok) setPrefs({ alerts: false });
-    } else {
+    setBlocked(false);
+    if (!on) {
       await disableAlerts();
+      return;
+    }
+    setPrefs({ alerts: true });
+    if (!alertsAvailable) return; // test preview: remembered, works in the installed app
+    const ok = await enableAlerts();
+    if (!ok) {
+      setPrefs({ alerts: true });
+      setBlocked(true);
     }
   };
 
@@ -173,11 +183,44 @@ export function Preferences({ onDone }: Props) {
                 At most one an hour: your products first, then the most serious news. Quiet from 10pm to 7am unless it's critical.
               </Text>
             </View>
-            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.white} />
+            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
+          </View>
+          {!alertsAvailable && (
+            <Text style={[styles.note, { color: C.muted }]}>Alerts work in the installed app, not in this test preview.</Text>
+          )}
+          {blocked && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={[styles.note, { color: C.danger, marginTop: 0 }]}>Notifications are turned off for CyberSid in your phone settings.</Text>
+              <Pressable onPress={() => Linking.openSettings()} style={[styles.btn, { marginTop: 8 }]}>
+                <Text style={{ color: C.onBrand, fontFamily: F.label, fontSize: 14.5 * s }}>Open phone settings</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
+        {/* 3. appearance */}
+        <View style={styles.panel}>
+          <Text style={[styles.h, { fontSize: 16 * s }]}>Appearance</Text>
+          <View style={styles.segment}>
+            {(['system', 'light', 'dark'] as ThemeChoice[]).map((t) => {
+              const on = themeChoice === t;
+              return (
+                <Pressable key={t} onPress={() => setThemeChoice(t)} style={[styles.segBtn, on && { backgroundColor: C.brand }]} accessibilityState={{ selected: on }}>
+                  <MaterialCommunityIcons
+                    name={t === 'system' ? 'cellphone' : t === 'light' ? 'white-balance-sunny' : 'weather-night'}
+                    size={16}
+                    color={on ? C.onBrand : C.body}
+                  />
+                  <Text style={{ color: on ? C.onBrand : C.body, fontFamily: on ? F.label : F.medium, fontSize: 13.5 * s }}>
+                    {t === 'system' ? 'Phone' : t === 'light' ? 'Light' : 'Dark'}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
-        {/* 3. email */}
+        {/* 4. email */}
         <View style={styles.panel}>
           <Text style={[styles.h, { fontSize: 16 * s }]}>Daily email</Text>
           <Text style={[styles.p, { fontSize: 13.5 * s }]}>
@@ -212,7 +255,7 @@ export function Preferences({ onDone }: Props) {
           {emailState === 'sent' && (
             <Text style={[styles.note, { color: C.brandText }]}>Check your inbox and tap the link to confirm. Emails start after that.</Text>
           )}
-          {emailState === 'error' && <Text style={[styles.note, { color: '#C62F2E' }]}>That email doesn't look right, or you're offline. Please try again.</Text>}
+          {emailState === 'error' && <Text style={[styles.note, { color: C.danger }]}>That email doesn't look right, or you're offline. Please try again.</Text>}
         </View>
 
         <Text style={[styles.small, { textAlign: 'center', marginTop: 6 }]}>
@@ -223,11 +266,12 @@ export function Preferences({ onDone }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: Palette) =>
+  StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 },
   title: { fontFamily: F.brand, color: C.text },
   done: { backgroundColor: C.brand, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7 },
-  panel: { backgroundColor: C.white, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 12 },
+  panel: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 12 },
   h: { fontFamily: F.head, color: C.text },
   p: { color: C.body, lineHeight: 20, marginTop: 4 },
   small: { color: C.muted, fontFamily: F.label, fontSize: 12, letterSpacing: 0.8, marginTop: 14 },
@@ -241,4 +285,6 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   btn: { marginTop: 10, backgroundColor: C.brand, borderWidth: 1, borderColor: C.brand, borderRadius: 12, alignItems: 'center', paddingVertical: 12 },
   note: { fontSize: 13, marginTop: 8, lineHeight: 18 },
+  segment: { flexDirection: 'row', gap: 6, marginTop: 12, backgroundColor: C.card, borderRadius: 12, padding: 4, borderWidth: 1, borderColor: C.border },
+  segBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 9 },
 });
