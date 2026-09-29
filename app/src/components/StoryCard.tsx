@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { memo, useEffect, useRef, useState, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
@@ -36,7 +36,6 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
   const [sheet, setSheet] = useState<null | 'report'>(null);
-  const [chainOpen, setChainOpen] = useState(false);
   // the chain page is only built when the reader opens it (tap CHAIN or swipe), so scrolling stays fast
   const [chainReady, setChainReady] = useState(false);
   const aiImage = !!story.image_url && story.image_url.includes('/object/public/covers/');
@@ -103,15 +102,20 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   }, [active, hasChain, chainReady]);
 
   const openArticle = () => Linking.openURL(story.url);
+  const slide = () => pager.current?.scrollToEnd({ animated: true });
   const showChain = () => {
+    if (chainReady) {
+      slide();
+      return;
+    }
+    // not built yet: build it first, then slide across once it's drawn (smooth, no half-drawn page)
     setChainReady(true);
-    pager.current?.scrollToEnd({ animated: true });
-    setChainOpen(true);
+    requestAnimationFrame(() => requestAnimationFrame(slide));
   };
-  const hideChain = () => {
+  // stable, so the finished chain page is never redrawn just because the card changed
+  const hideChain = useCallback(() => {
     pager.current?.scrollTo({ x: 0, animated: true });
-    setChainOpen(false);
-  };
+  }, []);
   const share = () =>
     Share.share({
       message:
@@ -266,14 +270,12 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               showsHorizontalScrollIndicator={false}
               nestedScrollEnabled
               directionalLockEnabled
-              scrollEventThrottle={64}
               onScrollBeginDrag={() => setChainReady(true)}
-              onScroll={(e) => setChainOpen(e.nativeEvent.contentOffset.x > L.cardWidth / 2)}
             >
               {cardFace}
               <View style={{ width: L.cardWidth, flex: 1 }}>
                 {chainReady ? (
-                  <AttackChain story={story} scale={scale} width={L.cardWidth} visible={chainOpen} onBack={hideChain} />
+                  <AttackChain story={story} scale={scale} width={L.cardWidth} onBack={hideChain} />
                 ) : (
                   <View style={{ flex: 1, backgroundColor: '#221C1D' }} />
                 )}

@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
-import { alertsAvailable, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
+import { alertsAvailable, alertsConnected, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
 import { supabase } from '../lib/supabase';
@@ -64,6 +64,20 @@ export function Preferences({ onDone }: Props) {
   const remove = (x: string) => save(prefs.products.filter((p) => p !== x), prefs.terms.filter((t) => t !== x));
 
   const [blocked, setBlocked] = useState(false);
+  const [connected, setConnected] = useState(alertsConnected());
+  // opening Preferences: make sure this phone is connected (asks once if Android needs permission)
+  useEffect(() => {
+    if (!alertsAvailable || !prefs.alerts) return;
+    let live = true;
+    enableAlerts().then((t) => {
+      if (!live) return;
+      setConnected(!!t);
+      if (!t) setBlocked(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, [prefs.alerts]);
   // the switch always keeps the reader's choice; if Android has blocked notifications we offer the settings page
   const toggleAlerts = async (on: boolean) => {
     setBlocked(false);
@@ -74,6 +88,7 @@ export function Preferences({ onDone }: Props) {
     setPrefs({ alerts: true });
     if (!alertsAvailable) return; // test preview: remembered, works in the installed app
     const ok = await enableAlerts();
+    setConnected(!!ok);
     if (!ok) {
       setPrefs({ alerts: true });
       setBlocked(true);
@@ -185,6 +200,14 @@ export function Preferences({ onDone }: Props) {
             </View>
             <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
           </View>
+          {alertsAvailable && prefs.alerts && !blocked && (
+            <View style={[styles.statusRow, { backgroundColor: connected ? C.imageBg : C.card }]}>
+              <MaterialCommunityIcons name={connected ? 'check-circle' : 'progress-clock'} size={16} color={connected ? C.brand : C.muted} />
+              <Text style={{ color: connected ? C.brandText : C.muted, fontSize: 13 * s, flex: 1 }}>
+                {connected ? 'This phone is set up for alerts.' : 'Connecting this phone for alerts...'}
+              </Text>
+            </View>
+          )}
           {!alertsAvailable && (
             <Text style={[styles.note, { color: C.muted }]}>Alerts work in the installed app, not in this test preview.</Text>
           )}
@@ -285,6 +308,7 @@ const makeStyles = (C: Palette) =>
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   btn: { marginTop: 10, backgroundColor: C.brand, borderWidth: 1, borderColor: C.brand, borderRadius: 12, alignItems: 'center', paddingVertical: 12 },
   note: { fontSize: 13, marginTop: 8, lineHeight: 18 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, marginTop: 10 },
   segment: { flexDirection: 'row', gap: 6, marginTop: 12, backgroundColor: C.card, borderRadius: 12, padding: 4, borderWidth: 1, borderColor: C.border },
   segBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 9 },
 });

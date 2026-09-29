@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { memo, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { memo, useEffect, useState } from 'react';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { chainLink } from '../lib/actions';
 import { supabase } from '../lib/supabase';
@@ -8,7 +8,7 @@ import type { ChainStep, Story, ThreatGroup } from '../lib/types';
 import { F } from '../theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-type Props = { story: Story; scale: number; width: number; visible: boolean; onBack: () => void };
+type Props = { story: Story; scale: number; width: number; onBack: () => void };
 
 /** Red and charcoal incident board. Built from plain views only (no measuring, no SVG) so it opens instantly. */
 const K = {
@@ -79,8 +79,8 @@ function AttackPath({ steps, s }: { steps: ChainStep[]; s: number }) {
   return <View style={[styles.row, { alignItems: 'center', paddingVertical: 4 }]}>{out}</View>;
 }
 
-function StepRow({ step, index, last, s, anim, articleUrl }: {
-  step: ChainStep; index: number; last: boolean; s: number; anim: Animated.Value; articleUrl: string;
+function StepRow({ step, index, last, s, articleUrl }: {
+  step: ChainStep; index: number; last: boolean; s: number; articleUrl: string;
 }) {
   const hot = HOT.has(step.stage);
   const mitre = chainLink(step);
@@ -89,7 +89,7 @@ function StepRow({ step, index, last, s, anim, articleUrl }: {
   const node = 40 * s;
 
   return (
-    <Animated.View style={[styles.row, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
+    <View style={styles.row}>
       {/* left rail: numbered node, then the chain down to the next step */}
       <View style={{ width: 52 * s, alignItems: 'center' }}>
         <View style={[styles.node, { width: node, height: node, borderRadius: node / 2, backgroundColor: hot ? K.red : K.bg }]}>
@@ -119,7 +119,7 @@ function StepRow({ step, index, last, s, anim, articleUrl }: {
           )}
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -183,23 +183,11 @@ function Fact({ icon, label, value, s }: { icon: IconName; label: string; value:
   );
 }
 
-export function AttackChain({ story, scale: s, visible, onBack }: Props) {
+/** Drawn once, fully, with no animations: it is ready the moment the reader slides across. */
+export const AttackChain = memo(function AttackChain({ story, scale: s, onBack }: Props) {
   const steps = story.attack_chain ?? [];
   const inc = story.incident ?? {};
-  const anims = useRef(steps.map(() => new Animated.Value(0))).current;
   const target = [inc.victim, inc.victim_country].filter(Boolean).join(', ');
-
-  // steps appear one after another, on the native thread so it stays smooth
-  useEffect(() => {
-    if (!visible) {
-      anims.forEach((a) => a.setValue(0));
-      return;
-    }
-    Animated.stagger(
-      110,
-      anims.map((a) => Animated.timing(a, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true })),
-    ).start();
-  }, [visible, anims]);
 
   return (
     <View style={{ flex: 1, backgroundColor: K.bg }}>
@@ -232,7 +220,7 @@ export function AttackChain({ story, scale: s, visible, onBack }: Props) {
         <View style={[styles.divider, { marginVertical: 18 * s }]} />
 
         {steps.map((step, i) => (
-          <StepRow key={i} step={step} index={i} last={i === steps.length - 1} s={s} anim={anims[i] ?? new Animated.Value(1)} articleUrl={story.url} />
+          <StepRow key={i} step={step} index={i} last={i === steps.length - 1} s={s} articleUrl={story.url} />
         ))}
 
         {inc.researched && (
@@ -249,7 +237,7 @@ export function AttackChain({ story, scale: s, visible, onBack }: Props) {
       </ScrollView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingTop: 14, paddingBottom: 10 },

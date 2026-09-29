@@ -28,6 +28,11 @@ function notif(): NotificationsModule | null {
 
 export const alertsAvailable = supported;
 
+/** True once this phone has its push address and is on our alert list. */
+export function alertsConnected() {
+  return !!token && getPrefs().alerts;
+}
+
 async function channel(n: NotificationsModule) {
   if (Platform.OS === 'android') {
     await n.setNotificationChannelAsync('news', {
