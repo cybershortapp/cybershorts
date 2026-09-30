@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
-import { alertsAvailable, alertsConnected, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
+import { alertsAvailable, alertsConnected, alertsProblem, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
 import { supabase } from '../lib/supabase';
@@ -64,35 +64,33 @@ export function Preferences({ onDone }: Props) {
   const remove = (x: string) => save(prefs.products.filter((p) => p !== x), prefs.terms.filter((t) => t !== x));
 
   const [blocked, setBlocked] = useState(false);
+  const [problem, setProblem] = useState('');
   const [connected, setConnected] = useState(alertsConnected());
+  const connect = async () => {
+    setBlocked(false);
+    setProblem('');
+    const t = await enableAlerts();
+    setConnected(!!t);
+    if (!t) {
+      const why = alertsProblem();
+      if (why === 'blocked') setBlocked(true);
+      else setProblem(why || 'Could not connect this phone for alerts.');
+    }
+  };
   // opening Preferences: make sure this phone is connected (asks once if Android needs permission)
   useEffect(() => {
     if (!alertsAvailable || !prefs.alerts) return;
-    let live = true;
-    enableAlerts().then((t) => {
-      if (!live) return;
-      setConnected(!!t);
-      if (!t) setBlocked(true);
-    });
-    return () => {
-      live = false;
-    };
+    connect();
   }, [prefs.alerts]);
   // the switch always keeps the reader's choice; if Android has blocked notifications we offer the settings page
   const toggleAlerts = async (on: boolean) => {
     setBlocked(false);
+    setProblem('');
     if (!on) {
       await disableAlerts();
       return;
     }
-    setPrefs({ alerts: true });
-    if (!alertsAvailable) return; // test preview: remembered, works in the installed app
-    const ok = await enableAlerts();
-    setConnected(!!ok);
-    if (!ok) {
-      setPrefs({ alerts: true });
-      setBlocked(true);
-    }
+    setPrefs({ alerts: true }); // the effect above then connects this phone
   };
 
   const subscribe = async () => {
@@ -200,12 +198,22 @@ export function Preferences({ onDone }: Props) {
             </View>
             <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
           </View>
-          {alertsAvailable && prefs.alerts && !blocked && (
+          {alertsAvailable && prefs.alerts && !blocked && !problem && (
             <View style={[styles.statusRow, { backgroundColor: connected ? C.imageBg : C.card }]}>
               <MaterialCommunityIcons name={connected ? 'check-circle' : 'progress-clock'} size={16} color={connected ? C.brand : C.muted} />
               <Text style={{ color: connected ? C.brandText : C.muted, fontSize: 13 * s, flex: 1 }}>
                 {connected ? 'This phone is set up for alerts.' : 'Connecting this phone for alerts...'}
               </Text>
+            </View>
+          )}
+          {!!problem && prefs.alerts && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={[styles.note, { color: C.danger, marginTop: 0 }]} selectable>
+                Alerts not connected. {problem}
+              </Text>
+              <Pressable onPress={connect} style={[styles.btn, { marginTop: 8 }]}>
+                <Text style={{ color: C.onBrand, fontFamily: F.label, fontSize: 14.5 * s }}>Try again</Text>
+              </Pressable>
             </View>
           )}
           {!alertsAvailable && (

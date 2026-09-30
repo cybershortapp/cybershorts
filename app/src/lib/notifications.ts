@@ -13,6 +13,9 @@ const inExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreCl
 const supported = (Platform.OS === 'android' || Platform.OS === 'ios') && !inExpoGo;
 let N: NotificationsModule | null = null;
 let token: string | null = null;
+// the last reason alerts could not be set up, shown in Preferences so problems are never silent
+let problem = '';
+export const alertsProblem = () => problem;
 
 function notif(): NotificationsModule | null {
   if (!supported) return null;
@@ -46,37 +49,57 @@ async function channel(n: NotificationsModule) {
 /** Ask permission (once) and get this phone's push address. Returns null if not allowed. */
 export async function enableAlerts(): Promise<string | null> {
   const n = notif();
-  if (!n || !Device.isDevice) return null;
+  if (!n) return null;
+  if (!Device.isDevice) {
+    problem = 'Alerts need a real phone, not an emulator.';
+    return null;
+  }
+  problem = '';
   try {
     await channel(n);
     let { status } = await n.getPermissionsAsync();
     if (status !== 'granted') status = (await n.requestPermissionsAsync()).status;
     setPrefs({ alertsAsked: true });
     if (status !== 'granted') {
-      setPrefs({ alerts: false });
+      problem = 'blocked';
       return null;
     }
     const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-    token = (await n.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data;
-    await syncAlerts();
-    return token;
-  } catch {
+    if (!projectId) {
+      problem = 'App setup: no EAS project ID in this build.';
+      return null;
+    }
+    try {
+      token = (await n.getExpoPushTokenAsync({ projectId })).data;
+    } catch (e) {
+      problem = 'Could not get a push address: ' + String((e as Error)?.message ?? e).slice(0, 160);
+      return null;
+    }
+    const ok = await syncAlerts();
+    return ok ? token : null;
+  } catch (e) {
+    problem = String((e as Error)?.message ?? e).slice(0, 160);
     return null;
   }
 }
 
 /** Send the current preferences to our server, so alerts match what the reader follows. */
-export async function syncAlerts() {
-  if (!token) return;
+export async function syncAlerts(): Promise<boolean> {
+  if (!token) return false;
   const p = getPrefs();
   try {
-    if (p.alerts) {
-      await supabase.rpc('register_device', { p_token: token, p_products: p.products, p_terms: p.terms, p_alerts: true });
-    } else {
-      await supabase.rpc('remove_device', { p_token: token });
+    const { error } = p.alerts
+      ? await supabase.rpc('register_device', { p_token: token, p_products: p.products, p_terms: p.terms, p_alerts: true })
+      : await supabase.rpc('remove_device', { p_token: token });
+    if (error) {
+      problem = 'Server said: ' + error.message.slice(0, 160);
+      return false;
     }
+    return true;
   } catch {
     // no connection: it syncs again next time the app opens
+    problem = 'No connection to the server. It will try again next time the app opens.';
+    return false;
   }
 }
 

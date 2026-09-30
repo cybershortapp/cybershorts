@@ -102,8 +102,13 @@ function Main() {
       setStories([]);
       return;
     }
-    // newest ADDED first, so anything the robot just found is always at the top
-    let query = supabase.from('stories').select(STORY_FIELDS).order('created_at', { ascending: false }).limit(PAGE_SIZE);
+    // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
+    let query = supabase
+      .from('stories')
+      .select(STORY_FIELDS)
+      .order('published_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE);
     if (filter === 'Saved') query = query.in('id', savedIds);
     else if (filter === 'Critical') query = query.eq('severity', 'Critical');
     else if (filter === 'Zero-day') query = query.eq('zero_day', true);

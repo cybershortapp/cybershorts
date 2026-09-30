@@ -402,7 +402,9 @@ def article_image(link):
 
 def published_of(entry):
     t = entry.get("published_parsed") or entry.get("updated_parsed")
-    return datetime(*t[:6], tzinfo=timezone.utc) if t else datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    # a few sites put future dates on posts; never let one sit on top of the feed
+    return min(datetime(*t[:6], tzinfo=timezone.utc), now) if t else now
 
 
 def summarise_ai(client, title, excerpt):
