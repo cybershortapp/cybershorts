@@ -1049,6 +1049,14 @@ if __name__ == "__main__":
         update_groups()
     elif "--cves" in sys.argv:
         backfill_cves()
+    elif "--test-alert" in sys.argv:
+        from supabase import create_client
+        from notify import test_alert
+        test_alert(create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"]))
+    elif "--test-email" in sys.argv:
+        from supabase import create_client
+        from mailer import run_email
+        print("\nEmail: " + run_email(create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"]), force=True) + "\n")
     elif "--tag" in sys.argv:
         backfill_tags()
     elif "--dedupe" in sys.argv:

@@ -92,7 +92,7 @@ def send_alerts(db):
         if story:
             messages.append(_message(d["token"], story, hit))
 
-    sent, gone = [], []
+    sent, gone, problems = [], [], []
     for i in range(0, len(messages), 100):
         batch = messages[i:i + 100]
         try:
@@ -104,10 +104,56 @@ def send_alerts(db):
                 sent.append(m["to"])
             elif (t.get("details") or {}).get("error") == "DeviceNotRegistered":
                 gone.append(m["to"])
+            else:
+                problems.append(f"{(t.get('details') or {}).get('error', '')} {t.get('message', '')}".strip()[:120])
 
     for i in range(0, len(sent), 100):
         db.table("devices").update({"last_push_at": now.isoformat()}).in_("token", sent[i:i + 100]).execute()
     for i in range(0, len(gone), 100):
         db.table("devices").delete().in_("token", gone[i:i + 100]).execute()
     return f"{len(sent)} sent to {len(devices)} phones" + (" (quiet hours)" if quiet else "") + \
-        (f", {len(gone)} uninstalled phones removed" if gone else "")
+        (f", {len(gone)} uninstalled phones removed" if gone else "") + \
+        (f", problems: {' | '.join(dict.fromkeys(problems))}" if problems else "") + \
+        ("" if messages or not devices else ", nothing new worth an alert this hour")
+
+
+def _receipts(ids):
+    req = urllib.request.Request("https://exp.host/--/api/v2/push/getReceipts", data=json.dumps({"ids": ids}).encode(),
+                                 method="POST", headers={"Accept": "application/json", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read()).get("data") or {}
+
+
+def test_alert(db):
+    """Send one test alert to every registered phone right now, then check Google actually delivered it.
+    Run: python pipeline.py --test-alert"""
+    import time
+    devices = db.table("devices").select("token,alerts,updated_at").execute().data
+    print(f"\n=== Test alert: {len(devices)} phone(s) registered ===")
+    for d in devices:
+        print(f"  phone ...{d['token'][-10:]}  alerts on: {d['alerts']}  last updated: {str(d.get('updated_at'))[:16]}")
+    if not devices:
+        print("\nNo phones registered. Open CyberSid, go to Preferences, and check the Phone alerts status line.\n")
+        return
+    story = (db.table("stories").select("id,headline").order("created_at", desc=True).limit(1).execute().data or [{}])[0]
+    msgs = [{"to": d["token"], "title": "CyberSid test alert", "body": "If you can read this, alerts work. Tap to open the latest story.",
+             "sound": "default", "channelId": "news", "priority": "high", "data": {"storyId": story.get("id")}} for d in devices]
+    tickets = _post(msgs)
+    ids = []
+    for m, t in zip(msgs, tickets):
+        tail = m["to"][-10:]
+        if t.get("status") == "ok":
+            ids.append(t["id"])
+            print(f"  ...{tail}: accepted by Expo")
+        else:
+            print(f"  ...{tail}: REFUSED by Expo: {t.get('message')} {(t.get('details') or {}).get('error', '')}")
+    if not ids:
+        return
+    print("\nWaiting 15 seconds, then asking Google whether it was delivered...")
+    time.sleep(15)
+    for tid, rc in _receipts(ids).items():
+        if rc.get("status") == "ok":
+            print("  Delivered to Google OK. The phone should show it now.")
+        else:
+            print(f"  NOT delivered: {rc.get('message')}  [{(rc.get('details') or {}).get('error', '')}]")
+    print()

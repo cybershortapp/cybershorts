@@ -45,8 +45,9 @@ export type Story = {
   zero_day: boolean | null;
 };
 
-export const FILTERS = ['For you', 'All', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'Saved'] as const;
-export type Filter = (typeof FILTERS)[number];
+// the tabs along the top; Saved has its own bookmark button in the header instead
+export const FILTERS = ['For you', 'All', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy'] as const;
+export type Filter = (typeof FILTERS)[number] | 'Saved';
 
 export const STORY_FIELDS =
   'id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,incident,actor_group,category,image_url,published_at,created_at,products,zero_day';

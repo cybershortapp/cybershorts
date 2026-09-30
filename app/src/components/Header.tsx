@@ -8,8 +8,8 @@ import { F, type Palette, tabColour, useTheme } from '../theme';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type Props = {
-  view: 'brief' | 'feed' | 'prefs';
-  onBrief: () => void;
+  view: 'feed' | 'prefs';
+  onSaved: () => void;
   onPrefs: () => void;
   hasPrefs: boolean;
   filter: Filter;
@@ -24,7 +24,7 @@ const TAB_ICON: Partial<Record<Filter, IconName>> = {
   Saved: 'bookmark',
 };
 
-export function Header({ view, onBrief, onPrefs, hasPrefs, filter, onFilterChange, counter }: Props) {
+export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChange, counter }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
@@ -50,11 +50,14 @@ export function Header({ view, onBrief, onPrefs, hasPrefs, filter, onFilterChang
               {counter}
             </Text>
           )}
-          {view !== 'prefs' && (
-            <Pressable onPress={onBrief} hitSlop={8} style={[styles.iconBtn, view === 'brief' && styles.iconOn]} accessibilityLabel="Today's brief">
-              <MaterialCommunityIcons name="radar" size={17 * k} color={view === 'brief' ? C.onBrand : C.brandDark} />
-            </Pressable>
-          )}
+          {(() => {
+            const on = view === 'feed' && filter === 'Saved';
+            return (
+              <Pressable onPress={onSaved} hitSlop={8} style={[styles.iconBtn, on && styles.iconOn]} accessibilityLabel="Saved stories">
+                <MaterialCommunityIcons name={on ? 'bookmark' : 'bookmark-outline'} size={17 * k} color={on ? C.onBrand : C.brandDark} />
+              </Pressable>
+            );
+          })()}
           <Pressable onPress={onPrefs} hitSlop={8} style={[styles.iconBtn, view === 'prefs' && styles.iconOn]} accessibilityLabel="Preferences">
             <MaterialCommunityIcons name="tune-variant" size={17 * k} color={view === 'prefs' ? C.onBrand : C.brandDark} />
           </Pressable>

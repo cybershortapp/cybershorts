@@ -18,11 +18,9 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { BriefScreen } from './src/components/BriefScreen';
 import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
 import { StoryCard } from './src/components/StoryCard';
-import { buildBrief } from './src/lib/brief';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { useSaved } from './src/lib/saved';
@@ -58,11 +56,10 @@ function Main() {
   const styles = useMemo(() => makeStyles(C), [C]);
   const { savedIds, toggleSaved } = useSaved();
   const prefs = usePrefs();
-  // the app opens straight on the news; the daily brief is one tap away (radar icon)
-  const [view, setView] = useState<'brief' | 'feed' | 'prefs'>('feed');
+  // the app opens straight on the news
+  const [view, setView] = useState<'feed' | 'prefs'>('feed');
   const [filter, setFilter] = useState<Filter>('All');
   const [ready, setReady] = useState(prefsLoaded());
-  const [all, setAll] = useState<Story[]>([]); // latest stories, used for the brief and the All view
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -138,7 +135,6 @@ function Main() {
     }
     setError(null);
     setStories(rows);
-    if (filter === 'All') setAll(rows);
   }, [filter, savedKey, prefsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toTop = () => {
@@ -198,16 +194,6 @@ function Main() {
     return () => clearTimeout(t);
   }, [ready]);
 
-  // the brief needs the latest stories even when the reader is on another tab
-  useEffect(() => {
-    if (view !== 'brief' || all.length) return;
-    supabase
-      .from('stories')
-      .select(STORY_FIELDS)
-      .order('created_at', { ascending: false })
-      .limit(PAGE_SIZE)
-      .then(({ data }) => data && setAll(data as Story[]));
-  }, [view, all.length]);
 
   // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
   useEffect(() => {
@@ -233,13 +219,6 @@ function Main() {
     });
   }, []);
 
-  const brief = useMemo(() => buildBrief(all), [all]);
-
-  const openFeed = (story?: Story) => {
-    pendingJump.current = story?.id ?? null;
-    if (filter !== 'All') changeFilter('All');
-    setView('feed');
-  };
 
   // jump to the story picked in the brief once the feed is on screen
   useEffect(() => {
@@ -303,8 +282,6 @@ function Main() {
     );
   } else if (view === 'prefs') {
     content = <Preferences onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
-  } else if (view === 'brief') {
-    content = <BriefScreen brief={brief} onOpen={openFeed} />;
   } else if (stories.length === 0) {
     const noPrefs = filter === 'For you' && prefs.products.length + prefs.terms.length === 0;
     content = (
@@ -349,7 +326,12 @@ function Main() {
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <Header
         view={view}
-        onBrief={() => setView('brief')}
+        onSaved={() => {
+          setView('feed');
+          // tap again to leave Saved and go back to the news
+          if (filter === 'Saved') changeFilter(prefs.products.length + prefs.terms.length ? 'For you' : 'All');
+          else changeFilter('Saved');
+        }}
         onPrefs={() => setView('prefs')}
         hasPrefs={prefs.products.length + prefs.terms.length > 0}
         filter={filter}

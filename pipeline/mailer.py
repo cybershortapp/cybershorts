@@ -97,9 +97,11 @@ def _item(s, hit=None):
             f'<div style="color:#7A8197;font-size:12px;margin-top:3px">{html.escape(s["source"])}</div></div>')
 
 
-def send_digests(db, mailer):
+def send_digests(db, mailer, force=False):
     now = datetime.now(timezone.utc)
-    if now.astimezone(ZoneInfo("Europe/London")).hour != DIGEST_HOUR:
+    uk_hour = now.astimezone(ZoneInfo("Europe/London")).hour
+    # the first run at or after 8am sends it (GitHub's hourly timer is often late, so never rely on one exact hour)
+    if not force and not (DIGEST_HOUR <= uk_hour < 21):
         return 0
     stories = (db.table("stories").select("id,headline,technical,why_it_matters,severity,products,source,url")
                .gte("created_at", (now - timedelta(hours=24)).isoformat()).order("created_at", desc=True)
@@ -111,7 +113,7 @@ def send_digests(db, mailer):
     sent = 0
     for sub in subs:
         last = sub.get("last_sent_at")
-        if last and now - datetime.fromisoformat(last.replace("Z", "+00:00")) < timedelta(hours=20):
+        if not force and last and now - datetime.fromisoformat(last.replace("Z", "+00:00")) < timedelta(hours=20):
             continue
         mine, top = _digest_for(sub, stories)
         if not mine and not top:
@@ -135,13 +137,13 @@ def send_digests(db, mailer):
     return sent
 
 
-def run_email(db):
+def run_email(db, force=False):
     mailer = Mailer()
     if not mailer.ready:
         return "off (no SMTP_USER / SMTP_PASS)"
     try:
         c = send_confirmations(db, mailer)
-        d = send_digests(db, mailer)
+        d = send_digests(db, mailer, force)
         return f"{c} confirmations, {d} digests"
     finally:
         mailer.close()

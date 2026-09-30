@@ -38,6 +38,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const [sheet, setSheet] = useState<null | 'report'>(null);
   // the chain page is only built when the reader opens it (tap CHAIN or swipe), so scrolling stays fast
   const [chainReady, setChainReady] = useState(false);
+  const [bodyLines, setBodyLines] = useState(6);
   const aiImage = !!story.image_url && story.image_url.includes('/object/public/covers/');
   const [reportState, setReportState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   const action = actionFor(story);
@@ -185,19 +186,24 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         </Text>
 
         <Pressable onPress={openArticle}>
-          <Text style={{ color: C.text, fontFamily: F.head, fontSize: L.headlineSize, lineHeight: L.headlineLine, marginVertical: L.pad * 0.5 }}>
+          <Text numberOfLines={4} style={{ color: C.text, fontFamily: F.head, fontSize: L.headlineSize, lineHeight: L.headlineLine, marginVertical: L.pad * 0.5 }}>
             {story.headline}
           </Text>
         </Pressable>
 
-        <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }}>{story.technical}</Text>
+        {/* the summary gets whatever space is left and ends with "..." if it doesn't fit,
+            so it can never push the buttons below over each other (big-text phones, iPhones) */}
+        <View style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / L.bodyLine)))}>
+          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }} numberOfLines={bodyLines} ellipsizeMode="tail">
+            {story.technical}
+          </Text>
+        </View>
 
-        <View style={{ flexGrow: 1, minHeight: 4 }} />
 
         {!!story.why_it_matters && (
           <View style={[styles.why, { padding: L.pad * 0.7, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
             <View style={[styles.whyDot, { marginTop: L.bodyLine / 2 - 4 }]} />
-            <Text style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontWeight: '600', flex: 1 }}>
+            <Text numberOfLines={3} style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontWeight: '600', flex: 1 }}>
               {story.why_it_matters}
             </Text>
           </View>
