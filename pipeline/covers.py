@@ -45,25 +45,40 @@ def cover_prompt(scene, category):
     return STYLE.format(scene=scene)
 
 
-def usable_image(url, min_width=480):
-    """True if the story's own picture loads and is big enough to look good on a card."""
+APP_UA = "okhttp/4.12.0"   # what the Android app's picture loader sends
+PHONE_FORMATS = ("image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif")
+
+
+def image_problem(url, min_width=480):
+    """Why the story's own picture would NOT show well in the app, or None if it's fine.
+    Checks: https, a format every phone can show, big enough, and the site lets an app load it
+    (some sites only serve pictures to browsers coming from their own pages)."""
     if not url:
-        return False
+        return "no picture"
+    if not url.lower().startswith("https://"):
+        return "plain http (Android blocks it)"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": BROWSER_UA, "Accept": "image/*,*/*"})
+        req = urllib.request.Request(url, headers={"User-Agent": APP_UA, "Accept": "image/webp,image/*"})
         with urllib.request.urlopen(req, timeout=8) as r:
-            if not r.headers.get("Content-Type", "image/").lower().startswith("image/"):
-                return False
+            ctype = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if ctype not in PHONE_FORMATS:
+                return f"format {ctype or 'unknown'}"
             data = r.read(600_000)
-        if len(data) < 4000:
-            return False
-        try:
-            w, _ = Image.open(io.BytesIO(data)).size
-            return w >= min_width
-        except Exception:
-            return True   # a format Pillow can't read (e.g. avif) but a real picture: keep it
+    except urllib.error.HTTPError as ex:
+        return f"site refused the app (HTTP {ex.code})"
+    except Exception as ex:
+        return f"could not load ({str(ex)[:40]})"
+    if len(data) < 4000:
+        return "too small"
+    try:
+        w, _ = Image.open(io.BytesIO(data)).size
     except Exception:
-        return False
+        return "not a readable picture"
+    return None if w >= min_width else f"too small ({w}px wide)"
+
+
+def usable_image(url, min_width=480):
+    return image_problem(url, min_width) is None
 
 
 def _finish(raw):

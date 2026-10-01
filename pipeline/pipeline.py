@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 from sources import SOURCES
 from tags import tag_products, is_zero_day
-from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, usable_image
+from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, usable_image
 
 load_dotenv()
 
@@ -965,9 +965,20 @@ def backfill_covers():
     maker = CoverMaker(db)
     limit = int(os.getenv("COVERS_BACKFILL", "40"))
     rows = (db.table("stories").select("id,source,headline,category,image_url")
-            .order("published_at", desc=True).limit(150).execute().data)
-    todo = [r for r in rows if not r["image_url"] or
-            ("/object/public/covers/" not in r["image_url"] and not usable_image(r["image_url"]))]
+            .order("published_at", desc=True).limit(int(os.getenv("COVERS_CHECK", "150"))).execute().data)
+    todo, reasons = [], {}
+    for r in rows:
+        if r["image_url"] and "/object/public/covers/" in r["image_url"]:
+            continue    # already one of our AI pictures
+        why = image_problem(r["image_url"])
+        if why:
+            todo.append(r)
+            key = f"{r['source']}: {why}"
+            reasons[key] = reasons.get(key, 0) + 1
+    if reasons:
+        print("\nPictures that won't show in the app:")
+        for k, n in sorted(reasons.items(), key=lambda x: -x[1]):
+            print(f"  {n:>3} x {k}")
     print(f"\n=== AI pictures: {len(todo)} of the latest {len(rows)} stories need one, making up to {limit} "
           f"({maker.describe()}) ===\n")
     made = 0

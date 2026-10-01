@@ -28,7 +28,8 @@ import { configMissing, supabase } from './src/lib/supabase';
 import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
 import { F, type Palette, useTheme } from './src/theme';
 
-const PAGE_SIZE = 60; // cards fetched at a time; more load automatically as the reader nears the end
+const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are quick
+const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
 const LOAD_MORE_AT = 8; // start fetching the next page this many cards before the end
 const MAX_CARDS = 600; // about 3 weeks of news in one sitting; keeps memory use low
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
@@ -98,14 +99,14 @@ function Main() {
 
   // one page of stories for the current tab, starting at card number `from`
   const pageQuery = useCallback(
-    (from: number) => {
+    (from: number, size = PAGE_SIZE) => {
       // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
       let query = supabase
         .from('stories')
         .select(STORY_FIELDS)
         .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
-        .range(from, from + PAGE_SIZE - 1);
+        .range(from, from + size - 1);
       if (filter === 'Saved') query = query.in('id', savedIds);
       else if (filter === 'Critical') query = query.eq('severity', 'Critical');
       else if (filter === 'Zero-day') query = query.eq('zero_day', true);
@@ -129,7 +130,7 @@ function Main() {
       setStories([]);
       return;
     }
-    const query = pageQuery(0);
+    const query = pageQuery(0, FIRST_PAGE);
     if (!query) {
       setError(null);
       setStories([]);
@@ -142,7 +143,7 @@ function Main() {
     }
     const rows = (data as Story[]) ?? [];
     lastLoaded.current = Date.now();
-    if (rows.length < PAGE_SIZE) noMore.current.add(filter);
+    if (rows.length < FIRST_PAGE) noMore.current.add(filter);
     else noMore.current.delete(filter);
     if (opts?.markSeen) {
       // remember the newest story that exists now; anything newer than the previous visit gets a NEW tag
