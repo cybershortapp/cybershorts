@@ -17,3 +17,5 @@ web-build/
 *.jks
 *.keystore
 credentials.json
+
+pipeline/test-cover.jpg
