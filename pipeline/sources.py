@@ -12,6 +12,8 @@ Removed after the first full test (27 Sep 2026): Security Boulevard, Tripwire an
 automated readers, HTTP 403), Ars Technica and ENISA (feed address gone, 404), Microsoft MSRC and
 Google Threat Intelligence (feed returned no stories). CISA's exploited-vulnerabilities list will be
 read from its official GitHub data instead (Round 2).
+Removed 1 Oct 2026: Sophos News (old blog address times out; Sophos research is covered by the news
+sites) and Australian Cyber Security Centre (times out even with 45s; Australia-only alerts).
 """
 
 def s(name, url, kind="news", test=False, country="GB"):
@@ -30,7 +32,6 @@ SOURCES = [
     s("Troy Hunt", "https://www.troyhunt.com/rss/"),
     s("BBC Technology", "https://feeds.bbci.co.uk/news/technology/rss.xml", "general"),
     s("The Guardian", "https://www.theguardian.com/technology/data-computer-security/rss"),
-    s("Sophos News", "https://news.sophos.com/en-us/feed/", "vendor"),
     s("ESET WeLiveSecurity", "https://www.welivesecurity.com/en/rss/feed/", "vendor"),
 
     # ---- Global security news ----
@@ -77,7 +78,6 @@ SOURCES = [
 
     # ---- Government and CERT alerts ----
     s("Canadian Cyber Centre", "https://www.cyber.gc.ca/api/cccs/rss/v1/get?feed=alerts_advisories&lang=en", "gov"),
-    s("Australian Cyber Security Centre", "https://www.cyber.gov.au/rss/alerts", "gov"),
     s("CERT-EU", "https://cert.europa.eu/publications/security-advisories-rss", "gov"),
 
     # ---- Consumer tech, filtered to cyber stories only ----
