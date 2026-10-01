@@ -28,7 +28,9 @@ import { configMissing, supabase } from './src/lib/supabase';
 import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
 import { F, type Palette, useTheme } from './src/theme';
 
-const PAGE_SIZE = 60;
+const PAGE_SIZE = 60; // cards fetched at a time; more load automatically as the reader nears the end
+const LOAD_MORE_AT = 8; // start fetching the next page this many cards before the end
+const MAX_CARDS = 600; // about 3 weeks of news in one sitting; keeps memory use low
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
 const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
 
@@ -78,6 +80,8 @@ function Main() {
   const indexRef = useRef(0);
   const storiesRef = useRef<Story[]>([]);
   const firstLoad = useRef(true);
+  const loadingMore = useRef(false);
+  const noMore = useRef(new Set<Filter>()); // tabs where every story is already loaded
 
   // once saved preferences are read: start on "For you" if they follow products, otherwise "All"
   useEffect(() => {
@@ -92,6 +96,29 @@ function Main() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // one page of stories for the current tab, starting at card number `from`
+  const pageQuery = useCallback(
+    (from: number) => {
+      // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
+      let query = supabase
+        .from('stories')
+        .select(STORY_FIELDS)
+        .order('published_at', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+      if (filter === 'Saved') query = query.in('id', savedIds);
+      else if (filter === 'Critical') query = query.eq('severity', 'Critical');
+      else if (filter === 'Zero-day') query = query.eq('zero_day', true);
+      else if (filter === 'For you') {
+        const f = forYouFilter();
+        if (!f) return null;
+        query = query.or(f);
+      } else if (filter !== 'All') query = query.eq('category', filter);
+      return query;
+    },
+    [filter, savedKey, prefsKey], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const load = useCallback(async (opts?: { markSeen?: boolean }) => {
     if (configMissing) {
       setError('App settings are missing. Check the .env file in the app folder.');
@@ -102,26 +129,12 @@ function Main() {
       setStories([]);
       return;
     }
-    // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
-    let query = supabase
-      .from('stories')
-      .select(STORY_FIELDS)
-      .order('published_at', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(PAGE_SIZE);
-    if (filter === 'Saved') query = query.in('id', savedIds);
-    else if (filter === 'Critical') query = query.eq('severity', 'Critical');
-    else if (filter === 'Zero-day') query = query.eq('zero_day', true);
-    else if (filter === 'For you') {
-      const f = forYouFilter();
-      if (!f) {
-        setError(null);
-        setStories([]);
-        return;
-      }
-      query = query.or(f);
-    } else if (filter !== 'All') query = query.eq('category', filter);
-
+    const query = pageQuery(0);
+    if (!query) {
+      setError(null);
+      setStories([]);
+      return;
+    }
     const { data, error: err } = await query;
     if (err) {
       setError("Couldn't load stories. Check your connection and try again.");
@@ -129,6 +142,8 @@ function Main() {
     }
     const rows = (data as Story[]) ?? [];
     lastLoaded.current = Date.now();
+    if (rows.length < PAGE_SIZE) noMore.current.add(filter);
+    else noMore.current.delete(filter);
     if (opts?.markSeen) {
       // remember the newest story that exists now; anything newer than the previous visit gets a NEW tag
       const { data: newest } = await supabase.from('stories').select('created_at').order('created_at', { ascending: false }).limit(1);
@@ -140,7 +155,33 @@ function Main() {
     }
     setError(null);
     setStories(rows);
-  }, [filter, savedKey, prefsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, savedKey, prefsKey, pageQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // near the end of the loaded cards: quietly fetch the next page and add it to the bottom
+  const loadMore = useCallback(async () => {
+    const f = filter;
+    if (loadingMore.current || noMore.current.has(f) || filter === 'Saved') return;
+    const have = storiesRef.current.length;
+    if (have === 0 || have >= MAX_CARDS) return;
+    const query = pageQuery(have);
+    if (!query) return;
+    loadingMore.current = true;
+    try {
+      const { data, error: err } = await query;
+      if (err || shownFilter.current !== f) return;
+      const rows = (data as Story[]) ?? [];
+      if (rows.length < PAGE_SIZE) noMore.current.add(f);
+      if (rows.length) {
+        setStories((cur) => {
+          const ids = new Set(cur.map((x) => x.id));
+          const extra = rows.filter((x) => !ids.has(x.id)); // skip any that moved pages while reading
+          return extra.length ? [...cur, ...extra] : cur;
+        });
+      }
+    } finally {
+      loadingMore.current = false;
+    }
+  }, [filter, pageQuery]);
 
   const toTop = () => {
     setIndex(0);
@@ -236,6 +277,10 @@ function Main() {
   const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems[0]?.index != null) setIndex(viewableItems[0].index);
   }).current;
+
+  useEffect(() => {
+    if (view === 'feed' && stories.length && index >= stories.length - LOAD_MORE_AT) loadMore();
+  }, [index, stories.length, view, loadMore]);
 
   // download the next few pictures while the reader is still on this card, so they appear instantly
   useEffect(() => {

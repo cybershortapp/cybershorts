@@ -39,6 +39,8 @@ DAILY_AI_CAP = int(os.getenv("DAILY_AI_CAP", "50" if TEST_MODE else "500"))     
 PER_SOURCE = 5 if TEST_MODE else 15
 PER_VENDOR = 5 if TEST_MODE else 6
 FEED_TIMEOUT = int(os.getenv("FEED_TIMEOUT", "15"))   # seconds per feed
+FEED_RETRY_TIMEOUT = int(os.getenv("FEED_RETRY_TIMEOUT", "45"))   # second try for slow feeds
+FEED_READER_UA = "Mozilla/5.0 (compatible; CyberSidReader/1.0; +https://cybershortapp.github.io/cybershorts/)"
 RESEARCH_PER_RUN = int(os.getenv("RESEARCH_PER_RUN", "2" if TEST_MODE else "4"))   # web research for chains
 RESEARCH_PER_DAY = int(os.getenv("RESEARCH_PER_DAY", "10" if TEST_MODE else "40"))
 COVERS = flag("COVERS", "true")                                                   # AI pictures for stories without one
@@ -525,6 +527,29 @@ def find_duplicate(title, excerpt, cves, recent, rare=None):
     return None, [r for _, r in scored[:5]]
 
 
+def read_feed(src, timeout=None, ua=None):
+    """Download one feed with a hard time limit, so one slow website can't freeze the whole run."""
+    try:
+        req = urllib.request.Request(src["url"], headers={
+            "User-Agent": ua or BROWSER_UA,
+            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+            "Accept-Language": "en-GB,en;q=0.9"})
+        with urllib.request.urlopen(req, timeout=timeout or FEED_TIMEOUT) as resp:
+            raw = resp.read(4_000_000)
+        return src["name"], feedparser.parse(raw), None
+    except Exception as ex:
+        return src["name"], None, ex
+
+def read_again(src):
+    """Second try for a feed that failed: much more time (far-away or slow sites), and a plain
+    feed-reader name, which some sites' bot filters accept when they block browser-looking requests."""
+    name, feed, err = read_feed(src, FEED_RETRY_TIMEOUT, FEED_READER_UA)
+    if err:
+        time.sleep(2)
+        name, feed, err = read_feed(src, FEED_RETRY_TIMEOUT)
+    return name, feed, err
+
+
 def main():
     # Python 3.14 prints harmless "Exception ignored while finalizing file" noise after network timeouts; hide it
     sys.unraisablehook = lambda unraisable: None
@@ -570,22 +595,17 @@ def main():
     # read all feeds at the same time (much faster than one by one, keeps each run short)
     from concurrent.futures import ThreadPoolExecutor
 
-    def read_feed(src):
-        """Download one feed with a hard time limit, so one slow website can't freeze the whole run."""
-        try:
-            req = urllib.request.Request(src["url"], headers={
-                "User-Agent": BROWSER_UA,
-                "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*"})
-            with urllib.request.urlopen(req, timeout=FEED_TIMEOUT) as resp:
-                raw = resp.read(4_000_000)
-            return src["name"], feedparser.parse(raw), None
-        except Exception as ex:
-            return src["name"], None, ex
-
     print(f"Reading {len(sources)} feeds (max {FEED_TIMEOUT}s each)...")
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=16) as pool:
         feeds = {name: (feed, err) for name, feed, err in pool.map(read_feed, sources)}
+    retry = [src for src in sources if feeds[src["name"]][1] or feeds[src["name"]][0] is None]
+    if retry:
+        print(f"Trying {len(retry)} slow or blocked feed(s) again with more time: {', '.join(r['name'] for r in retry)}")
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            for name, feed, err in pool.map(read_again, retry):
+                feeds[name] = (feed, err)
+                print(f"  {name}: {'OK on second try' if not err else 'still failing: ' + str(err)[:80]}")
     bad = sum(1 for f, e in feeds.values() if e or f is None)
     print(f"Feeds read in {time.time() - t0:.0f}s ({len(feeds) - bad} ok, {bad} not reachable)\n")
 
@@ -1044,6 +1064,57 @@ def update_groups():
     refresh_groups(create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"]))
 
 
+
+def health_check():
+    """Check every news source and the AI picture service, without changing anything.
+    Run: python pipeline.py --health"""
+    from concurrent.futures import ThreadPoolExecutor
+    from supabase import create_client
+    now = datetime.now(timezone.utc)
+    print(f"\n=== News sources: reading all {len(SOURCES)} ===\n")
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        res = {n: (f, e) for n, f, e in pool.map(read_feed, SOURCES)}
+    slow = [s for s in SOURCES if res[s["name"]][1] or res[s["name"]][0] is None]
+    if slow:
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            for n, f, e in pool.map(read_again, slow):
+                res[n] = (f, e)
+    ok = 0
+    for src in SOURCES:
+        f, e = res[src["name"]]
+        if e or f is None:
+            print(f"  FAIL   {src['name'][:32]:<33} {str(e)[:70]}")
+            continue
+        items = f.entries or []
+        if not items:
+            print(f"  EMPTY  {src['name'][:32]:<33} feed works but has no stories (address may have moved)")
+            continue
+        ok += 1
+        newest = max(published_of(x) for x in items)
+        age = (now - newest).total_seconds() / 3600
+        tag = "QUIET " if age > 24 * 7 else "OK    "
+        extra = "  (2nd try)" if src in slow else ""
+        print(f"  {tag} {src['name'][:32]:<33} {len(items):>3} stories, newest {age:.0f}h ago{extra}")
+    print(f"\n{ok} of {len(SOURCES)} sources working.  QUIET = nothing new for over a week.\n")
+
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    maker = CoverMaker(db)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    print(f"=== AI pictures ({maker.describe()}) ===")
+    print(f"  Made today so far: {covers_made_today(db, day_start)} (daily limit {COVERS_PER_DAY})")
+    rows = (db.table("stories").select("image_url").gte("created_at", (now - timedelta(hours=24)).isoformat())
+            .execute().data)
+    missing = sum(1 for r in rows if not r["image_url"])
+    print(f"  Stories in the last 24h: {len(rows)}, without any picture: {missing}")
+    jpg = maker.picture(cover_prompt("a glowing padlock over a city network at night, cyber security", "Tools"))
+    if jpg:
+        with open("test-cover.jpg", "wb") as fh:
+            fh.write(jpg)
+        print(f"  Test picture: OK via {', '.join(maker.used)}. Saved as test-cover.jpg in this folder (not uploaded).")
+    else:
+        print(f"  Test picture: FAILED. {' | '.join(maker.errors)[:300]}")
+    print()
+
 if __name__ == "__main__":
     if "--chains" in sys.argv:
         backfill_chains()
@@ -1051,6 +1122,8 @@ if __name__ == "__main__":
         update_groups()
     elif "--cves" in sys.argv:
         backfill_cves()
+    elif "--health" in sys.argv:
+        health_check()
     elif "--test-alert" in sys.argv:
         from supabase import create_client
         from notify import test_alert

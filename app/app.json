@@ -48,6 +48,12 @@
         "projectId": "65ebff1f-c421-4fd0-a54e-870ce95a53e6"
       }
     },
-    "owner": "cybershortappexpo"
+    "owner": "cybershortappexpo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/65ebff1f-c421-4fd0-a54e-870ce95a53e6"
+    }
   }
 }
