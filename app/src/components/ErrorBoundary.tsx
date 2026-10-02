@@ -1,5 +1,7 @@
 import { Component, type ReactNode } from 'react';
 
+import { rememberError } from '../lib/crash';
+
 type Props = { children: ReactNode; fallback: (reset: () => void) => ReactNode; resetKey?: unknown };
 type State = { failed: boolean; key: unknown };
 
@@ -18,6 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: unknown) {
     console.warn('CyberSid screen error:', error);
+    rememberError(String((error as Error)?.message ?? error));
   }
 
   reset = () => this.setState({ failed: false });
