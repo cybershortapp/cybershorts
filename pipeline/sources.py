@@ -14,6 +14,8 @@ Google Threat Intelligence (feed returned no stories). CISA's exploited-vulnerab
 read from its official GitHub data instead (Round 2).
 Removed 1 Oct 2026: Sophos News (old blog address times out; Sophos research is covered by the news
 sites) and Australian Cyber Security Centre (times out even with 45s; Australia-only alerts).
+Removed 2 Oct 2026 after the GitHub source check: The Cyber Express (blocks GitHub's servers, 403),
+GBHackers (bot check page, no stories) and Cybernews (feed address gone, 404).
 """
 
 def s(name, url, kind="news", test=False, country="GB", reader=None):
@@ -45,7 +47,6 @@ SOURCES = [
     s("Krebs on Security", "https://krebsonsecurity.com/feed/"),
     s("CyberScoop", "https://cyberscoop.com/feed/"),
     s("Security Affairs", "https://securityaffairs.com/feed"),
-    s("The Cyber Express", "https://thecyberexpress.com/feed/"),
     s("Hackread", "https://www.hackread.com/feed/"),
     s("Cybersecurity Dive", "https://www.cybersecuritydive.com/feeds/news/"),
     s("SC Media", "https://www.scworld.com/rss"),
@@ -57,9 +58,7 @@ SOURCES = [
     s("ZDNET Security", "https://www.zdnet.com/topic/security/rss.xml"),
     s("Malwarebytes", "https://www.malwarebytes.com/blog/feed/index.xml", "vendor"),
     # added 2 Oct 2026: high-volume daily security news
-    s("GBHackers", "https://gbhackers.com/feed/"),
     s("Cyber Security News", "https://cybersecuritynews.com/feed/"),
-    s("Cybernews", "https://cybernews.com/feed/", "general"),
 
     # ---- Vendor and research labs ----
     s("Microsoft Security", "https://www.microsoft.com/en-us/security/blog/feed/", "vendor"),

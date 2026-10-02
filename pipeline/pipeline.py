@@ -628,7 +628,9 @@ def main():
         if err or feed is None:
             row["status"] = f"FEED ERROR: {err}"[:60]
             continue
-        entries = [e for e in feed.entries[:limit] if e.get("link") and e.get("title")]
+        # newest first: some feeds (e.g. Microsoft's) list thousands of items in date order, oldest at the top
+        entries = sorted((e for e in feed.entries if e.get("link") and e.get("title")),
+                         key=published_of, reverse=True)[:limit]
         row["found"] = len(entries)
         if not entries:
             row["status"] = "NO STORIES (check URL)"
