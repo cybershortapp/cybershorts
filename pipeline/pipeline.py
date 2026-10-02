@@ -766,6 +766,18 @@ def main():
         left = sum(1 for c in candidates if c[3] not in seen_ids)
         print(f"[stop] AI budget used up ({ai_budget} calls). {left} older stories wait for the next run.")
 
+    # ---- 2b. a tip or explainer card in the morning and evening (hand-written, no AI) ----
+    tip_note = "off"
+    if db and not TEST_MODE:
+        try:
+            from tips import post_due_tip
+            tip = post_due_tip(db)
+            tip_note = f"posted: {tip['headline']}" if tip else "none due"
+            if tip:
+                need_cover.append((tip["id"], cover_prompt(tip["scene"], "Tips"), tip["headline"]))
+        except Exception as ex:
+            tip_note = f"failed: {str(ex)[:80]}"
+
     # ---- 3. AI pictures for new stories that have no usable picture ----
     covers_made, covers_note = 0, "off"
     if COVERS and db and need_cover:
@@ -825,6 +837,7 @@ def main():
     if ai and ai.used:
         print("AI used: " + ", ".join(f"{k} x{v}" for k, v in ai.used.items()))
     print(f"AI pictures: {covers_note}")
+    print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
     print()
@@ -1081,6 +1094,31 @@ def update_groups():
 
 
 
+def check_tips():
+    """Make sure every hand-written tip links to a page that still exists. Run: python pipeline.py --check-tips"""
+    from tips import load_tips
+    tips, bad = load_tips(), 0
+    print(f"\n=== Tip cards: {len(tips)} ===\n")
+    for t in tips:
+        for k in ("key", "headline", "technical", "why", "url"):
+            if not t.get(k):
+                print(f"  MISSING {k}: {t.get('key')}")
+                bad += 1
+    for url in sorted({t["url"] for t in tips}):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": BROWSER_UA, "Accept": "text/html"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                print(f"  OK     {r.status}  {url}")
+        except Exception as ex:
+            code = getattr(ex, "code", None)
+            # some sites block automated checks (403/429) but work in a browser; only 404/410 mean the page is gone
+            gone = code in (404, 410)
+            bad += gone
+            print(f"  {'GONE ' if gone else 'CHECK'}  {code or ''}  {url}  {'' if gone else '(blocked check, likely fine)'}")
+    print(f"\n{'All tip links look fine.' if not bad else f'{bad} problem(s) to fix.'}\n")
+    return bad
+
+
 def health_check():
     """Check every news source and the AI picture service, without changing anything.
     Run: python pipeline.py --health"""
@@ -1143,6 +1181,8 @@ if __name__ == "__main__":
         backfill_cves()
     elif "--health" in sys.argv:
         health_check()
+    elif "--check-tips" in sys.argv:
+        sys.exit(1 if check_tips() else 0)
     elif "--test-alert" in sys.argv:
         from supabase import create_client
         from notify import test_alert
