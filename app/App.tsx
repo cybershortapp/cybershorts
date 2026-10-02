@@ -18,10 +18,12 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
+import { cleanStories } from './src/lib/clean';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
@@ -141,7 +143,7 @@ function Main() {
       setError("Couldn't load stories. Check your connection and try again.");
       return;
     }
-    const rows = (data as Story[]) ?? [];
+    const rows = cleanStories(data as Story[]);
     lastLoaded.current = Date.now();
     if (rows.length < FIRST_PAGE) noMore.current.add(filter);
     else noMore.current.delete(filter);
@@ -170,7 +172,7 @@ function Main() {
     try {
       const { data, error: err } = await query;
       if (err || shownFilter.current !== f) return;
-      const rows = (data as Story[]) ?? [];
+      const rows = cleanStories(data as Story[]);
       if (rows.length < PAGE_SIZE) noMore.current.add(f);
       if (rows.length) {
         setStories((cur) => {
@@ -262,7 +264,8 @@ function Main() {
       setView('feed');
       changeFilter('All');
       const { data } = await supabase.from('stories').select(STORY_FIELDS).eq('id', id).maybeSingle();
-      if (data) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [data as Story, ...cur]));
+      const [story] = cleanStories(data ? [data as Story] : []);
+      if (story) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [story, ...cur]));
     });
   }, []);
 
@@ -303,6 +306,7 @@ function Main() {
   const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
   const renderItem = useCallback(
     ({ item, index: i }: { item: Story; index: number }) => (
+      <ErrorBoundary resetKey={item.id} fallback={() => <BrokenCard height={pageHeight} />}>
       <StoryCard
         story={item}
         height={pageHeight}
@@ -312,6 +316,7 @@ function Main() {
         isNew={!!marker && item.created_at > marker}
         caughtUp={i === firstOld && i > 0}
       />
+      </ErrorBoundary>
     ),
     [pageHeight, index, savedSet, toggleSaved, marker, firstOld],
   );
@@ -396,6 +401,34 @@ function Main() {
   );
 }
 
+/** Shown in place of one story that couldn't be drawn, so the rest of the feed keeps working. */
+function BrokenCard({ height }: { height: number }) {
+  const C = useTheme();
+  return (
+    <View style={{ height, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Text style={{ color: C.muted, textAlign: 'center', fontSize: 15, lineHeight: 22 }}>
+        This story couldn't be shown. Swipe on for the next one.
+      </Text>
+    </View>
+  );
+}
+
+/** Last safety net: never a blank white screen. */
+function AppCrashed({ onReload }: { onReload: () => void }) {
+  const C = useTheme();
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Text style={{ color: C.text, fontFamily: F.head, fontSize: 18, textAlign: 'center' }}>Something went wrong</Text>
+      <Text style={{ color: C.muted, textAlign: 'center', marginTop: 8, fontSize: 14.5, lineHeight: 21 }}>
+        Sorry about that. Tap below to reload the news.
+      </Text>
+      <Pressable onPress={onReload} style={{ marginTop: 18, backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 22, paddingVertical: 11 }}>
+        <Text style={{ color: C.onBrand, fontFamily: F.label }}>Reload</Text>
+      </Pressable>
+    </SafeAreaView>
+  );
+}
+
 // keep the splash screen up until the logo fonts are ready, so text is never measured with the wrong font
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -415,7 +448,9 @@ export default function App() {
   return (
     <SafeAreaProvider style={{ backgroundColor: C.bg }}>
       <StatusBar style={C.dark ? 'light' : 'dark'} />
-      <Main />
+      <ErrorBoundary fallback={(reset) => <AppCrashed onReload={reset} />}>
+        <Main />
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

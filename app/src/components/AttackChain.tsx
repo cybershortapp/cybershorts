@@ -3,6 +3,7 @@ import React, { memo, useEffect, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { chainLink } from '../lib/actions';
+import { cleanGroup } from '../lib/clean';
 import { supabase } from '../lib/supabase';
 import type { ChainStep, Story, ThreatGroup } from '../lib/types';
 import { F } from '../theme';
@@ -137,8 +138,9 @@ function GroupCard({ id, s }: { id: string; s: number }) {
       .eq('id', id)
       .maybeSingle()
       .then(({ data }) => {
-        groupCache.set(id, (data as ThreatGroup | null) ?? null);
-        if (live) setG((data as ThreatGroup | null) ?? null);
+        const clean = cleanGroup((data as ThreatGroup | null) ?? null);
+        groupCache.set(id, clean);
+        if (live) setG(clean);
       });
     return () => {
       live = false;
@@ -164,9 +166,9 @@ function GroupCard({ id, s }: { id: string; s: number }) {
       {g.campaigns.length > 0 && (
         <Text style={{ fontSize: 13.5 * s, color: K.muted, marginTop: 12 * s }}>Past campaigns: {g.campaigns.slice(0, 3).join(', ')}</Text>
       )}
-      <Pressable onPress={() => Linking.openURL(g.url)} style={{ marginTop: 10 * s }} hitSlop={8}>
+      {!!g.url && <Pressable onPress={() => Linking.openURL(g.url).catch(() => {})} style={{ marginTop: 10 * s }} hitSlop={8}>
         <Text style={{ fontSize: 12.5 * s, color: K.redSoft }}>MITRE ATT&CK® profile {g.id} ↗</Text>
-      </Pressable>
+      </Pressable>}
     </View>
   );
 }
