@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
+import { lastError, type AppError } from '../lib/crash';
 import { alertsAvailable, alertsConnected, alertsProblem, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
@@ -63,6 +64,10 @@ export function Preferences({ onDone }: Props) {
   };
   const remove = (x: string) => save(prefs.products.filter((p) => p !== x), prefs.terms.filter((t) => t !== x));
 
+  const [appError, setAppError] = useState<AppError | null>(null);
+  useEffect(() => {
+    lastError().then(setAppError);
+  }, []);
   const [blocked, setBlocked] = useState(false);
   const [problem, setProblem] = useState('');
   const [connected, setConnected] = useState(alertsConnected());
@@ -292,6 +297,11 @@ export function Preferences({ onDone }: Props) {
         <Text style={[styles.small, { textAlign: 'center', marginTop: 6 }]}>
           Your products are saved on this phone. They're only sent to us to match your alerts and emails.
         </Text>
+        {!!appError && (
+          <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]} selectable>
+            Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}
+          </Text>
+        )}
       </View>
     </ScrollView>
   );

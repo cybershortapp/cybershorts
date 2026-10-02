@@ -24,6 +24,7 @@ import { Preferences } from './src/components/Preferences';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
+import { installCrashHandler } from './src/lib/crash';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
@@ -186,6 +187,15 @@ function Main() {
     }
   }, [filter, pageQuery]);
 
+  // jump to a card without ever asking for one that doesn't exist (that throws and closes the app)
+  const safeScrollTo = (i: number) => {
+    const n = storiesRef.current.length;
+    if (!listRef.current || n === 0) return;
+    try {
+      listRef.current.scrollToIndex({ index: Math.max(0, Math.min(i, n - 1)), animated: false });
+    } catch {}
+  };
+
   const toTop = () => {
     setIndex(0);
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -226,7 +236,8 @@ function Main() {
       setStories(saved.stories);
       setIndex(saved.index);
       setLoading(false);
-      setTimeout(() => listRef.current?.scrollToIndex({ index: saved.index, animated: false }), 0);
+      storiesRef.current = saved.stories;
+      setTimeout(() => safeScrollTo(saved.index), 0);
       return;
     }
     setLoading(true);
@@ -275,11 +286,12 @@ function Main() {
     if (view !== 'feed' || !pendingJump.current || pageHeight === 0 || filter !== 'All') return;
     const i = stories.findIndex((s) => s.id === pendingJump.current);
     pendingJump.current = null;
-    if (i > 0) setTimeout(() => listRef.current?.scrollToIndex({ index: i, animated: false }), 50);
+    if (i > 0) setTimeout(() => safeScrollTo(i), 50);
   }, [view, stories, pageHeight, filter]);
 
   const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems[0]?.index != null) setIndex(viewableItems[0].index);
+    const i = viewableItems[0]?.index;
+    if (i != null && i >= 0) setIndex(i);
   }).current;
 
   useEffect(() => {
@@ -414,7 +426,7 @@ function BrokenCard({ height }: { height: number }) {
 }
 
 /** Last safety net: never a blank white screen. */
-function AppCrashed({ onReload }: { onReload: () => void }) {
+function AppCrashed({ onReload, message }: { onReload: () => void; message?: string }) {
   const C = useTheme();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
@@ -422,6 +434,11 @@ function AppCrashed({ onReload }: { onReload: () => void }) {
       <Text style={{ color: C.muted, textAlign: 'center', marginTop: 8, fontSize: 14.5, lineHeight: 21 }}>
         Sorry about that. Tap below to reload the news.
       </Text>
+      {!!message && (
+        <Text style={{ color: C.muted, textAlign: 'center', marginTop: 14, fontSize: 11.5, lineHeight: 16, opacity: 0.8 }} selectable>
+          {message}
+        </Text>
+      )}
       <Pressable onPress={onReload} style={{ marginTop: 18, backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 22, paddingVertical: 11 }}>
         <Text style={{ color: C.onBrand, fontFamily: F.label }}>Reload</Text>
       </Pressable>
@@ -441,6 +458,13 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
   const ready = fontsLoaded || !!fontError || timedOut;
+  const [fatal, setFatal] = useState<string | null>(null);
+  const [run, setRun] = useState(0); // bumping this rebuilds every screen from scratch
+  useEffect(() => installCrashHandler(setFatal), []);
+  const reload = () => {
+    setFatal(null);
+    setRun((r) => r + 1);
+  };
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
@@ -448,9 +472,13 @@ export default function App() {
   return (
     <SafeAreaProvider style={{ backgroundColor: C.bg }}>
       <StatusBar style={C.dark ? 'light' : 'dark'} />
-      <ErrorBoundary fallback={(reset) => <AppCrashed onReload={reset} />}>
-        <Main />
-      </ErrorBoundary>
+      {fatal ? (
+        <AppCrashed onReload={reload} message={fatal} />
+      ) : (
+        <ErrorBoundary key={run} fallback={() => <AppCrashed onReload={reload} />}>
+          <Main />
+        </ErrorBoundary>
+      )}
     </SafeAreaProvider>
   );
 }
