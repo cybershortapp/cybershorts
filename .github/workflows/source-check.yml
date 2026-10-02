@@ -1,0 +1,44 @@
+name: source-check
+
+# Checks every news source (and the AI picture service) without changing anything.
+# Runs on pull requests that touch the sources, and by hand from the Actions tab.
+# On a pull request the result is posted as a comment, so it can be read from a phone.
+on:
+  pull_request:
+    paths: ["pipeline/sources.py", "pipeline/data_feeds.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Check all sources
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          python pipeline.py --health --no-picture 2>&1 | tee health.txt
+          { echo '### Source check'; echo '```'; cat health.txt; echo '```'; } > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Post the result on the pull request
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file report.md

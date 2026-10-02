@@ -16,8 +16,9 @@ Removed 1 Oct 2026: Sophos News (old blog address times out; Sophos research is 
 sites) and Australian Cyber Security Centre (times out even with 45s; Australia-only alerts).
 """
 
-def s(name, url, kind="news", test=False, country="GB"):
-    return {"name": name, "url": url, "kind": kind, "test": test, "country": country}
+def s(name, url, kind="news", test=False, country="GB", reader=None):
+    """reader: a data source handled in data_feeds.py instead of an RSS feed."""
+    return {"name": name, "url": url, "kind": kind, "test": test, "country": country, "reader": reader}
 
 
 SOURCES = [
@@ -55,6 +56,10 @@ SOURCES = [
     s("TechCrunch Security", "https://techcrunch.com/category/security/feed/"),
     s("ZDNET Security", "https://www.zdnet.com/topic/security/rss.xml"),
     s("Malwarebytes", "https://www.malwarebytes.com/blog/feed/index.xml", "vendor"),
+    # added 2 Oct 2026: high-volume daily security news
+    s("GBHackers", "https://gbhackers.com/feed/"),
+    s("Cyber Security News", "https://cybersecuritynews.com/feed/"),
+    s("Cybernews", "https://cybernews.com/feed/", "general"),
 
     # ---- Vendor and research labs ----
     s("Microsoft Security", "https://www.microsoft.com/en-us/security/blog/feed/", "vendor"),
@@ -75,8 +80,15 @@ SOURCES = [
     s("Zero Day Initiative", "https://www.zerodayinitiative.com/blog?format=rss", "vendor"),
     s("SANS Internet Storm Center", "https://isc.sans.edu/rssfeed_full.xml", "vendor"),
     s("FortiGuard PSIRT", "https://filestore.fortinet.com/fortiguard/rss/ir.xml", "vendor"),
+    # added 2 Oct 2026: vendor security advisories (what to patch)
+    s("Cisco Security Advisories", "https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml", "vendor"),
+    s("Palo Alto Networks Advisories", "https://security.paloaltonetworks.com/rss.xml", "vendor"),
+    s("Microsoft Security Response Center", "https://api.msrc.microsoft.com/update-guide/rss", "vendor"),
 
     # ---- Government and CERT alerts ----
+    # added 2 Oct 2026: data sources (see data_feeds.py)
+    s("CISA Known Exploited", "https://www.cisa.gov/known-exploited-vulnerabilities-catalog", "gov", reader="kev"),
+    s("Have I Been Pwned", "https://haveibeenpwned.com/PwnedWebsites", reader="hibp"),
     s("Canadian Cyber Centre", "https://www.cyber.gc.ca/api/cccs/rss/v1/get?feed=alerts_advisories&lang=en", "gov"),
     s("CERT-EU", "https://cert.europa.eu/publications/security-advisories-rss", "gov"),
 

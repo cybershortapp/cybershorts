@@ -20,6 +20,7 @@ import feedparser
 from dotenv import load_dotenv
 
 from sources import SOURCES
+from data_feeds import READERS
 from tags import tag_products, is_zero_day
 from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, usable_image
 
@@ -530,6 +531,8 @@ def find_duplicate(title, excerpt, cves, recent, rare=None):
 def read_feed(src, timeout=None, ua=None):
     """Download one feed with a hard time limit, so one slow website can't freeze the whole run."""
     try:
+        if src.get("reader"):          # a data source (CISA, Have I Been Pwned...), not an RSS feed
+            return src["name"], READERS[src["reader"]](timeout or FEED_RETRY_TIMEOUT), None
         req = urllib.request.Request(src["url"], headers={
             "User-Agent": ua or BROWSER_UA,
             "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
@@ -664,7 +667,7 @@ def main():
             row["skipped"] += 1
             continue
 
-        page, final_url = fetch_article(link)
+        page, final_url = ("", link) if src.get("reader") else fetch_article(link)
         body = article_text(page)
         text_for_ai = body if len(body) > len(excerpt) else excerpt
         cves = find_cves(title, excerpt, body)
@@ -1117,6 +1120,9 @@ def health_check():
             .execute().data)
     missing = sum(1 for r in rows if not r["image_url"])
     print(f"  Stories in the last 24h: {len(rows)}, without any picture: {missing}")
+    if "--no-picture" in sys.argv:
+        print("  Test picture: skipped (--no-picture)\n")
+        return
     jpg = maker.picture(cover_prompt("a glowing padlock over a city network at night, cyber security", "Tools"))
     if jpg:
         with open("test-cover.jpg", "wb") as fh:
