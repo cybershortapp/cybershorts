@@ -7,6 +7,9 @@ on:
   push:
     branches: [main]
     paths: ["app/**", "!app/**/*.md"]
+  # on pull requests it builds and checks the update but does not publish it
+  pull_request:
+    paths: ["app/**", ".github/workflows/app-update.yml"]
   workflow_dispatch:
     inputs:
       message:
@@ -45,15 +48,31 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
       - run: npm ci
-      # the app's public settings (Supabase address and publishable key) come from eas.json, same as the builds
+      # the app's public settings (Supabase address and publishable key) come from eas.json, same as the builds.
+      # They are put straight into the environment, so they are baked into the update whatever EAS does with .env files.
       - name: Write app settings
         run: |
           jq -r '.build.preview.env | to_entries[] | "\(.key)=\(.value)"' eas.json > .env
-          cut -d= -f1 .env
+          cat .env >> "$GITHUB_ENV"
+          echo "Settings found: $(cut -d= -f1 .env | tr '\n' ' ')"
+          grep -q '^EXPO_PUBLIC_SUPABASE_URL=https://' .env && grep -q '^EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_' .env \
+            || { echo "::error::Supabase settings missing from eas.json"; exit 1; }
       - name: Type check
         run: npx tsc --noEmit
+      - name: Build the update
+        run: npx expo export --platform all --output-dir dist
+      # safety net: never publish an update that can't reach the news (this exact mistake happened once)
+      - name: Check the settings are inside the update
+        run: |
+          for p in android ios; do
+            f=$(ls dist/_expo/static/js/$p/*.hbc dist/_expo/static/js/$p/*.js 2>/dev/null | grep -v '\.map$' | head -1)
+            [ -n "$f" ] || { echo "::error::No $p bundle was built"; exit 1; }
+            grep -aq "$EXPO_PUBLIC_SUPABASE_URL" "$f" || { echo "::error::Supabase address is missing from the $p update. Not publishing."; exit 1; }
+            echo "$p update contains the app settings: OK"
+          done
       - name: Publish update to the preview channel
+        if: github.event_name != 'pull_request'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MESSAGE: ${{ github.event.inputs.message || github.event.head_commit.message }}
-        run: npx eas-cli update --channel preview --environment preview --message "$(echo "$MESSAGE" | head -n1 | cut -c1-80)" --non-interactive
+        run: npx eas-cli update --channel preview --environment preview --skip-bundler --input-dir dist --message "$(echo "$MESSAGE" | head -n1 | cut -c1-80)" --non-interactive
