@@ -16,6 +16,8 @@ Removed 1 Oct 2026: Sophos News (old blog address times out; Sophos research is 
 sites) and Australian Cyber Security Centre (times out even with 45s; Australia-only alerts).
 Removed 2 Oct 2026 after the GitHub source check: The Cyber Express (blocks GitHub's servers, 403),
 GBHackers (bot check page, no stories) and Cybernews (feed address gone, 404).
+Tried 3 Oct 2026 and not added: teiss (404), Computing (403), Trend Micro (404), Fortinet threat blog (empty),
+Bitdefender Labs and Red Canary (no posts for 6+ weeks), JPCERT (English feed rarely updated).
 """
 
 def s(name, url, kind="news", test=False, country="GB", reader=None):
@@ -36,6 +38,10 @@ SOURCES = [
     s("BBC Technology", "https://feeds.bbci.co.uk/news/technology/rss.xml", "general"),
     s("The Guardian", "https://www.theguardian.com/technology/data-computer-security/rss"),
     s("ESET WeLiveSecurity", "https://www.welivesecurity.com/en/rss/feed/", "vendor"),
+    # added 3 Oct 2026: more UK business tech press
+    s("IT Pro", "https://www.itpro.com/security/feed", "general"),
+    s("The Stack", "https://www.thestack.technology/rss/", "general"),
+    s("Risky Bulletin", "https://news.risky.biz/rss/"),
 
     # ---- Global security news ----
     s("BleepingComputer", "https://www.bleepingcomputer.com/feed/", test=True),
@@ -83,6 +89,15 @@ SOURCES = [
     s("Cisco Security Advisories", "https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml", "vendor"),
     s("Palo Alto Networks Advisories", "https://security.paloaltonetworks.com/rss.xml", "vendor"),
     s("Microsoft Security Response Center", "https://api.msrc.microsoft.com/update-guide/rss", "vendor"),
+
+    # added 3 Oct 2026: research teams that publish their own findings
+    s("Zscaler ThreatLabz", "https://www.zscaler.com/blogs/feeds/security-research", "vendor"),
+    s("Recorded Future", "https://www.recordedfuture.com/feed", "vendor"),
+    s("Proofpoint", "https://www.proofpoint.com/us/rss.xml", "vendor"),
+    s("Sophos", "https://www.sophos.com/en-us/blog/feed", "vendor"),
+    s("Sekoia", "https://blog.sekoia.io/feed/", "vendor"),
+    s("Volexity", "https://www.volexity.com/feed/", "vendor"),
+    s("The DFIR Report", "https://thedfirreport.com/feed/", "vendor"),
 
     # ---- Government and CERT alerts ----
     # added 2 Oct 2026: data sources (see data_feeds.py)
