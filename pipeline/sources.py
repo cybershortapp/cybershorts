@@ -36,6 +36,12 @@ SOURCES = [
     s("BBC Technology", "https://feeds.bbci.co.uk/news/technology/rss.xml", "general"),
     s("The Guardian", "https://www.theguardian.com/technology/data-computer-security/rss"),
     s("ESET WeLiveSecurity", "https://www.welivesecurity.com/en/rss/feed/", "vendor"),
+    # added 3 Oct 2026: more UK business tech press
+    s("teiss", "https://www.teiss.co.uk/feed"),
+    s("Computing", "https://www.computing.co.uk/rss/category/security"),
+    s("IT Pro", "https://www.itpro.com/security/feed", "general"),
+    s("The Stack", "https://www.thestack.technology/rss/", "general"),
+    s("Risky Bulletin", "https://news.risky.biz/rss/"),
 
     # ---- Global security news ----
     s("BleepingComputer", "https://www.bleepingcomputer.com/feed/", test=True),
@@ -84,12 +90,26 @@ SOURCES = [
     s("Palo Alto Networks Advisories", "https://security.paloaltonetworks.com/rss.xml", "vendor"),
     s("Microsoft Security Response Center", "https://api.msrc.microsoft.com/update-guide/rss", "vendor"),
 
+    # added 3 Oct 2026: research teams that publish their own findings
+    s("Trend Micro Research", "https://www.trendmicro.com/en_us/research.rss.xml", "vendor"),
+    s("Zscaler ThreatLabz", "https://www.zscaler.com/blogs/feeds/security-research", "vendor"),
+    s("Bitdefender Labs", "https://www.bitdefender.com/blog/api/rss/labs/", "vendor"),
+    s("Fortinet Threat Research", "https://feeds.fortinet.com/fortinet/blog/threat-research", "vendor"),
+    s("Recorded Future", "https://www.recordedfuture.com/feed", "vendor"),
+    s("Proofpoint", "https://www.proofpoint.com/us/rss.xml", "vendor"),
+    s("Sophos", "https://www.sophos.com/en-us/blog/feed", "vendor"),
+    s("Red Canary", "https://redcanary.com/feed/", "vendor"),
+    s("Sekoia", "https://blog.sekoia.io/feed/", "vendor"),
+    s("Volexity", "https://www.volexity.com/feed/", "vendor"),
+    s("The DFIR Report", "https://thedfirreport.com/feed/", "vendor"),
+
     # ---- Government and CERT alerts ----
     # added 2 Oct 2026: data sources (see data_feeds.py)
     s("CISA Known Exploited", "https://www.cisa.gov/known-exploited-vulnerabilities-catalog", "gov", reader="kev"),
     s("Have I Been Pwned", "https://haveibeenpwned.com/PwnedWebsites", reader="hibp"),
     s("Canadian Cyber Centre", "https://www.cyber.gc.ca/api/cccs/rss/v1/get?feed=alerts_advisories&lang=en", "gov"),
     s("CERT-EU", "https://cert.europa.eu/publications/security-advisories-rss", "gov"),
+    s("JPCERT/CC", "https://www.jpcert.or.jp/english/rss/jpcert-en.rdf", "gov"),
 
     # ---- Consumer tech, filtered to cyber stories only ----
     s("The Verge", "https://www.theverge.com/rss/index.xml", "general"),
