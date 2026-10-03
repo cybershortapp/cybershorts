@@ -16,6 +16,8 @@ Removed 1 Oct 2026: Sophos News (old blog address times out; Sophos research is 
 sites) and Australian Cyber Security Centre (times out even with 45s; Australia-only alerts).
 Removed 2 Oct 2026 after the GitHub source check: The Cyber Express (blocks GitHub's servers, 403),
 GBHackers (bot check page, no stories) and Cybernews (feed address gone, 404).
+Tried 3 Oct 2026 and not added: teiss (404), Computing (403), Trend Micro (404), Fortinet threat blog (empty),
+Bitdefender Labs and Red Canary (no posts for 6+ weeks), JPCERT (English feed rarely updated).
 """
 
 def s(name, url, kind="news", test=False, country="GB", reader=None):
@@ -37,8 +39,6 @@ SOURCES = [
     s("The Guardian", "https://www.theguardian.com/technology/data-computer-security/rss"),
     s("ESET WeLiveSecurity", "https://www.welivesecurity.com/en/rss/feed/", "vendor"),
     # added 3 Oct 2026: more UK business tech press
-    s("teiss", "https://www.teiss.co.uk/feed"),
-    s("Computing", "https://www.computing.co.uk/rss/category/security"),
     s("IT Pro", "https://www.itpro.com/security/feed", "general"),
     s("The Stack", "https://www.thestack.technology/rss/", "general"),
     s("Risky Bulletin", "https://news.risky.biz/rss/"),
@@ -91,14 +91,10 @@ SOURCES = [
     s("Microsoft Security Response Center", "https://api.msrc.microsoft.com/update-guide/rss", "vendor"),
 
     # added 3 Oct 2026: research teams that publish their own findings
-    s("Trend Micro Research", "https://www.trendmicro.com/en_us/research.rss.xml", "vendor"),
     s("Zscaler ThreatLabz", "https://www.zscaler.com/blogs/feeds/security-research", "vendor"),
-    s("Bitdefender Labs", "https://www.bitdefender.com/blog/api/rss/labs/", "vendor"),
-    s("Fortinet Threat Research", "https://feeds.fortinet.com/fortinet/blog/threat-research", "vendor"),
     s("Recorded Future", "https://www.recordedfuture.com/feed", "vendor"),
     s("Proofpoint", "https://www.proofpoint.com/us/rss.xml", "vendor"),
     s("Sophos", "https://www.sophos.com/en-us/blog/feed", "vendor"),
-    s("Red Canary", "https://redcanary.com/feed/", "vendor"),
     s("Sekoia", "https://blog.sekoia.io/feed/", "vendor"),
     s("Volexity", "https://www.volexity.com/feed/", "vendor"),
     s("The DFIR Report", "https://thedfirreport.com/feed/", "vendor"),
@@ -109,7 +105,6 @@ SOURCES = [
     s("Have I Been Pwned", "https://haveibeenpwned.com/PwnedWebsites", reader="hibp"),
     s("Canadian Cyber Centre", "https://www.cyber.gc.ca/api/cccs/rss/v1/get?feed=alerts_advisories&lang=en", "gov"),
     s("CERT-EU", "https://cert.europa.eu/publications/security-advisories-rss", "gov"),
-    s("JPCERT/CC", "https://www.jpcert.or.jp/english/rss/jpcert-en.rdf", "gov"),
 
     # ---- Consumer tech, filtered to cyber stories only ----
     s("The Verge", "https://www.theverge.com/rss/index.xml", "general"),
