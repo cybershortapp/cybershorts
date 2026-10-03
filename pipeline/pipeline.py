@@ -528,6 +528,13 @@ def find_duplicate(title, excerpt, cves, recent, rare=None):
     return None, [r for _, r in scored[:5]]
 
 
+def gh_note(title, text):
+    """On GitHub Actions, attach a short note to the run that can be read without opening the logs."""
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        text = str(text).replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+        print(f"::notice title={title}::{text}")
+
+
 def read_feed(src, timeout=None, ua=None):
     """Download one feed with a hard time limit, so one slow website can't freeze the whole run."""
     try:
@@ -837,6 +844,11 @@ def main():
     if ai and ai.used:
         print("AI used: " + ", ".join(f"{k} x{v}" for k, v in ai.used.items()))
     print(f"AI pictures: {covers_note}")
+    titles = [r["source"] for r in health if r["added"]]
+    gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
+            f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
+            f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
+            f"tip: {tip_note} | stopped early: {stopped}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
@@ -1133,15 +1145,17 @@ def health_check():
         with ThreadPoolExecutor(max_workers=8) as pool:
             for n, f, e in pool.map(read_again, slow):
                 res[n] = (f, e)
-    ok = 0
+    ok, note_lines = 0, []
     for src in SOURCES:
         f, e = res[src["name"]]
         if e or f is None:
             print(f"  FAIL   {src['name'][:32]:<33} {str(e)[:70]}")
+            note_lines.append(f"FAIL {src['name']}: {str(e)[:50]}")
             continue
         items = f.entries or []
         if not items:
             print(f"  EMPTY  {src['name'][:32]:<33} feed works but has no stories (address may have moved)")
+            note_lines.append(f"EMPTY {src['name']}")
             continue
         ok += 1
         newest = max(published_of(x) for x in items)
@@ -1149,7 +1163,9 @@ def health_check():
         tag = "QUIET " if age > 24 * 7 else "OK    "
         extra = "  (2nd try)" if src in slow else ""
         print(f"  {tag} {src['name'][:32]:<33} {len(items):>3} stories, newest {age:.0f}h ago{extra}")
+        note_lines.append(f"{src['name']}: newest {age:.0f}h ago")
     print(f"\n{ok} of {len(SOURCES)} sources working.  QUIET = nothing new for over a week.\n")
+    gh_note("Source check", "\n".join(note_lines))
 
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
     maker = CoverMaker(db)
