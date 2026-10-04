@@ -410,8 +410,14 @@ def published_of(entry):
     return min(datetime(*t[:6], tzinfo=timezone.utc), now) if t else now
 
 
-def summarise_ai(client, title, excerpt):
-    data = client.json(PROMPT, f"Title: {title}\nExcerpt: {excerpt[:3000]}", 800)
+VENDOR_NOTE = ("Note: this is a security company's own blog. Its product launches, new features, partnerships, "
+               "funding, customer stories and awards are adverts (is_news false). Its threat research, new "
+               "vulnerabilities and attack write-ups are news.")
+
+
+def summarise_ai(client, title, excerpt, kind=None):
+    note = f"\n{VENDOR_NOTE}" if kind == "vendor" else ""
+    data = client.json(PROMPT, f"Title: {title}\nExcerpt: {excerpt[:3000]}{note}", 800)
     if data.get("is_news") is False:
         # not security news: nothing else is needed, the story is skipped
         return {"is_news": False, "headline": "", "technical": "", "why": "", "severity": "Info",
@@ -743,7 +749,7 @@ def main():
                     stopped = True
                     break
                 ai_calls += 1
-                s = summarise_ai(ai, title, text_for_ai)
+                s = summarise_ai(ai, title, text_for_ai, src.get("kind"))
             else:
                 s = summarise_free(title, text_for_ai)
 
@@ -1249,6 +1255,19 @@ def skipped_report(days=2, hours=None):
     gh_note("Skipped report", " ; ".join(f"{v} {k}" for k, v in counts.items()) + "\n" + "\n".join(sorted(lines))[:60000])
 
 
+def remove_cards(words):
+    """Take a card out of the feed by words from its headline, and never add that link again.
+    Run: python pipeline.py --remove "words from the headline" """
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    rows = db.table("stories").select("id,headline,source").ilike("headline", f"%{words}%").limit(5).execute().data
+    for r in rows:
+        db.table("seen_links").upsert({"id": r["id"], "reason": "not_news", "story_id": None}).execute()
+        db.table("stories").delete().eq("id", r["id"]).execute()
+        print(f"removed: {r['source']}: {r['headline']}")
+    gh_note("Removed", "; ".join(f"{r['source']}: {r['headline']}" for r in rows) or "nothing matched")
+
+
 def recheck_skipped(hours=24):
     """Let the AI look again at stories it called "not news" in the last hours (after the news rules change).
     Only removes the "not news" memory; the next pipeline run reads them again. Run: python pipeline.py --recheck"""
@@ -1367,6 +1386,8 @@ if __name__ == "__main__":
         health_check()
     elif "--check-tips" in sys.argv:
         sys.exit(1 if check_tips() else 0)
+    elif "--remove" in sys.argv:
+        remove_cards(sys.argv[sys.argv.index("--remove") + 1])
     elif "--recheck" in sys.argv:
         recheck_skipped()
     elif "--skipped" in sys.argv:
