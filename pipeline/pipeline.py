@@ -1260,7 +1260,7 @@ def remove_cards(words):
     Run: python pipeline.py --remove "words from the headline" """
     from supabase import create_client
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
-    rows = db.table("stories").select("id,headline,source").ilike("headline", f"%{words}%").limit(5).execute().data
+    rows = db.table("stories").select("id,headline,source").ilike("headline", f"*{words}*").limit(5).execute().data
     for r in rows:
         db.table("seen_links").upsert({"id": r["id"], "reason": "not_news", "story_id": None}).execute()
         db.table("stories").delete().eq("id", r["id"]).execute()
