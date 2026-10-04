@@ -20,21 +20,22 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
           "November", "December"]
 
 
-def uk_today_start(now):
-    """Midnight (UK time) at the start of today, in UTC."""
-    uk = now.astimezone(UK)
-    return uk.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+def uk_today_start(now, tz=UK):
+    """Midnight (local time, UK unless another time zone is given) at the start of today, in UTC."""
+    local = now.astimezone(tz)
+    return local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
 
 
-def due(now, hour):
-    """True from `hour` o'clock UK time until midnight, so a late or missed run still posts the card."""
-    return now.astimezone(UK).hour >= hour
+def due(now, hour, tz=UK):
+    """True from `hour` o'clock local time until midnight, so a late or missed run still posts the card."""
+    return now.astimezone(tz).hour >= hour
 
 
-def posted_today(db, source, now):
-    rows = (db.table("stories").select("id").eq("source", source)
-            .gte("created_at", uk_today_start(now).isoformat()).limit(1).execute().data)
-    return bool(rows)
+def posted_today(db, source, now, tz=UK, country=None):
+    q = db.table("stories").select("id").eq("source", source).gte("created_at", uk_today_start(now, tz).isoformat())
+    if country:
+        q = q.eq("country", country)
+    return bool(q.limit(1).execute().data)
 
 
 def missing_pictures(db, source, now, days=3):
@@ -185,12 +186,12 @@ def card_ok(card):
     return len(card["headline"].split()) <= 16 and 20 <= len(card["technical"].split()) <= 90
 
 
-def story_row(sid, source, category, url, card, now):
+def story_row(sid, source, category, url, card, now, country="INTL"):
     return {
         "id": sid, "source": source, "url": url, "orig_title": card["headline"].strip(),
         "headline": card["headline"].strip(), "technical": card["technical"].strip(),
         "why_it_matters": card["why"].strip(), "severity": "Info", "action": "none", "cves": [],
         "attack_chain": None, "chain_checked": True, "also_reported": [], "incident": None, "actor_group": None,
-        "category": category, "country": "GB", "language": "en", "image_url": None,
+        "category": category, "country": country, "language": "en", "image_url": None,
         "published_at": now.isoformat(), "products": [], "zero_day": False,
     }

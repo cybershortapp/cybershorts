@@ -1,7 +1,8 @@
 """News sources.
 name     shown on the card
 url      RSS or Atom feed (feed addresses change; the health report flags dead ones)
-country  main audience (GB for now)
+country  who the stories are for: INTL (everyone, the default), or a country code (GB, IN) for local
+         news like a UK scam warning or an Indian UPI fraud. The app shows INTL plus the reader's own country.
 kind     news | vendor | gov | general | search
          general = not a security-only site (BBC, Guardian...). Only stories with
          cyber words in the title are kept, so we don't pay the AI to read sport or gadgets.
@@ -22,25 +23,41 @@ Tried 3 Oct 2026 and not added: teiss (404), Computing (403), Trend Micro (404),
 Bitdefender Labs and Red Canary (no posts for 6+ weeks), JPCERT (English feed rarely updated).
 """
 
-def s(name, url, kind="news", test=False, country="GB", reader=None):
+def s(name, url, kind="news", test=False, country="INTL", reader=None):
     """reader: a data source handled in data_feeds.py instead of an RSS feed."""
     return {"name": name, "url": url, "kind": kind, "test": test, "country": country, "reader": reader}
 
 
 SOURCES = [
-    # ---- news searches (Bing News, UK edition): stories from UK national and local press that the
-    # security sites don't cover, like scam warnings and attacks on councils, schools and shops.
-    # Only headlines with security words are read; the card shows the real publisher. ----
-    s("UK news: cyber attacks", "https://www.bing.com/news/search?q=%22cyber+attack%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: scam warnings", "https://www.bing.com/news/search?q=scam+warning+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: ransomware", "https://www.bing.com/news/search?q=ransomware&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: hackers", "https://www.bing.com/news/search?q=hackers+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: fraud and phishing", "https://www.bing.com/news/search?q=phishing+OR+%22online+fraud%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
-    s("UK news: cyber security", "https://www.bing.com/news/search?q=%22cyber+security%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    # ---- news searches (Bing News): national and local press that the security sites don't cover.
+    # Only headlines with security words are read; the card shows the real publisher. Searches that
+    # are about one country are tagged with it, so only readers there see them. ----
+    # UK edition
+    s("UK news: cyber attacks", "https://www.bing.com/news/search?q=%22cyber+attack%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    s("UK news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    s("UK news: scam warnings", "https://www.bing.com/news/search?q=scam+warning+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    s("UK news: ransomware", "https://www.bing.com/news/search?q=ransomware&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="INTL"),
+    s("UK news: hackers", "https://www.bing.com/news/search?q=hackers+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    s("UK news: fraud and phishing", "https://www.bing.com/news/search?q=phishing+OR+%22online+fraud%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    s("UK news: cyber security", "https://www.bing.com/news/search?q=%22cyber+security%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search", country="GB"),
+    # worldwide (English, international edition)
+    s("World news: cyberattacks", "https://www.bing.com/news/search?q=cyberattack&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: ransomware attacks", "https://www.bing.com/news/search?q=%22ransomware+attack%22&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: hackers", "https://www.bing.com/news/search?q=hackers+arrested+OR+hacker+group&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: Europe", "https://www.bing.com/news/search?q=cyberattack+Europe&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: Asia Pacific", "https://www.bing.com/news/search?q=cyberattack+Asia+OR+Australia+OR+Japan&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    s("World news: Middle East and Africa", "https://www.bing.com/news/search?q=cyberattack+%22Middle+East%22+OR+Africa&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
+    # India edition: shown to readers in India only
+    s("India news: cyber fraud", "https://www.bing.com/news/search?q=%22cyber+fraud%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: cyber attacks", "https://www.bing.com/news/search?q=cyber+attack+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: digital arrest scams", "https://www.bing.com/news/search?q=digital+arrest+scam&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: UPI fraud", "https://www.bing.com/news/search?q=UPI+fraud&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: cyber crime police", "https://www.bing.com/news/search?q=cyber+crime+police&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
 
     # ---- UK security and tech press ----
-    s("NCSC", "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", "gov", test=True),
+    s("NCSC", "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", "gov", test=True, country="GB"),
     s("Infosecurity Magazine", "https://www.infosecurity-magazine.com/rss/news/", test=True),
     s("The Register", "https://www.theregister.com/security/headlines.atom"),
     s("Computer Weekly", "https://www.computerweekly.com/rss/IT-security.xml"),

@@ -1,3 +1,4 @@
+import { getRegion, type Region } from './region';
 import type { Story } from './types';
 
 /**
@@ -8,8 +9,15 @@ import type { Story } from './types';
 export const TRUSTED_LINKS = {
   // Have I Been Pwned: check if an email appears in known data breaches
   breachCheck: 'https://haveibeenpwned.com/',
-  // UK NCSC: how to report scam emails, texts, calls and websites
-  reportScam: 'https://www.ncsc.gov.uk/collection/phishing-scams',
+  // where to report a scam, by the reader's region:
+  //   UK: NCSC guide to reporting scam emails, texts, calls and websites
+  //   India: National Cyber Crime Reporting Portal (helpline 1930)
+  //   elsewhere: econsumer.gov, the international consumer fraud reporting site (ICPEN, 65+ countries)
+  reportScam: {
+    GB: 'https://www.ncsc.gov.uk/collection/phishing-scams',
+    IN: 'https://cybercrime.gov.in/',
+    INTL: 'https://www.econsumer.gov/',
+  } as Record<Region, string>,
   // US NIST National Vulnerability Database, one page per CVE ID
   cve: (id: string) => `https://nvd.nist.gov/vuln/detail/${id}`,
   // MITRE ATT&CK: one page per tactic (TA0001) and per technique (T1566, T1566.001)
@@ -38,8 +46,11 @@ export function actionFor(story: Story): ActionLink | null {
       return cve ? { label: `View ${cve}`, url: TRUSTED_LINKS.cve(cve), icon: 'shield-check-outline' } : null;
     case 'check_breach':
       return { label: 'Check if your email was leaked', url: TRUSTED_LINKS.breachCheck, icon: 'email-search-outline' };
-    case 'report_scam':
-      return { label: 'How to report a scam', url: TRUSTED_LINKS.reportScam, icon: 'flag-outline' };
+    case 'report_scam': {
+      const region = getRegion();
+      const label = region === 'IN' ? 'Report it: call 1930 or cybercrime.gov.in' : 'How to report a scam';
+      return { label, url: TRUSTED_LINKS.reportScam[region], icon: 'flag-outline' };
+    }
     default:
       return cve ? { label: `View ${cve}`, url: TRUSTED_LINKS.cve(cve), icon: 'shield-check-outline' } : null;
   }

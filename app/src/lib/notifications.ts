@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
 import { getPrefs, setPrefs } from './prefs';
+import { getRegion } from './region';
 import { supabase } from './supabase';
 
 type NotificationsModule = typeof import('expo-notifications');
@@ -88,9 +89,13 @@ export async function syncAlerts(): Promise<boolean> {
   if (!token) return false;
   const p = getPrefs();
   try {
-    const { error } = p.alerts
-      ? await supabase.rpc('register_device', { p_token: token, p_products: p.products, p_terms: p.terms, p_alerts: true })
+    let { error } = p.alerts
+      ? await supabase.rpc('register_device', { p_token: token, p_products: p.products, p_terms: p.terms, p_alerts: true, p_country: getRegion() })
       : await supabase.rpc('remove_device', { p_token: token });
+    if (error && p.alerts) {
+      // server not updated for regions yet: register the old way (alerts then count this phone as UK)
+      ({ error } = await supabase.rpc('register_device', { p_token: token, p_products: p.products, p_terms: p.terms, p_alerts: true }));
+    }
     if (error) {
       problem = 'Server said: ' + error.message.slice(0, 160);
       return false;

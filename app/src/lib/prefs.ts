@@ -8,10 +8,11 @@ export type Prefs = {
   alerts: boolean; // phone alerts on/off
   alertsAsked: boolean; // we've asked for notification permission once
   email: string; // email they subscribed with ('' if none)
+  region: '' | 'GB' | 'IN' | 'INTL'; // where they are ('' = work it out from the phone)
 };
 
 const KEY = 'prefs-v1';
-const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '' };
+const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '', region: '' };
 
 let state: Prefs = EMPTY;
 let loaded = false;

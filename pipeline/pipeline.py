@@ -1270,6 +1270,25 @@ def remove_cards(words):
             + " | newest: " + " ; ".join(repr(t["headline"]) for t in top))
 
 
+def set_countries():
+    """One-off after regions were added: stories saved before then were all tagged GB. Make them INTL
+    (for everyone), except UK tips and NCSC. Run: python pipeline.py --set-countries"""
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    total = 0
+    while True:
+        rows = (db.table("stories").select("id").eq("country", "GB").not_.in_("source", ["CyberSid Tips", "NCSC"])
+                .limit(500).execute().data)
+        if not rows:
+            break
+        ids = [r["id"] for r in rows]
+        for i in range(0, len(ids), 100):
+            db.table("stories").update({"country": "INTL"}).in_("id", ids[i:i + 100]).execute()
+        total += len(ids)
+    print(f"{total} stories now shown to everyone (INTL)")
+    gh_note("Set countries", f"{total} stories now INTL")
+
+
 def recheck_skipped(hours=24):
     """Let the AI look again at stories it called "not news" in the last hours (after the news rules change).
     Only removes the "not news" memory; the next pipeline run reads them again. Run: python pipeline.py --recheck"""
@@ -1310,7 +1329,8 @@ def try_daily():
     from history import post_daily_history
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
     ai = AI()
-    for name, func in (("Tip", post_daily_tip), ("History", post_daily_history)):
+    for name, func in (("Tip", lambda db, ai, dry_run: post_daily_tip(db, ai, dry_run=dry_run, regions=["IN"])),
+                       ("History", post_daily_history)):
         story, note, calls, _ = func(db, ai, dry_run=True)
         print(f"\n=== {name} written by AI (not posted): {note} | {calls} AI calls ===")
         if story:
@@ -1390,6 +1410,8 @@ if __name__ == "__main__":
         sys.exit(1 if check_tips() else 0)
     elif "--remove" in sys.argv:
         remove_cards(sys.argv[sys.argv.index("--remove") + 1])
+    elif "--set-countries" in sys.argv:
+        set_countries()
     elif "--recheck" in sys.argv:
         recheck_skipped()
     elif "--skipped" in sys.argv:

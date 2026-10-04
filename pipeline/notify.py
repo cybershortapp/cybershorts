@@ -111,7 +111,7 @@ def send_alerts(db):
     now = datetime.now(timezone.utc)
     quiet = _quiet(now)
     stories = (db.table("stories")
-               .select("id,headline,technical,why_it_matters,severity,category,products,zero_day,created_at,published_at")
+               .select("id,headline,technical,why_it_matters,severity,category,products,zero_day,created_at,published_at,country")
                .gte("created_at", (now - LOOKBACK).isoformat()).order("created_at").limit(300)
                .execute().data)
     for s in stories:
@@ -119,11 +119,17 @@ def send_alerts(db):
     # a story published days ago but only picked up now is old news: it goes in the feed, no alert
     stories = [s for s in stories if datetime.fromisoformat(s["published_at"].replace("Z", "+00:00")) >= now - FRESH]
 
-    # all phones with alerts on, 1000 at a time
-    devices, start = [], 0
+    # all phones with alerts on, 1000 at a time (country: where the reader is; older phones count as UK)
+    devices, start, fields = [], 0, "token,products,terms,last_push_at,country"
     while True:
-        chunk = (db.table("devices").select("token,products,terms,last_push_at").eq("alerts", True)
-                 .range(start, start + 999).execute().data)
+        try:
+            chunk = (db.table("devices").select(fields).eq("alerts", True)
+                     .range(start, start + 999).execute().data)
+        except Exception:
+            if fields.endswith(",country"):     # the country column hasn't been added yet
+                fields = "token,products,terms,last_push_at"
+                continue
+            raise
         devices += chunk
         if len(chunk) < 1000:
             break
@@ -131,7 +137,9 @@ def send_alerts(db):
 
     messages, handled = [], []
     for d in devices:
-        m = plan(stories, d, now)
+        # each reader gets news for everyone plus their own country's local news and tips
+        mine = {"INTL", d.get("country") or "GB"}
+        m = plan([s for s in stories if (s.get("country") or "INTL") in mine], d, now)
         messages += m
         # remember what this phone has been sent; in quiet hours only when something was sent, so the
         # rest of the night still goes into the 7am alert
