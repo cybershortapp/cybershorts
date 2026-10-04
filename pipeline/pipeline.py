@@ -1167,6 +1167,55 @@ def check_tips():
     return bad
 
 
+def skipped_report(days=2):
+    """List the stories from the last few days that were skipped as "not news", and why, to check the filter
+    isn't throwing away real news. Run: python pipeline.py --skipped"""
+    from concurrent.futures import ThreadPoolExecutor
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        feeds = list(pool.map(read_feed, SOURCES))
+    by_src = {s["name"]: s for s in SOURCES}
+    rows, kept, merged = [], 0, 0
+    for name, feed, err in feeds:
+        if err or feed is None:
+            continue
+        src = by_src[name]
+        for e in sorted((e for e in feed.entries if e.get("link") and e.get("title")), key=published_of, reverse=True)[:30]:
+            if published_of(e) < cutoff:
+                continue
+            sid = hashlib.sha1(e.get("link").encode()).hexdigest()[:16]
+            rows.append((sid, name, src, e.get("title")))
+    reasons = {}
+    for i in range(0, len(rows), 150):
+        ids = [r[0] for r in rows[i:i + 150]]
+        for r in db.table("seen_links").select("id,reason").in_("id", ids).execute().data:
+            reasons[r["id"]] = r["reason"]
+        for r in db.table("stories").select("id").in_("id", ids).execute().data:
+            reasons[r["id"]] = "kept"
+    lines, counts = [], {}
+    for sid, name, src, title in rows:
+        why = reasons.get(sid, "not read yet")
+        if why == "not_news":
+            if NOT_NEWS_TITLE.search(title):
+                why = "skipped: advert/webinar words in title"
+            elif src.get("kind") == "general" and not CYBER_WORDS.search(title):
+                why = "skipped: not about security (general site)"
+            else:
+                why = "skipped: AI said not news"
+        counts[why] = counts.get(why, 0) + 1
+        if why.startswith("skipped: AI") or why.startswith("skipped: advert") or why == "not read yet":
+            lines.append(f"{why[9:] if why.startswith('skipped') else why} | {name} | {title[:110]}")
+    print(f"\n=== Stories from the last {days} days in the feeds: {len(rows)} ===")
+    for k, v in sorted(counts.items(), key=lambda x: -x[1]):
+        print(f"  {v:>4}  {k}")
+    print()
+    for l in sorted(lines):
+        print("  " + l)
+    gh_note("Skipped report", " ; ".join(f"{v} {k}" for k, v in counts.items()) + "\n" + "\n".join(sorted(lines))[:60000])
+
+
 def try_daily():
     """Let the AI write one new tip and one new history card, without posting them, to check it works.
     Run: python pipeline.py --try-daily"""
@@ -1254,6 +1303,8 @@ if __name__ == "__main__":
         health_check()
     elif "--check-tips" in sys.argv:
         sys.exit(1 if check_tips() else 0)
+    elif "--skipped" in sys.argv:
+        skipped_report()
     elif "--try-daily" in sys.argv:
         try_daily()
     elif "--test-alert" in sys.argv:
