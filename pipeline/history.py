@@ -30,7 +30,9 @@ attacks, arrests, takedowns, malware, breaches, laws and milestones from any cou
 {"events": [{"wikipedia": "exact article title", "date": "YYYY-MM-DD"}]}"""
 
 WRITE_PROMPT = """Write a cyber history card for CyberSid using ONLY facts from the Wikipedia article text the user
-gives you. UK English, plain words, no hype, no em dashes. If the article is not about a cyber security event, reply
+gives you. UK English, plain words, no hype, no em dashes. The card is about ONE moment with a date: the headline,
+the summary and the date must all be about that same moment (for malware or a group, pick its best-known dated
+event, e.g. its discovery or takedown). If the article is not about a cyber security event, reply
 {"ok": false}. Reply with ONLY JSON:
 {"ok": true,
  "headline": "what happened, max 12 words, e.g. 'WannaCry ransomware hits the NHS and the world'",
