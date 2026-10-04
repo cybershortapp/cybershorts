@@ -42,7 +42,7 @@ jobs:
           python pipeline.py --check-tips 2>&1 | tee -a health.txt || true
           # the AI writes one new tip and one history card from real pages, without posting them
           python pipeline.py --skipped 2>&1 | grep -v '^::' | tee -a health.txt || true
-          SKIPPED_HOURS=8 python pipeline.py --skipped || true
+          python pipeline.py --set-countries
           python pipeline.py --try-daily 2>&1 | grep -v '^::' | tee -a health.txt || true
           { echo '### Source check'; echo '```'; cat health.txt; echo '```'; } > report.md
           cat report.md >> "$GITHUB_STEP_SUMMARY"
