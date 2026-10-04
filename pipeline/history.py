@@ -18,7 +18,8 @@ from daily import (MONTHS, UK, card_ok, date_in_text, due, is_repeat, missing_pi
 SOURCE = "CyberSid History"
 POST_HOUR = 12
 CYBER = re.compile(r"\b(cyber|hack|malware|ransomware|virus|worm|trojan|breach|exploit|vulnerab|phishing|botnet|"
-                   r"denial-of-service|ddos|encryption|cryptograph|spyware|backdoor|data leak|intrusion|security)", re.I)
+                   r"denial-of-service|ddos|encryption|cryptograph|spyware|backdoor|data leak|intrusion|security|"
+                   r"unauthori[sz]ed access|computer fraud|password|stolen data|personal data|attacker)", re.I)
 
 PICK_PROMPT = """You choose the daily "cyber history" card for CyberSid, a UK cyber security news app.
 Suggest 8 well-documented cyber security events (famous attacks, breaches, malware outbreaks, major vulnerabilities,
@@ -106,7 +107,7 @@ def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
             if norm_url(url) in used_urls or too_similar(title, avoid, 0.6):
                 print(f"  [history] already used: {title}")
                 continue
-            if len(text) < 500 or len(CYBER.findall(text[:6000])) < 3:
+            if len(text) < 500 or len(CYBER.findall(text[:6000])) < 2:
                 print(f"  [history] not a cyber security article: {title}")
                 continue
             if checked >= per_round:
