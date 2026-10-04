@@ -43,16 +43,7 @@ const EMPTY_TEXT: Partial<Record<Filter, string>> = {
   'For you': "Nothing about your products yet. Stay tuned: we'll show it here the moment it's reported.",
   Critical: 'No critical stories right now. Stay tuned.',
   Saved: 'Tap the bookmark on any story to save it here.',
-  History: 'Cyber history is on its way. Check back soon.',
 };
-
-/** History tab: today's anniversaries first, then the days coming up, around the calendar. */
-function byAnniversary(rows: Story[]) {
-  const dayOfYear = (d: Date) => Math.floor((Date.UTC(2000, d.getUTCMonth(), d.getUTCDate()) - Date.UTC(2000, 0, 1)) / 86400000);
-  const today = dayOfYear(new Date());
-  const key = (s: Story) => (dayOfYear(new Date(s.published_at)) - today + 366) % 366;
-  return [...rows].sort((a, b) => key(a) - key(b) || b.published_at.localeCompare(a.published_at));
-}
 
 /** "For you": stories tagged with the reader's products, or mentioning their own keywords. */
 function forYouFilter() {
@@ -128,18 +119,14 @@ function Main() {
       if (filter === 'Search') {
         if (searchTerm.length < 2) return null;
         query = query.or(`headline.ilike.*${searchTerm}*,technical.ilike.*${searchTerm}*,source.ilike.*${searchTerm}*`);
-      } else if (filter === 'History') {
-        // a few hundred at most, all loaded at once and sorted by anniversary on the phone
-        query = supabase.from('stories').select(STORY_FIELDS).eq('category', 'History').order('published_at', { ascending: false }).limit(500);
       } else if (filter === 'Saved') query = query.in('id', savedIds);
       else if (filter === 'Critical') query = query.eq('severity', 'Critical');
       else if (filter === 'Zero-day') query = query.eq('zero_day', true);
       else if (filter === 'For you') {
         const f = forYouFilter();
         if (!f) return null;
-        query = query.or(f).neq('category', 'History');
-      } else if (filter === 'All') query = query.neq('category', 'History');
-      else query = query.eq('category', filter);
+        query = query.or(f);
+      } else if (filter !== 'All') query = query.eq('category', filter);
       return query;
     },
     [filter, savedKey, prefsKey, searchKey], // eslint-disable-line react-hooks/exhaustive-deps
@@ -168,8 +155,7 @@ function Main() {
     }
     let rows = cleanStories(data as Story[]);
     lastLoaded.current = Date.now();
-    if (filter === 'History') rows = byAnniversary(rows);
-    if (rows.length < FIRST_PAGE || filter === 'History') noMore.current.add(filter);
+    if (rows.length < FIRST_PAGE) noMore.current.add(filter);
     else noMore.current.delete(filter);
     if (opts?.markSeen) {
       // remember the newest story that exists now; anything newer than the previous visit gets a NEW tag
@@ -193,7 +179,7 @@ function Main() {
   // near the end of the loaded cards: quietly fetch the next page and add it to the bottom
   const loadMore = useCallback(async () => {
     const f = filter;
-    if (loadingMore.current || noMore.current.has(f) || filter === 'Saved' || filter === 'History') return;
+    if (loadingMore.current || noMore.current.has(f) || filter === 'Saved') return;
     const have = storiesRef.current.length;
     if (have === 0 || have >= MAX_CARDS) return;
     const query = pageQuery(have);

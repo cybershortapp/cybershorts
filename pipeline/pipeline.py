@@ -597,7 +597,7 @@ def main():
     if db:
         since = (started - timedelta(days=3)).isoformat()
         recent = (db.table("stories").select("id,orig_title,technical,cves,source,url,also_reported,published_at")
-                  .gte("created_at", since).execute().data)
+                  .gte("created_at", since).or_("category.is.null,category.not.in.(Tips,History)").execute().data)
         day_start = started.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         runs = db.table("pipeline_runs").select("ai_calls,research").gte("started_at", day_start).execute().data
         ai_used_today = sum(r["ai_calls"] or 0 for r in runs)
@@ -786,30 +786,38 @@ def main():
         left = sum(1 for c in candidates if c[3] not in seen_ids)
         print(f"[stop] AI budget used up ({ai_budget} calls). {left} older stories wait for the next run.")
 
-    # ---- 2b. a tip or explainer card in the morning and evening (hand-written, no AI) ----
-    tip_note = "off"
+    # ---- 2b. the daily cards: one tip (8am UK) and one cyber history card (12pm UK), never repeated ----
+    # Their pictures go to the front of the queue, so they always have one, even on busy news days.
+    daily_cover, tip_note, history_note = [], "off", "off"
     if db and not TEST_MODE:
-        try:
-            from tips import post_due_tip
-            tip = post_due_tip(db)
-            tip_note = f"posted: {tip['headline']}" if tip else "none due"
-            if tip:
-                need_cover.append((tip["id"], cover_prompt(tip["scene"], "Tips"), tip["headline"]))
-        except Exception as ex:
-            tip_note = f"failed: {str(ex)[:80]}"
+        for name, module, func, category in (("tip", "tips", "post_daily_tip", "Tips"),
+                                             ("history", "history", "post_daily_history", "Other")):
+            try:
+                story, note, calls, waiting = getattr(__import__(module), func)(db, ai)
+                ai_calls += calls
+                daily_cover += [(sid, cover_prompt(scene, category), headline) for sid, scene, headline in waiting]
+                if story:
+                    print(f"[{name}] {note}")
+            except Exception as ex:
+                note = f"failed: {str(ex)[:80]}"
+                print(f"[warn] {name} card: {note}")
+            if name == "tip":
+                tip_note = note
+            else:
+                history_note = note
 
-    # ---- 2c. cyber history cards (hand-written, added once; pictures follow over the next runs) ----
-    history_note = "off"
-    if db and not TEST_MODE:
+    # ---- 2c. recent stories that still have no picture (the picture service was busy or failed last time) ----
+    if db and COVERS and not TEST_MODE:
         try:
-            from history import sync_history
-            waiting = sync_history(db)
-            for hid, scene, headline in waiting:
-                need_cover.append((hid, cover_prompt(scene, "Other"), headline))
-            history_note = f"{len(waiting)} waiting for a picture" if waiting else "all have pictures"
+            have = {c[0] for c in need_cover + daily_cover}
+            since = (started - timedelta(days=2)).isoformat()
+            missing = (db.table("stories").select("id,headline,category").is_("image_url", "null")
+                       .gte("created_at", since).order("created_at", desc=True).limit(20).execute().data)
+            for r in [r for r in missing if r["id"] not in have][:int(os.getenv("COVERS_RETRY", "6"))]:
+                need_cover.append((r["id"], cover_prompt("", r["category"] or "Other"), r["headline"]))
         except Exception as ex:
-            history_note = f"failed: {str(ex)[:80]}"
-            print(f"[warn] history cards: {str(ex)[:80]}")
+            print(f"[warn] picture retry list: {str(ex)[:80]}")
+    need_cover = daily_cover + need_cover
 
     # ---- 3. AI pictures for new stories that have no usable picture ----
     covers_made, covers_note = 0, "off"
@@ -1158,6 +1166,25 @@ def check_tips():
     return bad
 
 
+def try_daily():
+    """Let the AI write one new tip and one new history card, without posting them, to check it works.
+    Run: python pipeline.py --try-daily"""
+    from supabase import create_client
+    from ai import AI
+    from tips import post_daily_tip
+    from history import post_daily_history
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    ai = AI()
+    for name, func in (("Tip", post_daily_tip), ("History", post_daily_history)):
+        story, note, calls, _ = func(db, ai, dry_run=True)
+        print(f"\n=== {name} written by AI (not posted): {note} | {calls} AI calls ===")
+        if story:
+            for k in ("id", "headline", "technical", "why_it_matters", "url"):
+                print(f"  {k}: {story[k]}")
+        gh_note(f"{name} trial", f"{note} | {story['technical'] if story else ''} | {story['url'] if story else ''}")
+    print()
+
+
 def health_check():
     """Check every news source and the AI picture service, without changing anything.
     Run: python pipeline.py --health"""
@@ -1226,6 +1253,8 @@ if __name__ == "__main__":
         health_check()
     elif "--check-tips" in sys.argv:
         sys.exit(1 if check_tips() else 0)
+    elif "--try-daily" in sys.argv:
+        try_daily()
     elif "--test-alert" in sys.argv:
         from supabase import create_client
         from notify import test_alert
