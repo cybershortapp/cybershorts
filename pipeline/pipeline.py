@@ -11,7 +11,7 @@ Settings (.env on laptop, GitHub secrets online):
 Exit code is 1 when the run looks broken, so GitHub emails you.
 """
 import os, re, sys, json, hashlib, time, html
-import urllib.request
+import urllib.parse, urllib.request
 from urllib.parse import urljoin
 from datetime import datetime, timezone, timedelta
 from difflib import SequenceMatcher
@@ -95,7 +95,7 @@ def clean_chain(raw, source_text):
 
 PROMPT = f"""You write short cyber security news cards for a UK mobile app read by IT and security people.
 Given an article title and excerpt, reply with ONLY a JSON object:
-{{"is_news": true or false. false if this is an advert, webinar, product launch, promotion, podcast, event, job post, opinion piece with no new facts, a roundup of several unrelated stories, an open thread or off-topic blog post, or not about cyber security,
+{{"is_news": true or false. false only if this is an advert, webinar, a company promoting its own product or award, podcast, event, job post, opinion piece with no new facts, a roundup of several unrelated stories, an open thread or off-topic blog post, or not about cyber security, privacy or online safety. These ARE news (true): attacks, breaches, flaws and patches, scams and fraud warnings, arrests, privacy and data protection stories, AI misuse or AI security, government cyber policy, contracts and appointments, security research and technical write-ups, and new free security tools or features for users. If unsure, use true,
   "headline": "max 12 words, your own wording",
   "technical": "about 55 words for a security professional. Include CVE IDs, threat actors, affected products and versions if present",
   "why": "max 15 words. One practical line telling the reader what to do or why it matters, e.g. 'Patch FortiOS now if your VPN is internet-facing'",
@@ -457,7 +457,7 @@ def summarise_free(title, excerpt):
 
 NOT_NEWS_TITLE = re.compile(
     r"\b(webinar|podcast|sponsored|partner content|register now|join us|live demo|on-demand|whitepaper|"
-    r"e-?book|we'?re hiring|job opening|press release|awards?\b|conference|summit|top \d+ |best .* tools|"
+    r"e-?book|we'?re hiring|job opening|press release|award (?:ceremony|winners?|shortlist)|wins? .{0,30}\baward\b|named a leader|conference|summit|top \d+ |best .* tools|"
     r"newsletter|round ?\d+|roundup|round-up|week in review|weekly update|this week in|recap|"
     r"in other news|squid blogging|news digest|weekly digest|daily digest|links? of the week|open thread)",
     re.I,
@@ -548,6 +548,21 @@ def gh_note(title, text):
         print(f"::notice title={title}::{text}")
 
 
+def search_entries(feed):
+    """News search feeds (Bing News) link through a redirect and name the real publisher separately.
+    Use the article's own address, so the same story from a direct feed is recognised as already seen,
+    and show the publisher (e.g. "The Guardian") on the card."""
+    for e in feed.entries:
+        link = e.get("link") or ""
+        if "apiclick.aspx" in link:
+            real = urllib.parse.parse_qs(urllib.parse.urlparse(link).query).get("url", [""])[0]
+            if real.startswith("http"):
+                e["link"] = real
+        pub = re.sub(r"\s+on MSN$", "", str(e.get("news_source") or "")).strip()
+        if pub:
+            e["publisher"] = pub
+
+
 def read_feed(src, timeout=None, ua=None):
     """Download one feed with a hard time limit, so one slow website can't freeze the whole run."""
     try:
@@ -559,7 +574,10 @@ def read_feed(src, timeout=None, ua=None):
             "Accept-Language": "en-GB,en;q=0.9"})
         with urllib.request.urlopen(req, timeout=timeout or FEED_TIMEOUT) as resp:
             raw = resp.read(4_000_000)
-        return src["name"], feedparser.parse(raw), None
+        feed = feedparser.parse(raw)
+        if src.get("kind") == "search":
+            search_entries(feed)
+        return src["name"], feed, None
     except Exception as ex:
         return src["name"], None, ex
 
@@ -676,6 +694,7 @@ def main():
         if stopped:
             break
         row = rows[src["name"]]
+        pub = e.get("publisher") or src["name"]     # search feeds: the real publisher
         if sid in seen_ids:          # a link can appear in two feeds
             row["seen"] += 1
             continue
@@ -683,7 +702,7 @@ def main():
         excerpt = clean(e.get("summary") or e.get("description"))
 
         # 1. obvious adverts, webinars and off-topic stories (no AI cost)
-        if NOT_NEWS_TITLE.search(title) or (src.get("kind") == "general" and not CYBER_WORDS.search(title)):
+        if NOT_NEWS_TITLE.search(title) or (src.get("kind") in ("general", "search") and not CYBER_WORDS.search(title)):
             remember(sid, "not_news")
             seen_ids.add(sid)
             row["skipped"] += 1
@@ -705,15 +724,15 @@ def main():
                 match = same_event(ai, title, text_for_ai, similar)
             if match:
                 also = match.get("also_reported") or []
-                if match["source"] != src["name"] and all(a.get("source") != src["name"] for a in also):
-                    also = also + [{"source": src["name"], "url": link}]
+                if match["source"] != pub and all(a.get("source") != pub for a in also):
+                    also = also + [{"source": pub, "url": link}]
                     match["also_reported"] = also
                     if db:
                         db.table("stories").update({"also_reported": also}).eq("id", match["id"]).execute()
                 remember(sid, "duplicate", match["id"])
                 seen_ids.add(sid)
                 row["merged"] += 1
-                print(f"[merge] {src['name']}: {title[:60]}\n        -> same as: {match['orig_title'][:60]}")
+                print(f"[merge] {pub}: {title[:60]}\n        -> same as: {match['orig_title'][:60]}")
                 continue
 
             # 3. write the card
@@ -730,7 +749,7 @@ def main():
                 remember(sid, "not_news")
                 seen_ids.add(sid)
                 row["skipped"] += 1
-                print(f"[skip] {src['name']}: not news -> {title[:60]}")
+                print(f"[skip] {pub}: not news -> {title[:60]}")
                 continue
 
             chain, incident = s["chain"], s["incident"]
@@ -752,7 +771,7 @@ def main():
             if image and COVERS and not usable_image(image):
                 image = None   # broken or tiny picture: an AI picture looks better
             story = {
-                "id": sid, "source": src["name"], "url": link, "orig_title": title,
+                "id": sid, "source": pub, "url": link, "orig_title": title,
                 "headline": s["headline"], "technical": s["technical"],
                 "why_it_matters": s["why"].strip() or None, "severity": s["severity"],
                 "action": s["action"], "cves": cves,
@@ -768,10 +787,10 @@ def main():
             seen_ids.add(sid)
             if not image:
                 need_cover.append((sid, cover_prompt(s.get("scene"), s["category"]), s["headline"]))
-            recent.append({"id": sid, "orig_title": title, "cves": cves, "source": src["name"], "technical": s["technical"],
+            recent.append({"id": sid, "orig_title": title, "cves": cves, "source": pub, "technical": s["technical"],
                            "url": link, "also_reported": [], "_words": words(f"{title} {s['technical'][:300]}")})
             row["added"] += 1
-            print(f"[ok]  {src['name']}: {s['headline']}")
+            print(f"[ok]  {pub}: {s['headline']}")
             if DRY_RUN or TEST_MODE:
                 extra = f" | attack chain: {len(chain)} steps" if chain else ""
                 extra += f" (+{len(research_steps)} researched)" if research_steps else ""
@@ -779,7 +798,7 @@ def main():
                 print(f"      [{s['severity']}] {s['why']}{extra}\n")
         except Exception as ex:
             row["failed"] += 1
-            print(f"[fail] {src['name']}: {title[:50]} -> {ex}")
+            print(f"[fail] {pub}: {title[:50]} -> {ex}")
 
 
     if stopped:
@@ -1167,6 +1186,55 @@ def check_tips():
     return bad
 
 
+def skipped_report(days=2):
+    """List the stories from the last few days that were skipped as "not news", and why, to check the filter
+    isn't throwing away real news. Run: python pipeline.py --skipped"""
+    from concurrent.futures import ThreadPoolExecutor
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        feeds = list(pool.map(read_feed, SOURCES))
+    by_src = {s["name"]: s for s in SOURCES}
+    rows, kept, merged = [], 0, 0
+    for name, feed, err in feeds:
+        if err or feed is None:
+            continue
+        src = by_src[name]
+        for e in sorted((e for e in feed.entries if e.get("link") and e.get("title")), key=published_of, reverse=True)[:30]:
+            if published_of(e) < cutoff:
+                continue
+            sid = hashlib.sha1(e.get("link").encode()).hexdigest()[:16]
+            rows.append((sid, name, src, e.get("title")))
+    reasons = {}
+    for i in range(0, len(rows), 150):
+        ids = [r[0] for r in rows[i:i + 150]]
+        for r in db.table("seen_links").select("id,reason").in_("id", ids).execute().data:
+            reasons[r["id"]] = r["reason"]
+        for r in db.table("stories").select("id").in_("id", ids).execute().data:
+            reasons[r["id"]] = "kept"
+    lines, counts = [], {}
+    for sid, name, src, title in rows:
+        why = reasons.get(sid, "not read yet")
+        if why == "not_news":
+            if NOT_NEWS_TITLE.search(title):
+                why = "skipped: advert/webinar words in title"
+            elif src.get("kind") == "general" and not CYBER_WORDS.search(title):
+                why = "skipped: not about security (general site)"
+            else:
+                why = "skipped: AI said not news"
+        counts[why] = counts.get(why, 0) + 1
+        if why.startswith("skipped: AI") or why.startswith("skipped: advert") or why == "not read yet":
+            lines.append(f"{why[9:] if why.startswith('skipped') else why} | {name} | {title[:110]}")
+    print(f"\n=== Stories from the last {days} days in the feeds: {len(rows)} ===")
+    for k, v in sorted(counts.items(), key=lambda x: -x[1]):
+        print(f"  {v:>4}  {k}")
+    print()
+    for l in sorted(lines):
+        print("  " + l)
+    gh_note("Skipped report", " ; ".join(f"{v} {k}" for k, v in counts.items()) + "\n" + "\n".join(sorted(lines))[:60000])
+
+
 def try_daily():
     """Let the AI write one new tip and one new history card, without posting them, to check it works.
     Run: python pipeline.py --try-daily"""
@@ -1254,6 +1322,8 @@ if __name__ == "__main__":
         health_check()
     elif "--check-tips" in sys.argv:
         sys.exit(1 if check_tips() else 0)
+    elif "--skipped" in sys.argv:
+        skipped_report()
     elif "--try-daily" in sys.argv:
         try_daily()
     elif "--test-alert" in sys.argv:

@@ -2,9 +2,11 @@
 name     shown on the card
 url      RSS or Atom feed (feed addresses change; the health report flags dead ones)
 country  main audience (GB for now)
-kind     news | vendor | gov | general
+kind     news | vendor | gov | general | search
          general = not a security-only site (BBC, Guardian...). Only stories with
          cyber words in the title are kept, so we don't pay the AI to read sport or gadgets.
+         search = a news search feed (Bing News); same headline check as general, and the card shows
+         the real publisher instead of the feed name.
 test     used when TEST_MODE is on
 Checked by health report only. Remove any that show NO STORIES for a few days in a row.
 
@@ -26,6 +28,17 @@ def s(name, url, kind="news", test=False, country="GB", reader=None):
 
 
 SOURCES = [
+    # ---- news searches (Bing News, UK edition): stories from UK national and local press that the
+    # security sites don't cover, like scam warnings and attacks on councils, schools and shops.
+    # Only headlines with security words are read; the card shows the real publisher. ----
+    s("UK news: cyber attacks", "https://www.bing.com/news/search?q=%22cyber+attack%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: scam warnings", "https://www.bing.com/news/search?q=scam+warning+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: ransomware", "https://www.bing.com/news/search?q=ransomware&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: hackers", "https://www.bing.com/news/search?q=hackers+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: fraud and phishing", "https://www.bing.com/news/search?q=phishing+OR+%22online+fraud%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+    s("UK news: cyber security", "https://www.bing.com/news/search?q=%22cyber+security%22+UK&format=rss&setlang=en-GB&cc=GB&qft=sortbydate%3d%221%22", "search"),
+
     # ---- UK security and tech press ----
     s("NCSC", "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", "gov", test=True),
     s("Infosecurity Magazine", "https://www.infosecurity-magazine.com/rss/news/", test=True),
