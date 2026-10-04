@@ -218,11 +218,12 @@ def covers_made_today(db, day_start):
 
 
 def cleanup_old_covers(db, days=120, limit=50):
-    """Delete AI pictures of stories older than `days`, so free storage never fills up."""
+    """Delete AI pictures of stories older than `days`, so free storage never fills up.
+    History cards are skipped: their dates are years old on purpose and their pictures are kept for good."""
     from datetime import datetime, timedelta, timezone
     before = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     rows = (db.table("stories").select("id,image_url").like("image_url", "%/object/public/covers/%")
-            .lt("published_at", before).limit(limit).execute().data)
+            .or_("category.is.null,category.neq.History").lt("published_at", before).limit(limit).execute().data)
     if not rows:
         return 0
     paths = [r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0] for r in rows]
