@@ -1,11 +1,12 @@
 """
-Phone alerts. Runs at the end of every hourly pipeline run.
+Phone alerts. Runs at the end of every pipeline run (every 30 minutes).
 
-Rules (so people stay informed without being annoyed):
-  - at most ONE alert per phone per hour
-  - the best new story since that phone's last alert: their own products / keywords first, then the most serious
-  - Info-level stories only alert when they match the person's products
-  - quiet hours 22:00-07:00 UK time: only Critical stories about their products, or zero-days
+Rules:
+  - every new card gets an alert: news, the daily tip and the daily history card
+  - more than 4 new cards in one run: the 3 most important get their own alert, the rest come as one
+    "more new stories" alert, so a busy moment doesn't buzz the phone ten times
+  - quiet hours 22:00-07:00 UK time: only Critical stories about the person's products, or zero-days;
+    everything else from the night arrives as one "overnight" alert at 7am
 Sent through Expo's free push service. Phones that uninstalled the app are removed automatically.
 """
 import json, urllib.request
@@ -16,7 +17,10 @@ from tags import matches
 
 EXPO_URL = "https://exp.host/--/api/v2/push/send"
 RANK = {"Critical": 4, "High": 3, "Medium": 2, "Info": 1}
-LOOKBACK = timedelta(hours=3)
+UK = ZoneInfo("Europe/London")
+LOOKBACK = timedelta(hours=12)      # far enough back to cover the whole night
+NEW_PHONE = timedelta(hours=1)      # a phone that never had an alert gets only the last hour's cards
+MAX_SINGLE = 4                      # up to this many cards per run each get their own alert
 
 
 def _post(messages):
@@ -26,27 +30,28 @@ def _post(messages):
         return json.loads(r.read()).get("data") or []
 
 
-def _pick(stories, device, since, quiet):
-    best, best_score, best_match = None, -1, None
-    for s in stories:
-        if s["created_at"] <= since or s.get("category") in ("Tips", "History"):
-            continue     # tips and history cards never trigger alerts
-        rank = RANK.get(s.get("severity") or "Info", 1)
-        hit = matches(s, device.get("products"), device.get("terms"))
-        zero = bool(s.get("zero_day"))
-        if quiet and not ((hit and rank == 4) or zero):
-            continue
-        if not hit and rank < 2:
-            continue
-        score = (100 if hit else 0) + rank * 10 + (5 if zero else 0)
-        if score > best_score:
-            best, best_score, best_match = s, score, hit
-    return best, best_match
+def _quiet(t):
+    h = t.astimezone(UK).hour
+    return h >= 22 or h < 7
+
+
+def _urgent(s, hit):
+    """Important enough to wake someone: critical news about their products, or a zero-day."""
+    return bool(s.get("zero_day")) or (bool(hit) and s.get("severity") == "Critical")
+
+
+def _score(s, hit):
+    return (100 if hit else 0) + RANK.get(s.get("severity") or "Info", 1) * 10 + (5 if s.get("zero_day") else 0)
 
 
 def _message(token, story, hit):
     sev = story.get("severity") or "Info"
-    if hit:
+    cat = story.get("category")
+    if cat == "Tips":
+        title = "Today's tip"
+    elif cat == "History":
+        title = "Cyber history"
+    elif hit:
         title = f"For you: {hit}"
     elif story.get("zero_day"):
         title = "Zero-day alert"
@@ -59,16 +64,54 @@ def _message(token, story, hit):
             "priority": "high" if sev == "Critical" or hit else "default", "data": {"storyId": story["id"]}}
 
 
+def _summary(token, stories, title):
+    lines = [f"- {s['headline']}" for s in stories[:4]]
+    if len(stories) > 4:
+        lines.append(f"and {len(stories) - 4} more")
+    return {"to": token, "title": title, "body": "\n".join(lines)[:230], "sound": "default", "channelId": "news",
+            "priority": "default", "data": {"storyId": stories[0]["id"]}}
+
+
+def plan(stories, device, now):
+    """The alerts one phone should get from this run. Stories must be oldest first."""
+    last = device.get("last_push_at")
+    last = datetime.fromisoformat(last.replace("Z", "+00:00")) if last else now - NEW_PHONE
+    token = device["token"]
+    hits = {s["id"]: matches(s, device.get("products"), device.get("terms")) for s in stories}
+    if _quiet(now):
+        return [_message(token, s, hits[s["id"]]) for s in stories
+                if s["created_at"] > last and _urgent(s, hits[s["id"]])]
+
+    uk_now = now.astimezone(UK)
+    morning = uk_now.replace(hour=7, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+    night_start = morning - timedelta(hours=9, minutes=30)      # 21:30 the evening before
+    messages = []
+    # first run after quiet hours: one alert for everything from the night that wasn't urgent enough to send
+    if last < morning:
+        night = [s for s in stories if night_start <= s["created_at"] < morning
+                 and not (_quiet(s["created_at"]) and _urgent(s, hits[s["id"]]))]
+        if len(night) == 1:
+            messages.append(_message(token, night[0], hits[night[0]["id"]]))
+        elif night:
+            night.sort(key=lambda s: -_score(s, hits[s["id"]]))
+            messages.append(_summary(token, night, f"{len(night)} new stories overnight"))
+    fresh = [s for s in stories if s["created_at"] > max(last, morning)]
+    if len(fresh) > MAX_SINGLE:
+        ranked = sorted(fresh, key=lambda s: -_score(s, hits[s["id"]]))
+        top, rest = ranked[:MAX_SINGLE - 1], ranked[MAX_SINGLE - 1:]
+        messages.append(_summary(token, rest, f"{len(rest)} more new stories"))
+        fresh = [s for s in fresh if s in top]
+    messages += [_message(token, s, hits[s["id"]]) for s in fresh]
+    return messages
+
+
 def send_alerts(db):
     now = datetime.now(timezone.utc)
-    uk_hour = now.astimezone(ZoneInfo("Europe/London")).hour
-    quiet = uk_hour >= 22 or uk_hour < 7
+    quiet = _quiet(now)
     stories = (db.table("stories")
                .select("id,headline,technical,why_it_matters,severity,category,products,zero_day,created_at")
-               .gte("created_at", (now - LOOKBACK).isoformat()).order("created_at", desc=True).limit(100)
+               .gte("created_at", (now - LOOKBACK).isoformat()).order("created_at").limit(300)
                .execute().data)
-    if not stories:
-        return "no new stories"
     for s in stories:
         s["created_at"] = datetime.fromisoformat(s["created_at"].replace("Z", "+00:00"))
 
@@ -82,39 +125,40 @@ def send_alerts(db):
             break
         start += 1000
 
-    messages = []
+    messages, handled = [], []
     for d in devices:
-        last = d.get("last_push_at")
-        last = datetime.fromisoformat(last.replace("Z", "+00:00")) if last else None
-        if last and now - last < timedelta(minutes=50):
-            continue            # already had this hour's alert
-        story, hit = _pick(stories, d, max(last or now - LOOKBACK, now - LOOKBACK), quiet)
-        if story:
-            messages.append(_message(d["token"], story, hit))
+        m = plan(stories, d, now)
+        messages += m
+        # remember what this phone has been sent; in quiet hours only when something was sent, so the
+        # rest of the night still goes into the 7am alert
+        if m or not quiet:
+            handled.append(d["token"])
 
-    sent, gone, problems = [], [], []
+    sent, gone, problems = set(), [], []
     for i in range(0, len(messages), 100):
         batch = messages[i:i + 100]
         try:
             tickets = _post(batch)
         except Exception as ex:
-            return f"push service error: {str(ex)[:80]} ({len(sent)} sent before it)"
+            problems.append(f"push service error: {str(ex)[:80]}")
+            handled = [t for t in handled if t in sent]
+            break
         for m, t in zip(batch, tickets):
             if t.get("status") == "ok":
-                sent.append(m["to"])
+                sent.add(m["to"])
             elif (t.get("details") or {}).get("error") == "DeviceNotRegistered":
                 gone.append(m["to"])
             else:
                 problems.append(f"{(t.get('details') or {}).get('error', '')} {t.get('message', '')}".strip()[:120])
 
-    for i in range(0, len(sent), 100):
-        db.table("devices").update({"last_push_at": now.isoformat()}).in_("token", sent[i:i + 100]).execute()
+    handled = [t for t in handled if t not in gone]
+    for i in range(0, len(handled), 100):
+        db.table("devices").update({"last_push_at": now.isoformat()}).in_("token", handled[i:i + 100]).execute()
     for i in range(0, len(gone), 100):
         db.table("devices").delete().in_("token", gone[i:i + 100]).execute()
-    return f"{len(sent)} sent to {len(devices)} phones" + (" (quiet hours)" if quiet else "") + \
+    return f"{len(messages)} alerts to {len(sent)} of {len(devices)} phones" + (" (quiet hours)" if quiet else "") + \
         (f", {len(gone)} uninstalled phones removed" if gone else "") + \
-        (f", problems: {' | '.join(dict.fromkeys(problems))}" if problems else "") + \
-        ("" if messages or not devices else ", nothing new worth an alert this hour")
+        (f", problems: {' | '.join(dict.fromkeys(problems))}" if problems else "")
 
 
 def _receipts(ids):

@@ -198,7 +198,7 @@ export function Preferences({ onDone }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={[styles.h, { fontSize: 16 * s }]}>Phone alerts</Text>
               <Text style={[styles.p, { fontSize: 13.5 * s }]}>
-                At most one an hour: your products first, then the most serious news. Quiet from 10pm to 7am unless it's critical.
+                An alert for every new story, tip and history card. Quiet from 10pm to 7am unless it's critical; the night's news comes in one alert at 7am.
               </Text>
             </View>
             <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
