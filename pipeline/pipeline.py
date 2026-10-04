@@ -799,12 +799,16 @@ def main():
             tip_note = f"failed: {str(ex)[:80]}"
 
     # ---- 2c. cyber history cards (hand-written, added once; pictures follow over the next runs) ----
+    history_note = "off"
     if db and not TEST_MODE:
         try:
             from history import sync_history
-            for hid, scene, headline in sync_history(db):
+            waiting = sync_history(db)
+            for hid, scene, headline in waiting:
                 need_cover.append((hid, cover_prompt(scene, "Other"), headline))
+            history_note = f"{len(waiting)} waiting for a picture" if waiting else "all have pictures"
         except Exception as ex:
+            history_note = f"failed: {str(ex)[:80]}"
             print(f"[warn] history cards: {str(ex)[:80]}")
 
     # ---- 3. AI pictures for new stories that have no usable picture ----
@@ -870,7 +874,7 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | stopped early: {stopped}")
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | stopped early: {stopped}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
