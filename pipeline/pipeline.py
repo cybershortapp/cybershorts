@@ -846,7 +846,7 @@ def main():
         except Exception as ex:
             print(f"[warn] old picture clean-up failed: {ex}")
 
-    # ---- 4. phone alerts (max one per phone per hour) and email ----
+    # ---- 4. phone alerts (one for every new card, quiet at night) and email ----
     alerts_note = email_note = "off"
     if db and not TEST_MODE:
         try:
@@ -882,7 +882,8 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | stopped early: {stopped}")
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | alerts: {alerts_note[:120]} | "
+            f"stopped early: {stopped}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
