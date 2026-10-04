@@ -1199,13 +1199,14 @@ def check_tips():
     return bad
 
 
-def skipped_report(days=2):
+def skipped_report(days=2, hours=None):
     """List the stories from the last few days that were skipped as "not news", and why, to check the filter
     isn't throwing away real news. Run: python pipeline.py --skipped"""
     from concurrent.futures import ThreadPoolExecutor
     from supabase import create_client
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    hours = hours or int(os.getenv("SKIPPED_HOURS", "0") or 0)
+    cutoff = datetime.now(timezone.utc) - (timedelta(hours=hours) if hours else timedelta(days=days))
     with ThreadPoolExecutor(max_workers=16) as pool:
         feeds = list(pool.map(read_feed, SOURCES))
     by_src = {s["name"]: s for s in SOURCES}
@@ -1218,7 +1219,7 @@ def skipped_report(days=2):
             if published_of(e) < cutoff:
                 continue
             sid = hashlib.sha1(e.get("link").encode()).hexdigest()[:16]
-            rows.append((sid, name, src, e.get("title")))
+            rows.append((sid, e.get("publisher") or name, src, e.get("title"), published_of(e)))
     reasons = {}
     for i in range(0, len(rows), 150):
         ids = [r[0] for r in rows[i:i + 150]]
@@ -1227,7 +1228,7 @@ def skipped_report(days=2):
         for r in db.table("stories").select("id").in_("id", ids).execute().data:
             reasons[r["id"]] = "kept"
     lines, counts = [], {}
-    for sid, name, src, title in rows:
+    for sid, name, src, title, when in rows:
         why = reasons.get(sid, "not read yet")
         if why == "not_news":
             if NOT_NEWS_TITLE.search(title):
@@ -1237,8 +1238,8 @@ def skipped_report(days=2):
             else:
                 why = "skipped: AI said not news"
         counts[why] = counts.get(why, 0) + 1
-        if why.startswith("skipped: AI") or why.startswith("skipped: advert") or why == "not read yet":
-            lines.append(f"{why[9:] if why.startswith('skipped') else why} | {name} | {title[:110]}")
+        if hours or why.startswith("skipped: AI") or why.startswith("skipped: advert") or why == "not read yet":
+            lines.append(f"{when:%H:%M} " + f"{why[9:] if why.startswith('skipped') else why} | {name} | {title[:110]}")
     print(f"\n=== Stories from the last {days} days in the feeds: {len(rows)} ===")
     for k, v in sorted(counts.items(), key=lambda x: -x[1]):
         print(f"  {v:>4}  {k}")
