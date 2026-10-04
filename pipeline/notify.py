@@ -2,7 +2,8 @@
 Phone alerts. Runs at the end of every pipeline run (every 30 minutes).
 
 Rules:
-  - every new card gets an alert: news, the daily tip and the daily history card
+  - every new card gets an alert: news, the daily tip and the daily history card, as long as the story itself
+    is recent (published in the last 24 hours); older stories found late go in the feed quietly
   - more than 4 new cards in one run: the 3 most important get their own alert, the rest come as one
     "more new stories" alert, so a busy moment doesn't buzz the phone ten times
   - quiet hours 22:00-07:00 UK time: only Critical stories about the person's products, or zero-days;
@@ -19,6 +20,7 @@ EXPO_URL = "https://exp.host/--/api/v2/push/send"
 RANK = {"Critical": 4, "High": 3, "Medium": 2, "Info": 1}
 UK = ZoneInfo("Europe/London")
 LOOKBACK = timedelta(hours=12)      # far enough back to cover the whole night
+FRESH = timedelta(hours=24)         # only alert about stories published in the last day
 NEW_PHONE = timedelta(hours=1)      # a phone that never had an alert gets only the last hour's cards
 MAX_SINGLE = 4                      # up to this many cards per run each get their own alert
 
@@ -109,11 +111,13 @@ def send_alerts(db):
     now = datetime.now(timezone.utc)
     quiet = _quiet(now)
     stories = (db.table("stories")
-               .select("id,headline,technical,why_it_matters,severity,category,products,zero_day,created_at")
+               .select("id,headline,technical,why_it_matters,severity,category,products,zero_day,created_at,published_at")
                .gte("created_at", (now - LOOKBACK).isoformat()).order("created_at").limit(300)
                .execute().data)
     for s in stories:
         s["created_at"] = datetime.fromisoformat(s["created_at"].replace("Z", "+00:00"))
+    # a story published days ago but only picked up now is old news: it goes in the feed, no alert
+    stories = [s for s in stories if datetime.fromisoformat(s["published_at"].replace("Z", "+00:00")) >= now - FRESH]
 
     # all phones with alerts on, 1000 at a time
     devices, start = [], 0

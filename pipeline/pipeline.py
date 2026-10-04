@@ -626,6 +626,8 @@ def main():
     if USE_AI:
         print(f"AI budget this run: {ai_budget} calls ({ai_used_today} used today, daily cap {DAILY_AI_CAP})\n")
     cutoff = started - timedelta(days=MAX_AGE_DAYS)
+    # news searches turn up older articles too; from them only take the last 2 days
+    search_cutoff = started - timedelta(days=int(os.getenv("SEARCH_MAX_AGE_DAYS", "2")))
 
     def remember(sid, reason, story_id=None):
         if db:
@@ -681,7 +683,7 @@ def main():
         for e, sid in zip(entries, ids):
             if sid in seen_ids:
                 row["seen"] += 1
-            elif published_of(e) < cutoff:
+            elif published_of(e) < (search_cutoff if src.get("kind") == "search" else cutoff):
                 row["old"] += 1
             else:
                 candidates.append((published_of(e), src, e, sid))
