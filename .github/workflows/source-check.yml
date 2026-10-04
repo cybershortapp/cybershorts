@@ -41,7 +41,6 @@ jobs:
           python pipeline.py --health --no-picture 2>&1 | tee health.txt
           python pipeline.py --check-tips 2>&1 | tee -a health.txt || true
           # the AI writes one new tip and one history card from real pages, without posting them
-          python probe.py 2>&1 | tee -a health.txt || true
           python pipeline.py --skipped 2>&1 | grep -v '^::' | tee -a health.txt || true
           python pipeline.py --try-daily 2>&1 | grep -v '^::' | tee -a health.txt || true
           { echo '### Source check'; echo '```'; cat health.txt; echo '```'; } > report.md
