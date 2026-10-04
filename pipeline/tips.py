@@ -52,7 +52,8 @@ Reply with ONLY JSON:
 lists", "wikipedia": "exact English Wikipedia article title on the topic"}"""
 
 WRITE_PROMPT = """Write a tip card for CyberSid using ONLY facts from the page text the user gives you. UK English,
-plain words, no hype, no em dashes. If the page doesn't support a useful tip on the topic, reply {"ok": false}.
+plain words, no hype, no em dashes. The tip must help the reader stay safe from scams, hacking, fraud or data theft,
+or explain a security idea. If the page has no such advice (for example it only covers how a service works), reply {"ok": false}.
 Reply with ONLY JSON:
 {"ok": true,
  "headline": "the tip in max 12 words, e.g. 'Turn on 2-step verification for your email first'",

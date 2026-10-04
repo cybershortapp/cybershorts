@@ -49,11 +49,12 @@ SOURCES = [
     s("World news: Asia Pacific", "https://www.bing.com/news/search?q=cyberattack+Asia+OR+Australia+OR+Japan&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
     s("World news: Middle East and Africa", "https://www.bing.com/news/search?q=cyberattack+%22Middle+East%22+OR+Africa&format=rss&setlang=en&cc=US&qft=sortbydate%3d%221%22", "search"),
     # India edition: shown to readers in India only
-    s("India news: cyber fraud", "https://www.bing.com/news/search?q=%22cyber+fraud%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
-    s("India news: cyber attacks", "https://www.bing.com/news/search?q=%22cyber+attack%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+s("India news: cyber fraud", "https://www.bing.com/news/search?q=%22cyber+fraud%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: cyber attacks", "https://www.bing.com/news/search?q=cyber+attack+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
     s("India news: data breaches", "https://www.bing.com/news/search?q=%22data+breach%22+India&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
-    s("India news: digital arrest and UPI scams", "https://www.bing.com/news/search?q=%22digital+arrest%22+OR+%22UPI+fraud%22&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
-    s("India news: CERT-In and cyber police", "https://www.bing.com/news/search?q=CERT-In+OR+%22cyber+police%22+OR+%22cyber+crime+police%22&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: digital arrest scams", "https://www.bing.com/news/search?q=digital+arrest+scam&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: UPI fraud", "https://www.bing.com/news/search?q=UPI+fraud&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
+    s("India news: cyber crime police", "https://www.bing.com/news/search?q=cyber+crime+police&format=rss&setlang=en-IN&cc=IN&qft=sortbydate%3d%221%22", "search", country="IN"),
 
     # ---- UK security and tech press ----
     s("NCSC", "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", "gov", test=True, country="GB"),
