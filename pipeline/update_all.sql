@@ -135,3 +135,6 @@ grant execute on function remove_device(text) to anon, authenticated;
 grant execute on function subscribe_email(text, text[], text[]) to anon, authenticated;
 grant execute on function confirm_email(uuid) to anon, authenticated;
 grant execute on function unsubscribe_email(uuid) to anon, authenticated;
+
+-- Regions (5 Oct 2026): see regions.sql
+alter table devices add column if not exists country text not null default 'GB';

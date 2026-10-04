@@ -6,6 +6,7 @@ import { lastError, type AppError } from '../lib/crash';
 import { alertsAvailable, alertsConnected, alertsProblem, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
+import { detectRegion, REGION_NAMES, type Region } from '../lib/region';
 import { supabase } from '../lib/supabase';
 import { F, type Palette, setThemeChoice, type ThemeChoice, useTheme, useThemeChoice } from '../theme';
 
@@ -232,6 +233,36 @@ export function Preferences({ onDone }: Props) {
               </Pressable>
             </View>
           )}
+        </View>
+
+        {/* region: local news, tips and report links */}
+        <View style={styles.panel}>
+          <Text style={[styles.h, { fontSize: 16 * s }]}>Your region</Text>
+          <Text style={[styles.p, { fontSize: 13.5 * s }]}>
+            You get world news plus local news, tips and scam reporting links for your country.
+            {!prefs.region ? ` Set from your phone: ${REGION_NAMES[detectRegion()]}.` : ''}
+          </Text>
+          <View style={styles.segment}>
+            {(['GB', 'IN', 'INTL'] as Region[]).map((r) => {
+              const on = (prefs.region || detectRegion()) === r;
+              return (
+                <Pressable
+                  key={r}
+                  onPress={() => {
+                    setPrefs({ region: r });
+                    syncAlerts();
+                  }}
+                  style={[styles.segBtn, on && { backgroundColor: C.brand }]}
+                  accessibilityState={{ selected: on }}
+                >
+                  <MaterialCommunityIcons name={r === 'INTL' ? 'earth' : 'map-marker-outline'} size={16} color={on ? C.onBrand : C.body} />
+                  <Text style={{ color: on ? C.onBrand : C.body, fontFamily: on ? F.label : F.medium, fontSize: 13.5 * s }}>
+                    {r === 'GB' ? 'UK' : r === 'IN' ? 'India' : 'Worldwide'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* 3. appearance */}

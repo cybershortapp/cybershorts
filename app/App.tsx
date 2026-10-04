@@ -1,5 +1,6 @@
 import { Oswald_500Medium, Oswald_700Bold } from '@expo-google-fonts/oswald';
 import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, useFonts } from '@expo-google-fonts/poppins';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
@@ -26,6 +27,7 @@ import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './s
 import { cleanStories } from './src/lib/clean';
 import { installCrashHandler } from './src/lib/crash';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
+import { getRegion, regionCountries } from './src/lib/region';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
 import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
@@ -79,10 +81,12 @@ function Main() {
   const beforeSearch = useRef<Filter>('All');
   const lastLoaded = useRef(0);
   const listRef = useRef<FlatList<Story>>(null);
+  const latestRef = useRef<() => void>(() => {});
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
   const prefsKey = filter === 'For you' ? [...prefs.products, ...prefs.terms].join('|') : '';
   const searchKey = filter === 'Search' ? searchTerm : '';
+  const region = prefs.region || getRegion(); // changes when they pick another region in Preferences
   const seenBefore = useRef<string | null>(null); // stories newer than this get a NEW tag
   // each tab remembers its cards and position while the app stays open; cleared on a fresh start
   const tabMemory = useRef(new Map<Filter, { stories: Story[]; index: number }>());
@@ -116,6 +120,8 @@ function Main() {
         .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, from + size - 1);
+      // news for everyone plus the reader's own country (UK readers don't get Indian UPI scams, and the other way round)
+      if (filter !== 'Saved') query = query.in('country', regionCountries(region));
       if (filter === 'Search') {
         if (searchTerm.length < 2) return null;
         query = query.or(`headline.ilike.*${searchTerm}*,technical.ilike.*${searchTerm}*,source.ilike.*${searchTerm}*`);
@@ -129,7 +135,7 @@ function Main() {
       } else if (filter !== 'All') query = query.eq('category', filter);
       return query;
     },
-    [filter, savedKey, prefsKey, searchKey], // eslint-disable-line react-hooks/exhaustive-deps
+    [filter, savedKey, prefsKey, searchKey, region], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const load = useCallback(async (opts?: { markSeen?: boolean }) => {
@@ -229,10 +235,17 @@ function Main() {
   useEffect(() => {
     tabMemory.current.delete('For you');
   }, [prefs.products, prefs.terms]);
+  useEffect(() => {
+    tabMemory.current.clear();
+  }, [region]);
 
   // switching tabs: remember where the reader was on the tab they are leaving
   const changeFilter = useCallback(
     (f: Filter) => {
+      if (f === shownFilter.current) {
+        latestRef.current(); // tap the tab you're on: back to the newest cards
+        return;
+      }
       if (shownFilter.current && storiesRef.current.length) {
         tabMemory.current.set(shownFilter.current, { stories: storiesRef.current, index: indexRef.current });
       }
@@ -325,6 +338,12 @@ function Main() {
     toTop();
     setRefreshing(false);
   };
+  // "Latest" button and tapping the current tab: jump to the first card and check for new stories
+  const goLatest = () => {
+    toTop();
+    onRefresh();
+  };
+  latestRef.current = goLatest;
 
   // stable list props, so only the cards that actually changed are redrawn
   const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
@@ -448,6 +467,12 @@ function Main() {
       />
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
+        {view === 'feed' && index >= 2 && stories.length > 0 && !loading && (
+          <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
+            <MaterialCommunityIcons name="arrow-up" size={16} color={C.onBrand} />
+            <Text style={styles.latestText}>Latest</Text>
+          </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -530,4 +555,10 @@ const makeStyles = (C: Palette) =>
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted },
   retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  latest: {
+    position: 'absolute', top: 10, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: C.brand,
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 6,
+  },
+  latestText: { color: C.onBrand, fontFamily: F.label, fontSize: 13.5 },
 });
