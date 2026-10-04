@@ -122,7 +122,9 @@ def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
             if card.get("ok") is False or not card_ok(card) or too_similar(card["headline"], avoid):
                 print(f"  [history] card rejected: {str(card)[:120]}")
                 continue
-            when, _ = date_in_text(str(card.get("date") or ""), text)
+            # the exact day if either the card or the suggestion gives one the article confirms, else the month
+            found = [date_in_text(str(d or ""), text) for d in (card.get("date"), p.get("date"))]
+            when = next((d for d, exact in found if exact), None) or next((d for d, _ in found if d), None)
             if not when:
                 print(f"  [history] date {card.get('date')} not confirmed in the article: {title}")
                 continue
