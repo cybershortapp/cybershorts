@@ -1265,7 +1265,9 @@ def remove_cards(words):
         db.table("seen_links").upsert({"id": r["id"], "reason": "not_news", "story_id": None}).execute()
         db.table("stories").delete().eq("id", r["id"]).execute()
         print(f"removed: {r['source']}: {r['headline']}")
-    gh_note("Removed", "; ".join(f"{r['source']}: {r['headline']}" for r in rows) or "nothing matched")
+    top = db.table("stories").select("headline").order("published_at", desc=True).limit(2).execute().data
+    gh_note("Removed", ("; ".join(f"{r['source']}: {r['headline']}" for r in rows) or "nothing matched")
+            + " | newest: " + " ; ".join(repr(t["headline"]) for t in top))
 
 
 def recheck_skipped(hours=24):
