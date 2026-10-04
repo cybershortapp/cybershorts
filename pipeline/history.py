@@ -12,8 +12,8 @@ History cards never trigger phone alerts or appear in the daily email.
 import json, os, re
 from datetime import date, datetime, timezone
 
-from daily import (MONTHS, UK, card_ok, date_in_text, due, missing_pictures, norm_url, posted_today, slug,
-                   story_row, too_similar, wikipedia)
+from daily import (MONTHS, UK, card_ok, date_in_text, due, is_repeat, missing_pictures, norm_url, posted_today,
+                   slug, story_row, too_similar, wiki_title, wikipedia)
 
 SOURCE = "CyberSid History"
 POST_HOUR = 12
@@ -21,10 +21,11 @@ CYBER = re.compile(r"\b(cyber|hack|malware|ransomware|virus|worm|trojan|breach|e
                    r"denial-of-service|ddos|encryption|cryptograph|spyware|backdoor|data leak|intrusion|security)", re.I)
 
 PICK_PROMPT = """You choose the daily "cyber history" card for CyberSid, a UK cyber security news app.
-Suggest 5 well-documented cyber security events (famous attacks, breaches, malware outbreaks, major vulnerabilities,
+Suggest 8 well-documented cyber security events (famous attacks, breaches, malware outbreaks, major vulnerabilities,
 arrests, laws, firsts) that each have their OWN English Wikipedia article. Prefer events that happened on the date
 the user gives (any year), then the same week, then any time. None of them may be in the user's list of events
-already used. Reply with ONLY JSON:
+already used, and the famous ones are mostly used already, so look wider: lesser-known but well-documented
+attacks, arrests, takedowns, malware, breaches, laws and milestones from any country. Reply with ONLY JSON:
 {"events": [{"wikipedia": "exact article title", "date": "YYYY-MM-DD"}]}"""
 
 WRITE_PROMPT = """Write a cyber history card for CyberSid using ONLY facts from the Wikipedia article text the user
@@ -78,33 +79,59 @@ def pick_from_list(entries, today):
     return on_day[0] if on_day else max(entries, key=days_until)
 
 
-def new_ai_event(ai, today, used_urls, used_headlines, tries=4):
-    """Ask the AI for an event, then write the card from its Wikipedia article. Returns (card or None, ai_calls)."""
-    calls, avoid = 1, list(used_headlines)
-    try:
-        picks = ai.json(PICK_PROMPT, f"Date: {today.day} {MONTHS[today.month - 1]}\nAlready used:\n- " +
-                        "\n- ".join(avoid[-300:]), 500).get("events") or []
-    except Exception:
-        return None, calls
-    for p in [p for p in picks if isinstance(p, dict) and p.get("wikipedia")][:tries]:
-        w = wikipedia(str(p["wikipedia"]))
-        if not w or norm_url(w[0]) in used_urls or too_similar(w[1], avoid, 0.6):
-            continue
-        url, title, text = w
-        if len(text) < 500 or len(CYBER.findall(text[:6000])) < 3:
-            continue    # not really a cyber security article
+def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
+    """Ask the AI for events, then write the card from the Wikipedia article. Returns (card or None, ai_calls)."""
+    calls, avoid = 0, list(used_headlines)
+    used_titles = sorted({wiki_title(u) for u in used_urls if wiki_title(u)})
+    tried = []
+    for _ in range(rounds):
         calls += 1
         try:
-            card = ai.json(WRITE_PROMPT, f"Article: {title}\n\n{text[:6000]}", 600)
-        except Exception:
+            picks = ai.json(PICK_PROMPT, f"Date: {today.day} {MONTHS[today.month - 1]}\nArticles already used:\n- " +
+                            "\n- ".join(used_titles + tried) + "\nCards already used:\n- " + "\n- ".join(avoid[-300:]),
+                            600).get("events") or []
+        except Exception as ex:
+            print(f"  [history] AI pick failed: {str(ex)[:80]}")
             continue
-        if card.get("ok") is False or not card_ok(card) or too_similar(card["headline"], avoid):
-            continue
-        when, _ = date_in_text(str(card.get("date") or ""), text)
-        if not when:
-            continue    # the date couldn't be confirmed in the article
-        card.update(url=url, date=when, key=slug(title, 40))
-        return card, calls
+        picks = [p for p in picks if isinstance(p, dict) and p.get("wikipedia")]
+        print(f"  [history] AI suggested: {', '.join(str(p['wikipedia']) for p in picks)}")
+        checked = 0
+        for p in picks:
+            tried.append(str(p["wikipedia"]))
+            w = wikipedia(str(p["wikipedia"]))
+            if not w:
+                print(f"  [history] no Wikipedia article: {p['wikipedia']}")
+                continue
+            url, title, text = w
+            if norm_url(url) in used_urls or too_similar(title, avoid, 0.6):
+                print(f"  [history] already used: {title}")
+                continue
+            if len(text) < 500 or len(CYBER.findall(text[:6000])) < 3:
+                print(f"  [history] not a cyber security article: {title}")
+                continue
+            if checked >= per_round:
+                break
+            checked += 1
+            calls += 1
+            try:
+                card = ai.json(WRITE_PROMPT, f"Article: {title}\n\n{text[:6000]}", 600)
+            except Exception as ex:
+                print(f"  [history] AI write failed: {str(ex)[:80]}")
+                continue
+            if card.get("ok") is False or not card_ok(card) or too_similar(card["headline"], avoid):
+                print(f"  [history] card rejected: {str(card)[:120]}")
+                continue
+            when, _ = date_in_text(str(card.get("date") or ""), text)
+            if not when:
+                print(f"  [history] date {card.get('date')} not confirmed in the article: {title}")
+                continue
+            calls += 1
+            if is_repeat(ai, card, avoid):
+                print(f"  [history] repeats an earlier card: {card['headline']}")
+                avoid.append(card["headline"])
+                continue
+            card.update(url=url, date=when, key=slug(title, 40))
+            return card, calls
     return None, calls
 
 

@@ -44,8 +44,40 @@ def missing_pictures(db, source, now, days=3):
     return rows
 
 
+SAME = {"2fa": "mfa", "2sv": "mfa", "two-factor": "mfa", "2-step": "mfa", "multi-factor": "mfa", "verification": "mfa",
+        "authentication": "mfa", "passwords": "password", "passphrase": "password", "texts": "sms", "text": "sms"}
+
+
 def key_words(text):
-    return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower()) if len(w) > 2 and w not in STOP}
+    """Key words of a headline, with plurals and common synonyms folded together (2FA, 2SV, MFA...)."""
+    out = set()
+    for w in re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)?", (text or "").lower()):
+        w = SAME.get(w, w)
+        if len(w) > 4 and w.endswith("s") and not w.endswith("ss"):
+            w = w[:-1]
+        if len(w) > 2 and w not in STOP:
+            out.add(w)
+    return out
+
+
+def wiki_title(url):
+    """'https://en.wikipedia.org/wiki/WannaCry_ransomware_attack' -> 'WannaCry ransomware attack'"""
+    return urllib.parse.unquote((url or "").rsplit("/wiki/", 1)[-1]).replace("_", " ") if "/wiki/" in (url or "") else ""
+
+
+REPEAT_PROMPT = """You check that a new card for a news app does not repeat an earlier one. Reply with ONLY JSON:
+{"repeat": true} if the new card gives the same main advice or covers the same event as any earlier card,
+otherwise {"repeat": false}."""
+
+
+def is_repeat(ai, card, earlier):
+    """Ask the AI whether a new card says the same thing as an earlier card (headlines differ, ideas may not)."""
+    try:
+        reply = ai.json(REPEAT_PROMPT, f"New card: {card['headline']}. {card['technical']}\n\nEarlier cards:\n- "
+                        + "\n- ".join(earlier[-400:]), 60)
+        return reply.get("repeat") is not False
+    except Exception:
+        return True
 
 
 def too_similar(headline, others, limit=0.5):
