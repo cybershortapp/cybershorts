@@ -1,0 +1,362 @@
+[
+ {
+  "key": "morris-worm",
+  "date": "1988-11-02",
+  "headline": "The Morris worm slows the early internet to a crawl",
+  "technical": "Released by a Cornell student, the Morris worm spread across Unix machines by abusing weaknesses in sendmail, finger and weak passwords. A bug made it reinfect machines repeatedly, overloading thousands of computers. It led to the creation of the first CERT team at Carnegie Mellon.",
+  "why": "The first big lesson that one flaw can take down many connected systems.",
+  "url": "https://en.wikipedia.org/wiki/Morris_worm",
+  "scene": "an old computer terminal with a glowing worm shape crawling across network cables"
+ },
+ {
+  "key": "melissa",
+  "date": "1999-03-26",
+  "headline": "The Melissa virus floods email systems worldwide",
+  "technical": "Melissa was a Word macro virus that emailed itself to the first 50 contacts in a victim's Outlook address book. It spread so fast that several large companies shut down their email servers. Its author was later sentenced to prison in the US.",
+  "why": "Showed how email and macros could spread malware at huge scale.",
+  "url": "https://en.wikipedia.org/wiki/Melissa_(computer_virus)",
+  "scene": "a stream of glowing envelopes multiplying out of an old laptop"
+ },
+ {
+  "key": "iloveyou",
+  "date": "2000-05-04",
+  "headline": "ILOVEYOU: the love letter that infected millions",
+  "technical": "An email with the subject 'ILOVEYOU' carried a script disguised as a text file. When opened, it overwrote files and mailed itself to everyone in the victim's address book. It is estimated to have infected tens of millions of computers within days.",
+  "why": "A classic example of social engineering beating technical defences.",
+  "url": "https://en.wikipedia.org/wiki/ILOVEYOU",
+  "scene": "a glowing heart shaped envelope cracking open with code spilling out"
+ },
+ {
+  "key": "code-red",
+  "date": "2001-07-19",
+  "headline": "Code Red infects over 350,000 web servers in one day",
+  "technical": "The Code Red worm exploited a buffer overflow in Microsoft's IIS web server and defaced sites with 'Hacked By Chinese!'. On 19 July 2001 it infected more than 359,000 servers in about 14 hours. A patch had been available for weeks.",
+  "why": "Unpatched internet-facing servers are found and hit within hours.",
+  "url": "https://en.wikipedia.org/wiki/Code_Red_(computer_worm)",
+  "scene": "rows of glowing red web servers in a data centre"
+ },
+ {
+  "key": "slammer",
+  "date": "2003-01-25",
+  "headline": "SQL Slammer infects most of its victims in 10 minutes",
+  "technical": "SQL Slammer was a tiny worm that exploited a flaw in Microsoft SQL Server. It doubled its infections every few seconds and infected most of its roughly 75,000 victims within ten minutes, slowing internet traffic worldwide. A patch had been released six months earlier.",
+  "why": "Worms can outrun any human response, so patching ahead of time matters.",
+  "url": "https://en.wikipedia.org/wiki/SQL_Slammer",
+  "scene": "a database cylinder bursting with fast glowing packets"
+ },
+ {
+  "key": "blaster",
+  "date": "2003-08-11",
+  "headline": "The Blaster worm hits Windows computers",
+  "technical": "Blaster spread through a flaw in Windows' remote procedure call service and caused computers to restart repeatedly. It was also programmed to flood Microsoft's Windows Update site. It helped push Microsoft towards automatic updates and its later security push.",
+  "why": "A big reason automatic updates became the default.",
+  "url": "https://en.wikipedia.org/wiki/Blaster_(computer_worm)",
+  "scene": "a desktop computer caught in a glowing restart loop"
+ },
+ {
+  "key": "estonia",
+  "date": "2007-04-27",
+  "headline": "Estonia comes under a wave of cyberattacks",
+  "technical": "After a dispute over moving a Soviet war memorial, Estonian government, bank and media websites were hit by weeks of DDoS attacks. It was one of the first attacks on a whole country's online services. NATO later set up its cyber defence centre of excellence in Tallinn.",
+  "why": "The first time a cyberattack was treated as a national security event.",
+  "url": "https://en.wikipedia.org/wiki/2007_cyberattacks_on_Estonia",
+  "scene": "a small country map covered by a storm of glowing network traffic"
+ },
+ {
+  "key": "aurora",
+  "date": "2010-01-12",
+  "headline": "Google reveals Operation Aurora attacks from China",
+  "technical": "Google disclosed that it and dozens of other companies had been targeted by sophisticated attacks linked to China, using an Internet Explorer zero-day. Attackers were after source code and Gmail accounts of human rights activists. It was a turning point in public awareness of state-backed hacking.",
+  "why": "Put advanced persistent threats on every boardroom's radar.",
+  "url": "https://en.wikipedia.org/wiki/Operation_Aurora",
+  "scene": "a glowing aurora sky over a corporate building with a shield"
+ },
+ {
+  "key": "stuxnet",
+  "date": "2010-06-17",
+  "headline": "Stuxnet, the first known cyber weapon, is discovered",
+  "technical": "Security firm VirusBlokAda reported a strange worm that later became known as Stuxnet. It used several Windows zero-days to reach Siemens industrial controllers and was designed to damage uranium centrifuges in Iran. It is widely attributed to the US and Israel.",
+  "why": "Proved code can cause physical damage to industrial systems.",
+  "url": "https://en.wikipedia.org/wiki/Stuxnet",
+  "scene": "industrial centrifuges glowing beside a control panel with a worm icon"
+ },
+ {
+  "key": "digi-notar",
+  "date": "2011-08-29",
+  "headline": "DigiNotar fake certificates expose Gmail users in Iran",
+  "technical": "A fraudulent certificate for google.com, issued by the Dutch certificate authority DigiNotar, was found being used to spy on users in Iran. Investigators found hundreds of fake certificates had been issued after DigiNotar was hacked. Browsers removed trust in DigiNotar and the company went bankrupt.",
+  "why": "Showed how much the web depends on certificate authorities staying secure.",
+  "url": "https://en.wikipedia.org/wiki/DigiNotar",
+  "scene": "a broken glowing padlock certificate with a crack through it"
+ },
+ {
+  "key": "shamoon",
+  "date": "2012-08-15",
+  "headline": "Shamoon wipes 30,000 Saudi Aramco computers",
+  "technical": "The Shamoon malware erased data on around 30,000 Saudi Aramco workstations, replacing files with an image of a burning flag. The world's largest oil company had to take much of its network offline for weeks. Shamoon returned in later waves against Gulf companies.",
+  "why": "Destructive wipers can cripple even the biggest companies.",
+  "url": "https://en.wikipedia.org/wiki/Shamoon",
+  "scene": "rows of office computers with blank glowing screens and an oil rig silhouette"
+ },
+ {
+  "key": "heartbleed",
+  "date": "2014-04-07",
+  "headline": "Heartbleed: a bug in OpenSSL leaks server memory",
+  "technical": "Heartbleed was a flaw in OpenSSL's heartbeat feature that let anyone read chunks of a server's memory, including passwords and private keys. Around half a million secure websites were thought to be vulnerable when it was disclosed. It became the first bug with its own logo and website.",
+  "why": "Showed how much of the internet relies on small, underfunded open-source projects.",
+  "url": "https://en.wikipedia.org/wiki/Heartbleed",
+  "scene": "a glowing bleeding heart icon over a server rack"
+ },
+ {
+  "key": "shellshock",
+  "date": "2014-09-24",
+  "headline": "Shellshock: a 25-year-old bug in the Bash shell",
+  "technical": "Shellshock let attackers run commands through specially crafted environment variables in Bash, the shell used on most Linux and Mac systems. Web servers using CGI scripts were especially exposed, and attacks started within hours. The bug had existed since 1989.",
+  "why": "Old code in core tools can hide serious, widespread flaws.",
+  "url": "https://en.wikipedia.org/wiki/Shellshock_(software_bug)",
+  "scene": "a glowing terminal window with a crack through a seashell shape"
+ },
+ {
+  "key": "sony-pictures",
+  "date": "2014-11-24",
+  "headline": "Sony Pictures is hacked and its data leaked",
+  "technical": "A group calling itself Guardians of Peace wiped Sony Pictures computers and leaked emails, films and staff data. The US government attributed the attack to North Korea, linked to a film mocking its leader. Employees worked with pen and paper for weeks.",
+  "why": "A company can be hit by a nation state over its own products.",
+  "url": "https://en.wikipedia.org/wiki/2014_Sony_Pictures_hack",
+  "scene": "a film studio building with glowing broken screens and scattered film reels"
+ },
+ {
+  "key": "opm",
+  "date": "2015-06-04",
+  "headline": "US government personnel agency reveals huge breach",
+  "technical": "The US Office of Personnel Management disclosed that records of millions of federal employees had been stolen, later including background check files and fingerprints of about 5.6 million people. The attack was widely attributed to China. It is one of the most damaging government data breaches.",
+  "why": "Some data, like security clearance files, can never be changed after a leak.",
+  "url": "https://en.wikipedia.org/wiki/Office_of_Personnel_Management_data_breach",
+  "scene": "filing cabinets of glowing folders being pulled into a dark network"
+ },
+ {
+  "key": "ukraine-grid",
+  "date": "2015-12-23",
+  "headline": "Hackers switch off power in western Ukraine",
+  "technical": "Attackers took remote control of systems at three Ukrainian power companies and cut electricity to about 230,000 people for several hours. They also disabled backup systems and flooded call centres. It was the first confirmed cyberattack to take down a power grid.",
+  "why": "Critical infrastructure is a real target, not just a theory.",
+  "url": "https://en.wikipedia.org/wiki/2015_Ukraine_power_grid_hack",
+  "scene": "a power substation with dark houses behind it and glowing control screens"
+ },
+ {
+  "key": "bangladesh-bank",
+  "date": "2016-02-05",
+  "headline": "Hackers steal 81 million dollars from Bangladesh's central bank",
+  "technical": "Attackers used Bangladesh Bank's own SWIFT credentials to send fraudulent payment orders to the New York Fed. Most of the 951 million dollars requested was blocked, partly because of a spelling mistake, but 81 million was lost. The attack was linked to North Korea's Lazarus group.",
+  "why": "Payment systems need checks beyond valid credentials.",
+  "url": "https://en.wikipedia.org/wiki/Bangladesh_Bank_robbery",
+  "scene": "a bank vault with glowing money transfer lines escaping across a map"
+ },
+ {
+  "key": "yahoo",
+  "date": "2016-09-22",
+  "headline": "Yahoo reveals a breach of 500 million accounts",
+  "technical": "Yahoo announced that data from at least 500 million accounts had been stolen in 2014. Months later it disclosed an even bigger 2013 breach, eventually confirmed to affect all 3 billion accounts. The news cut 350 million dollars from Verizon's purchase price.",
+  "why": "Breaches hidden for years cost more when they come out.",
+  "url": "https://en.wikipedia.org/wiki/Yahoo_data_breaches",
+  "scene": "a mountain of glowing email envelopes spilling out of a cracked vault"
+ },
+ {
+  "key": "dyn",
+  "date": "2016-10-21",
+  "headline": "Mirai botnet knocks big websites offline via Dyn",
+  "technical": "A botnet of hacked cameras and routers, built with the Mirai malware, flooded DNS provider Dyn. Twitter, Netflix, Reddit and many other sites became unreachable for parts of the day, mostly in the US. Many devices were infected simply through default passwords.",
+  "why": "Insecure home gadgets can be turned into a weapon against the whole internet.",
+  "url": "https://en.wikipedia.org/wiki/DDoS_attacks_on_Dyn",
+  "scene": "an army of glowing webcams and routers firing beams at a server"
+ },
+ {
+  "key": "shadow-brokers",
+  "date": "2017-04-14",
+  "headline": "Shadow Brokers leak NSA hacking tools, including EternalBlue",
+  "technical": "A group called the Shadow Brokers published hacking tools said to come from the NSA. They included EternalBlue, an exploit for Windows file sharing that Microsoft had patched a month earlier. Within weeks it powered WannaCry and later NotPetya.",
+  "why": "Stockpiled exploits can leak and be used against everyone.",
+  "url": "https://en.wikipedia.org/wiki/The_Shadow_Brokers",
+  "scene": "a locked toolbox of glowing hacking tools being opened by a shadow"
+ },
+ {
+  "key": "wannacry",
+  "date": "2017-05-12",
+  "headline": "WannaCry ransomware hits the NHS and the world",
+  "technical": "WannaCry spread automatically using the leaked EternalBlue exploit, encrypting over 200,000 computers in 150 countries. In the UK, it disrupted around a third of NHS trusts, cancelling thousands of appointments. A researcher stopped it by registering a domain that acted as a kill switch.",
+  "why": "The most famous reason to install security updates promptly.",
+  "url": "https://en.wikipedia.org/wiki/WannaCry_ransomware_attack",
+  "scene": "a hospital building with glowing locked computer screens"
+ },
+ {
+  "key": "notpetya",
+  "date": "2017-06-27",
+  "headline": "NotPetya: the most costly cyberattack in history",
+  "technical": "Disguised as ransomware, NotPetya was a destructive wiper spread through a hijacked update of Ukrainian accounting software. It spread worldwide, hitting Maersk, Merck, FedEx and many others, with damages estimated at around 10 billion dollars. It was attributed to Russia's military intelligence.",
+  "why": "A supply chain attack aimed at one country can hit the whole world.",
+  "url": "https://en.wikipedia.org/wiki/2017_Ukraine_ransomware_attacks",
+  "scene": "shipping containers and port cranes with glowing locked screens"
+ },
+ {
+  "key": "equifax",
+  "date": "2017-09-07",
+  "headline": "Equifax reveals data breach of 147 million people",
+  "technical": "Credit agency Equifax announced attackers had stolen personal data including names, birth dates and Social Security numbers. They got in through an unpatched Apache Struts flaw that had been fixed months earlier. Around 15 million UK records were also affected.",
+  "why": "A single missed patch led to one of the biggest data breaches ever.",
+  "url": "https://en.wikipedia.org/wiki/2017_Equifax_data_breach",
+  "scene": "a credit report document with glowing data leaking out"
+ },
+ {
+  "key": "meltdown-spectre",
+  "date": "2018-01-03",
+  "headline": "Meltdown and Spectre: flaws in almost every modern CPU",
+  "technical": "Researchers revealed Meltdown and Spectre, hardware flaws that let programs read memory they should not be able to see. They affected processors from Intel, AMD and Arm going back decades. Fixes required operating system, browser and firmware updates, some with a performance cost.",
+  "why": "Even the hardware itself can have security flaws.",
+  "url": "https://en.wikipedia.org/wiki/Meltdown_(security_vulnerability)",
+  "scene": "a glowing computer chip cracking open with light leaking out"
+ },
+ {
+  "key": "gdpr",
+  "date": "2018-05-25",
+  "headline": "GDPR comes into force across Europe and the UK",
+  "technical": "The General Data Protection Regulation took effect, giving people more control over their personal data. Organisations must report serious breaches within 72 hours and can be fined up to 4 percent of global turnover. The UK kept it in law as the UK GDPR after Brexit.",
+  "why": "Made data breaches a board-level legal and financial risk.",
+  "url": "https://en.wikipedia.org/wiki/General_Data_Protection_Regulation",
+  "scene": "a glowing shield with a padlock over a map of Europe"
+ },
+ {
+  "key": "norsk-hydro",
+  "date": "2019-03-19",
+  "headline": "Norsk Hydro hit by LockerGoga ransomware",
+  "technical": "Aluminium maker Norsk Hydro was hit by LockerGoga ransomware, forcing some plants to switch to manual operations. The company refused to pay and was praised for its open, daily updates during the recovery. The attack cost it around 70 million dollars.",
+  "why": "A model for how to respond openly to a ransomware attack.",
+  "url": "https://en.wikipedia.org/wiki/Norsk_Hydro",
+  "scene": "an aluminium factory with glowing locked control screens"
+ },
+ {
+  "key": "twitter-hack",
+  "date": "2020-07-15",
+  "headline": "Hackers hijack famous Twitter accounts for a crypto scam",
+  "technical": "Attackers used phone-based social engineering on Twitter staff to reach internal admin tools. They took over accounts of Barack Obama, Elon Musk, Apple and others to post a Bitcoin scam. A teenager from Florida was later sentenced as the ringleader.",
+  "why": "Internal admin tools are a prime target for social engineering.",
+  "url": "https://en.wikipedia.org/wiki/2020_Twitter_account_hijacking",
+  "scene": "a smartphone with glowing verified badges and a bitcoin symbol"
+ },
+ {
+  "key": "solarwinds",
+  "date": "2020-12-13",
+  "headline": "SolarWinds supply chain attack is revealed",
+  "technical": "Attackers had hidden a backdoor called Sunburst in updates of SolarWinds' Orion IT monitoring software, installed by up to 18,000 organisations. They then quietly targeted US government agencies and major companies. The campaign was attributed to Russia's foreign intelligence service.",
+  "why": "A trusted software update became the way in.",
+  "url": "https://en.wikipedia.org/wiki/2020_United_States_federal_government_data_breach",
+  "scene": "a software update package with a hidden glowing backdoor inside"
+ },
+ {
+  "key": "proxylogon",
+  "date": "2021-03-02",
+  "headline": "Microsoft Exchange zero-days lead to mass hacking",
+  "technical": "Microsoft released emergency patches for four Exchange Server zero-days, known as ProxyLogon, used by a China-linked group. Once details spread, many groups scanned the internet and compromised tens of thousands of unpatched on-premises email servers.",
+  "why": "Once a fix is public, unpatched servers get attacked within days.",
+  "url": "https://en.wikipedia.org/wiki/2021_Microsoft_Exchange_Server_data_breach",
+  "scene": "an email server with many glowing envelopes and a cracked shield"
+ },
+ {
+  "key": "colonial",
+  "date": "2021-05-07",
+  "headline": "Colonial Pipeline ransomware causes US fuel shortages",
+  "technical": "The DarkSide ransomware group hit Colonial Pipeline, which supplies about 45 percent of fuel to the US east coast. The company shut down the pipeline, causing panic buying, and paid a ransom of about 4.4 million dollars. Investigators later recovered part of it.",
+  "why": "Showed how ransomware can disrupt daily life far beyond IT.",
+  "url": "https://en.wikipedia.org/wiki/Colonial_Pipeline_ransomware_attack",
+  "scene": "a fuel pipeline and petrol pumps under a glowing padlock"
+ },
+ {
+  "key": "kaseya",
+  "date": "2021-07-02",
+  "headline": "Kaseya VSA attack spreads ransomware to over 1,000 companies",
+  "technical": "The REvil group exploited a flaw in Kaseya's VSA remote management software, used by IT service providers. Ransomware was pushed through providers to their customers, hitting between 800 and 1,500 businesses, including hundreds of Coop supermarkets in Sweden.",
+  "why": "Hitting one IT provider can reach all of its customers at once.",
+  "url": "https://en.wikipedia.org/wiki/Kaseya_VSA_ransomware_attack",
+  "scene": "one glowing control tower sending locks out to many small shops"
+ },
+ {
+  "key": "log4shell",
+  "date": "2021-12-09",
+  "headline": "Log4Shell: a critical flaw in a logging library used everywhere",
+  "technical": "A flaw in Log4j, a Java logging library, let attackers run code just by getting a server to log a crafted text string. Log4j was buried inside countless apps and devices, so organisations struggled to even find where they used it. Attacks started almost immediately.",
+  "why": "Showed why knowing what's inside your software matters.",
+  "url": "https://en.wikipedia.org/wiki/Log4Shell",
+  "scene": "a glowing log file with a burning match beside a server"
+ },
+ {
+  "key": "viasat",
+  "date": "2022-02-24",
+  "headline": "Viasat satellite network hacked as Russia invades Ukraine",
+  "technical": "As the invasion began, a cyberattack wiped tens of thousands of KA-SAT satellite modems used across Ukraine and Europe. It disrupted Ukrainian communications and knocked out remote control of thousands of German wind turbines. Western governments attributed it to Russia.",
+  "why": "Cyberattacks are now part of modern warfare.",
+  "url": "https://en.wikipedia.org/wiki/Viasat_hack",
+  "scene": "a satellite dish under a dark sky with broken glowing signal lines"
+ },
+ {
+  "key": "lapsus",
+  "date": "2022-03-22",
+  "headline": "Lapsus$ teen hacking group claims Okta and Microsoft breaches",
+  "technical": "The Lapsus$ group posted screenshots claiming access to identity provider Okta and Microsoft's source code. The group used bribed insiders, SIM swaps and MFA fatigue rather than advanced malware. Several members, including UK teenagers, were later arrested.",
+  "why": "Simple social engineering beat some of the world's biggest companies.",
+  "url": "https://en.wikipedia.org/wiki/Lapsus$",
+  "scene": "a smartphone flooded with sign-in approval prompts"
+ },
+ {
+  "key": "optus",
+  "date": "2022-09-22",
+  "headline": "Optus breach exposes data of nearly 10 million Australians",
+  "technical": "Australian telecom Optus revealed that customer data, including passport and licence numbers, had been taken. Reports said an internet-facing API needed no login to return customer records. The breach led Australia to raise its penalties for serious data breaches.",
+  "why": "A single unprotected API can leak a whole customer base.",
+  "url": "https://en.wikipedia.org/wiki/2022_Optus_data_breach",
+  "scene": "a phone tower with glowing ID cards floating away"
+ },
+ {
+  "key": "3cx",
+  "date": "2023-03-29",
+  "headline": "3CX desktop app hit by a supply chain attack",
+  "technical": "Security firms found that a signed update of the 3CX business phone app contained malware. The 3CX breach itself began when an employee installed a trojanised version of other software. It was linked to North Korean hackers and was the first known supply chain attack caused by another one.",
+  "why": "Even signed software from a trusted vendor can be compromised.",
+  "url": "https://en.wikipedia.org/wiki/3CX",
+  "scene": "an office desk phone and laptop linked by a glowing infected cable"
+ },
+ {
+  "key": "moveit",
+  "date": "2023-05-31",
+  "headline": "MOVEit flaw leads to mass data theft by Cl0p",
+  "technical": "Progress Software warned of a critical flaw in its MOVEit Transfer file sharing tool, already being exploited by the Cl0p gang. Cl0p stole data from thousands of organisations, including BA, the BBC and Boots through a UK payroll provider, and extorted them without encrypting anything.",
+  "why": "File transfer tools hold sensitive data and are a favourite target.",
+  "url": "https://en.wikipedia.org/wiki/2023_MOVEit_data_breach",
+  "scene": "a file transfer server with folders being pulled into the dark"
+ },
+ {
+  "key": "british-library",
+  "date": "2023-10-28",
+  "headline": "Rhysida ransomware cripples the British Library",
+  "technical": "A ransomware attack by the Rhysida group took down the British Library's systems, including its online catalogue, for months. Stolen staff and user data was leaked when no ransom was paid. The library's later report blamed old systems and a server without MFA.",
+  "why": "Legacy systems and missing MFA turn an intrusion into a disaster.",
+  "url": "https://en.wikipedia.org/wiki/British_Library",
+  "scene": "a grand library building with glowing locked book shelves"
+ },
+ {
+  "key": "xz-backdoor",
+  "date": "2024-03-29",
+  "headline": "A backdoor is found in the xz Linux compression tool",
+  "technical": "A Microsoft engineer noticed slow SSH logins and discovered a backdoor deliberately planted in xz Utils, a compression library in most Linux systems. The attacker had spent about two years becoming a trusted maintainer. It was caught before reaching most stable Linux releases.",
+  "why": "Open-source projects can be targeted through their maintainers.",
+  "url": "https://en.wikipedia.org/wiki/XZ_Utils_backdoor",
+  "scene": "a glowing compressed archive box with a tiny hidden door"
+ },
+ {
+  "key": "crowdstrike-outage",
+  "date": "2024-07-19",
+  "headline": "Faulty CrowdStrike update crashes millions of Windows PCs",
+  "technical": "A bad content update to CrowdStrike's Falcon security software made about 8.5 million Windows computers crash and fail to restart. Airlines, hospitals, banks and broadcasters were disrupted worldwide. It was not an attack, but showed the risk of software with deep system access.",
+  "why": "Security tools themselves need careful, staged rollouts.",
+  "url": "https://en.wikipedia.org/wiki/2024_CrowdStrike-related_IT_outages",
+  "scene": "airport departure boards and laptops showing glowing blue error screens"
+ }
+]

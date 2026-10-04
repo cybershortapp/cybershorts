@@ -35,10 +35,17 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const sev = severityOf(story.severity, C);
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
-  const [sheet, setSheet] = useState<null | 'report'>(null);
+  const [sheet, setSheet] = useState<null | 'report' | 'summary'>(null);
+  // measured full height of the summary, to know when it doesn't fit and needs "Read more"
+  const [fullLines, setFullLines] = useState(0);
+
   // the chain page is only built when the reader opens it (tap CHAIN or swipe), so scrolling stays fast
   const [chainReady, setChainReady] = useState(false);
   const [bodyLines, setBodyLines] = useState(6);
+  const truncated = fullLines > bodyLines;
+  const historyCard = story.category === 'History';
+  // tips and history are always "Info", so that label tells the reader nothing there
+  const showSeverity = !!story.severity && !((story.category === 'Tips' || historyCard) && story.severity === 'Info');
   const aiImage = !!story.image_url && story.image_url.includes('/object/public/covers/');
   const [reportState, setReportState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   const action = actionFor(story);
@@ -166,7 +173,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               <Text style={{ color: C.onBrand, fontSize: L.metaSize - 1, fontFamily: F.brand, letterSpacing: 0.5 }}>NEW</Text>
             </View>
           )}
-          {story.severity && (
+          {showSeverity && (
             <View style={[styles.pill, { backgroundColor: sev.bg }]}>
               <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
             </View>
@@ -182,7 +189,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           </View>
         </View>
         <Text style={{ color: C.muted, fontSize: L.metaSize, marginTop: 6, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
-          {story.source} · {timeAgo(story.published_at)}
+          {historyCard ? historyDate(story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
         </Text>
 
         <Pressable onPress={openArticle}>
@@ -193,11 +200,30 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
         {/* the summary gets whatever space is left and ends with "..." if it doesn't fit,
             so it can never push the buttons below over each other (big-text phones, iPhones) */}
-        <View style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / L.bodyLine)))}>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }} numberOfLines={bodyLines} ellipsizeMode="tail">
+        <Pressable
+          style={{ flex: 1, overflow: 'hidden' }}
+          onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / L.bodyLine)))}
+          onPress={truncated ? () => setSheet('summary') : undefined}
+          disabled={!truncated}
+          accessibilityRole={truncated ? 'button' : undefined}
+          accessibilityLabel={truncated ? 'Read the full summary' : undefined}
+        >
+          {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
+          <Text
+            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine }}
+            onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / L.bodyLine))}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+          >
             {story.technical}
           </Text>
-        </View>
+          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail">
+            {story.technical}
+          </Text>
+          {truncated && (
+            <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: L.metaSize, lineHeight: L.bodyLine }}>Read more</Text>
+          )}
+        </Pressable>
 
 
         {!!story.why_it_matters && (
@@ -293,6 +319,20 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         </Animated.View>
       </View>
 
+      {sheet === 'summary' && (
+      <Sheet visible title={story.headline} onClose={() => setSheet(null)}>
+        <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 12 }}>
+          <Text style={{ color: C.body, fontSize: 16, lineHeight: 24 }} selectable>{story.technical}</Text>
+          {!!story.why_it_matters && (
+            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14 }}>{story.why_it_matters}</Text>
+          )}
+          <Pressable onPress={() => { setSheet(null); openArticle(); }} style={{ marginTop: 16 }} accessibilityRole="link">
+            <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 15 }}>Read full story on {story.source}</Text>
+          </Pressable>
+        </ScrollView>
+      </Sheet>
+      )}
+
       {sheet === 'report' && (
       <Sheet visible title="Report an error" onClose={() => setSheet(null)}>
         {reportState === 'sent' ? (
@@ -319,6 +359,15 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 }
 
 export const StoryCard = memo(StoryCardBase);
+
+/** History cards show the real date, and "On this day" on its anniversary. */
+function historyDate(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const same = d.getUTCDate() === now.getUTCDate() && d.getUTCMonth() === now.getUTCMonth();
+  return same ? `On this day · ${label}` : label;
+}
 
 const makeStyles = (C: Palette) =>
   StyleSheet.create({

@@ -428,11 +428,24 @@ def summarise_ai(client, title, excerpt):
     if not isinstance(data.get("why"), str):
         data["why"] = ""
     data["is_news"] = data.get("is_news") is not False
+    data["technical"] = fit_summary(data["technical"])
     data["products"] = [str(x) for x in data.get("products") or [] if isinstance(x, str)][:5]
     data["zero_day"] = data.get("zero_day") is True
     data["chain"] = clean_chain(data.get("chain"), f"{title} {excerpt}")
     data["incident"] = clean_incident(data, f"{title} {excerpt}")
     return data
+
+
+def fit_summary(text, max_words=70):
+    """Backup models sometimes write far more than the ~55 words asked for, which can't fit on a card.
+    Cut long summaries at the last full sentence within max_words (or at max_words with "...")."""
+    text = re.sub(r"\s+", " ", text).strip()
+    parts = text.split(" ")
+    if len(parts) <= max_words:
+        return text
+    cut = " ".join(parts[:max_words])
+    end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "))
+    return cut[:end + 1] if end > len(cut) * 0.5 else cut.rstrip(",;:") + "..."
 
 
 def summarise_free(title, excerpt):
@@ -785,6 +798,15 @@ def main():
         except Exception as ex:
             tip_note = f"failed: {str(ex)[:80]}"
 
+    # ---- 2c. cyber history cards (hand-written, added once; pictures follow over the next runs) ----
+    if db and not TEST_MODE:
+        try:
+            from history import sync_history
+            for hid, scene, headline in sync_history(db):
+                need_cover.append((hid, cover_prompt(scene, "Other"), headline))
+        except Exception as ex:
+            print(f"[warn] history cards: {str(ex)[:80]}")
+
     # ---- 3. AI pictures for new stories that have no usable picture ----
     covers_made, covers_note = 0, "off"
     if COVERS and db and need_cover:
@@ -1109,8 +1131,9 @@ def update_groups():
 def check_tips():
     """Make sure every hand-written tip links to a page that still exists. Run: python pipeline.py --check-tips"""
     from tips import load_tips
-    tips, bad = load_tips(), 0
-    print(f"\n=== Tip cards: {len(tips)} ===\n")
+    from history import load_history
+    tips, bad = load_tips() + load_history(), 0
+    print(f"\n=== Tip and history cards: {len(tips)} ===\n")
     for t in tips:
         for k in ("key", "headline", "technical", "why", "url"):
             if not t.get(k):

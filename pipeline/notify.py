@@ -29,8 +29,8 @@ def _post(messages):
 def _pick(stories, device, since, quiet):
     best, best_score, best_match = None, -1, None
     for s in stories:
-        if s["created_at"] <= since:
-            continue
+        if s["created_at"] <= since or s.get("category") in ("Tips", "History"):
+            continue     # tips and history cards never trigger alerts
         rank = RANK.get(s.get("severity") or "Info", 1)
         hit = matches(s, device.get("products"), device.get("terms"))
         zero = bool(s.get("zero_day"))

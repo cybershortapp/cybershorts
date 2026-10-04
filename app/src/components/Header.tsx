@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { FILTERS, type Filter } from '../lib/types';
 import { F, type Palette, tabColour, useTheme } from '../theme';
@@ -15,6 +15,11 @@ type Props = {
   filter: Filter;
   onFilterChange: (f: Filter) => void;
   counter: string;
+  searching: boolean;
+  query: string;
+  onSearchOpen: () => void;
+  onSearchClose: () => void;
+  onQueryChange: (q: string) => void;
 };
 
 const TAB_ICON: Partial<Record<Filter, IconName>> = {
@@ -22,9 +27,10 @@ const TAB_ICON: Partial<Record<Filter, IconName>> = {
   Critical: 'alert-octagon',
   'Zero-day': 'lightning-bolt',
   Saved: 'bookmark',
+  History: 'history',
 };
 
-export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChange, counter }: Props) {
+export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChange, counter, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
@@ -50,6 +56,9 @@ export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChang
               {counter}
             </Text>
           )}
+          <Pressable onPress={searching ? onSearchClose : onSearchOpen} hitSlop={8} style={[styles.iconBtn, searching && styles.iconOn]} accessibilityLabel="Search stories">
+            <MaterialCommunityIcons name="magnify" size={17 * k} color={searching ? C.onBrand : C.brandDark} />
+          </Pressable>
           {(() => {
             const on = view === 'feed' && filter === 'Saved';
             return (
@@ -64,7 +73,28 @@ export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChang
         </View>
       </View>
 
-      {view === 'feed' && (
+      {view === 'feed' && searching && (
+        <View style={styles.searchRow}>
+          <MaterialCommunityIcons name="magnify" size={18 * k} color={C.muted} />
+          <TextInput
+            value={query}
+            onChangeText={onQueryChange}
+            placeholder="Search stories, products, CVEs..."
+            placeholderTextColor={C.muted}
+            autoFocus
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+            style={[styles.searchInput, { fontSize: 15 * k, color: C.text }]}
+            accessibilityLabel="Search stories"
+          />
+          <Pressable onPress={onSearchClose} hitSlop={10} accessibilityRole="button">
+            <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 14 * k }}>Cancel</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {view === 'feed' && !searching && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {FILTERS.map((f) => {
             const on = f === filter;
@@ -105,4 +135,6 @@ const makeStyles = (C: Palette) =>
     chips: { paddingBottom: 10, gap: 8 },
     chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
     dot: { width: 7, height: 7, borderRadius: 4 },
+    searchRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: C.chipBorder, backgroundColor: C.surface },
+    searchInput: { flex: 1, paddingVertical: 8, fontFamily: F.medium },
   });
