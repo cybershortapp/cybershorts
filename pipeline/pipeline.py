@@ -1249,6 +1249,37 @@ def skipped_report(days=2, hours=None):
     gh_note("Skipped report", " ; ".join(f"{v} {k}" for k, v in counts.items()) + "\n" + "\n".join(sorted(lines))[:60000])
 
 
+def recheck_skipped(hours=24):
+    """Let the AI look again at stories it called "not news" in the last hours (after the news rules change).
+    Only removes the "not news" memory; the next pipeline run reads them again. Run: python pipeline.py --recheck"""
+    from concurrent.futures import ThreadPoolExecutor
+    from supabase import create_client
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        feeds = list(pool.map(read_feed, SOURCES))
+    by_src, ids = {s["name"]: s for s in SOURCES}, []
+    for name, feed, err in feeds:
+        if err or feed is None:
+            continue
+        src = by_src[name]
+        for e in feed.entries:
+            title = clean(e.get("title") or "")
+            if not e.get("link") or published_of(e) < cutoff or NOT_NEWS_TITLE.search(title):
+                continue
+            if src.get("kind") in ("general", "search") and not CYBER_WORDS.search(title):
+                continue
+            ids.append(hashlib.sha1(e.get("link").encode()).hexdigest()[:16])
+    gone = 0
+    for i in range(0, len(ids), 150):
+        rows = db.table("seen_links").select("id").eq("reason", "not_news").in_("id", ids[i:i + 150]).execute().data
+        for r in rows:
+            db.table("seen_links").delete().eq("id", r["id"]).execute()
+            gone += 1
+    print(f"\n{gone} stories from the last {hours}h will be checked again by the next run.\n")
+    gh_note("Recheck", f"{gone} stories will be checked again")
+
+
 def try_daily():
     """Let the AI write one new tip and one new history card, without posting them, to check it works.
     Run: python pipeline.py --try-daily"""
@@ -1336,6 +1367,8 @@ if __name__ == "__main__":
         health_check()
     elif "--check-tips" in sys.argv:
         sys.exit(1 if check_tips() else 0)
+    elif "--recheck" in sys.argv:
+        recheck_skipped()
     elif "--skipped" in sys.argv:
         skipped_report()
     elif "--try-daily" in sys.argv:
