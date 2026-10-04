@@ -43,7 +43,16 @@ const EMPTY_TEXT: Partial<Record<Filter, string>> = {
   'For you': "Nothing about your products yet. Stay tuned: we'll show it here the moment it's reported.",
   Critical: 'No critical stories right now. Stay tuned.',
   Saved: 'Tap the bookmark on any story to save it here.',
+  History: 'Cyber history is on its way. Check back soon.',
 };
+
+/** History tab: today's anniversaries first, then the days coming up, around the calendar. */
+function byAnniversary(rows: Story[]) {
+  const dayOfYear = (d: Date) => Math.floor((Date.UTC(2000, d.getUTCMonth(), d.getUTCDate()) - Date.UTC(2000, 0, 1)) / 86400000);
+  const today = dayOfYear(new Date());
+  const key = (s: Story) => (dayOfYear(new Date(s.published_at)) - today + 366) % 366;
+  return [...rows].sort((a, b) => key(a) - key(b) || b.published_at.localeCompare(a.published_at));
+}
 
 /** "For you": stories tagged with the reader's products, or mentioning their own keywords. */
 function forYouFilter() {
@@ -72,11 +81,17 @@ function Main() {
   const [error, setError] = useState<string | null>(null);
   const [pageHeight, setPageHeight] = useState(0);
   const [index, setIndex] = useState(0);
+  // search: the box in the header; results show as normal cards
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const beforeSearch = useRef<Filter>('All');
   const lastLoaded = useRef(0);
   const listRef = useRef<FlatList<Story>>(null);
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
   const prefsKey = filter === 'For you' ? [...prefs.products, ...prefs.terms].join('|') : '';
+  const searchKey = filter === 'Search' ? searchTerm : '';
   const seenBefore = useRef<string | null>(null); // stories newer than this get a NEW tag
   // each tab remembers its cards and position while the app stays open; cleared on a fresh start
   const tabMemory = useRef(new Map<Filter, { stories: Story[]; index: number }>());
@@ -110,17 +125,24 @@ function Main() {
         .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, from + size - 1);
-      if (filter === 'Saved') query = query.in('id', savedIds);
+      if (filter === 'Search') {
+        if (searchTerm.length < 2) return null;
+        query = query.or(`headline.ilike.*${searchTerm}*,technical.ilike.*${searchTerm}*,source.ilike.*${searchTerm}*`);
+      } else if (filter === 'History') {
+        // a few hundred at most, all loaded at once and sorted by anniversary on the phone
+        query = supabase.from('stories').select(STORY_FIELDS).eq('category', 'History').order('published_at', { ascending: false }).limit(500);
+      } else if (filter === 'Saved') query = query.in('id', savedIds);
       else if (filter === 'Critical') query = query.eq('severity', 'Critical');
       else if (filter === 'Zero-day') query = query.eq('zero_day', true);
       else if (filter === 'For you') {
         const f = forYouFilter();
         if (!f) return null;
-        query = query.or(f);
-      } else if (filter !== 'All') query = query.eq('category', filter);
+        query = query.or(f).neq('category', 'History');
+      } else if (filter === 'All') query = query.neq('category', 'History');
+      else query = query.eq('category', filter);
       return query;
     },
-    [filter, savedKey, prefsKey], // eslint-disable-line react-hooks/exhaustive-deps
+    [filter, savedKey, prefsKey, searchKey], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const load = useCallback(async (opts?: { markSeen?: boolean }) => {
@@ -144,9 +166,10 @@ function Main() {
       setError("Couldn't load stories. Check your connection and try again.");
       return;
     }
-    const rows = cleanStories(data as Story[]);
+    let rows = cleanStories(data as Story[]);
     lastLoaded.current = Date.now();
-    if (rows.length < FIRST_PAGE) noMore.current.add(filter);
+    if (filter === 'History') rows = byAnniversary(rows);
+    if (rows.length < FIRST_PAGE || filter === 'History') noMore.current.add(filter);
     else noMore.current.delete(filter);
     if (opts?.markSeen) {
       // remember the newest story that exists now; anything newer than the previous visit gets a NEW tag
@@ -159,12 +182,18 @@ function Main() {
     }
     setError(null);
     setStories(rows);
-  }, [filter, savedKey, prefsKey, pageQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, savedKey, prefsKey, searchKey, pageQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // search as you type, once the typing pauses
+  useEffect(() => {
+    const t = setTimeout(() => setSearchTerm(cleanTerm(query)), 400);
+    return () => clearTimeout(t);
+  }, [query]);
 
   // near the end of the loaded cards: quietly fetch the next page and add it to the bottom
   const loadMore = useCallback(async () => {
     const f = filter;
-    if (loadingMore.current || noMore.current.has(f) || filter === 'Saved') return;
+    if (loadingMore.current || noMore.current.has(f) || filter === 'Saved' || filter === 'History') return;
     const have = storiesRef.current.length;
     if (have === 0 || have >= MAX_CARDS) return;
     const query = pageQuery(have);
@@ -357,7 +386,11 @@ function Main() {
         <Text style={styles.message}>
           {noPrefs
             ? 'Tell us which products you use (Defender, Mimecast, Fortinet...) and their news will show up here.'
-            : EMPTY_TEXT[filter] ?? `No ${filter === 'All' ? '' : filter + ' '}stories right now. Stay tuned.`}
+            : filter === 'Search'
+              ? searchTerm.length < 2
+                ? 'Search every story: try a product, a company or a CVE number.'
+                : `No stories match "${searchTerm}".`
+              : EMPTY_TEXT[filter] ?? `No ${filter === 'All' ? '' : filter + ' '}stories right now. Stay tuned.`}
         </Text>
         {noPrefs && (
           <Pressable onPress={() => setView('prefs')} style={[styles.retry, { backgroundColor: C.brand, borderColor: C.brand }]}>
@@ -396,6 +429,10 @@ function Main() {
         view={view}
         onSaved={() => {
           setView('feed');
+          if (searching) {
+            setSearching(false);
+            tabMemory.current.delete('Search');
+          }
           // tap again to leave Saved and go back to the news
           if (filter === 'Saved') changeFilter(prefs.products.length + prefs.terms.length ? 'For you' : 'All');
           else changeFilter('Saved');
@@ -405,6 +442,23 @@ function Main() {
         filter={filter}
         onFilterChange={changeFilter}
         counter={counter}
+        searching={searching}
+        query={query}
+        onQueryChange={setQuery}
+        onSearchOpen={() => {
+          setView('feed');
+          if (filter !== 'Search') beforeSearch.current = filter;
+          setQuery('');
+          setSearchTerm('');
+          tabMemory.current.delete('Search');
+          setSearching(true);
+          changeFilter('Search');
+        }}
+        onSearchClose={() => {
+          setSearching(false);
+          tabMemory.current.delete('Search');
+          changeFilter(beforeSearch.current);
+        }}
       />
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}

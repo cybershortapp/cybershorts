@@ -103,9 +103,10 @@ def send_digests(db, mailer, force=False):
     # the first run at or after 8am sends it (GitHub's hourly timer is often late, so never rely on one exact hour)
     if not force and not (DIGEST_HOUR <= uk_hour < 21):
         return 0
-    stories = (db.table("stories").select("id,headline,technical,why_it_matters,severity,products,source,url")
+    stories = (db.table("stories").select("id,headline,technical,why_it_matters,severity,products,source,url,category")
                .gte("created_at", (now - timedelta(hours=24)).isoformat()).order("created_at", desc=True)
                .limit(200).execute().data)
+    stories = [s for s in stories if s.get("category") not in ("Tips", "History")]   # news only in the email
     if not stories:
         return 0
     subs = (db.table("subscribers").select("email,token,products,terms,last_sent_at").eq("confirmed", True)

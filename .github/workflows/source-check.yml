@@ -5,7 +5,7 @@ name: source-check
 # On a pull request the result is posted as a comment, so it can be read from a phone.
 on:
   pull_request:
-    paths: ["pipeline/sources.py", "pipeline/data_feeds.py", "pipeline/tips.json", "pipeline/tips.py"]
+    paths: ["pipeline/sources.py", "pipeline/data_feeds.py", "pipeline/tips.json", "pipeline/tips.py", "pipeline/history.json"]
   workflow_dispatch:
 
 permissions:

@@ -84,6 +84,7 @@ export const TAB_COLOURS: Record<string, [string, string]> = {
   Saved: ['#0369A1', '#6EC3F0'],
   Other: ['#475569', '#A7B3C8'],
   Tips: ['#0E7490', '#5FCDE4'],
+  History: ['#92400E', '#F2B87A'],
 };
 
 export function tabColour(name: string, C: Palette) {
