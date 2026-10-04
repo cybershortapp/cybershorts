@@ -27,7 +27,6 @@ const TAB_ICON: Partial<Record<Filter, IconName>> = {
   Critical: 'alert-octagon',
   'Zero-day': 'lightning-bolt',
   Saved: 'bookmark',
-  History: 'history',
 };
 
 export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChange, counter, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {

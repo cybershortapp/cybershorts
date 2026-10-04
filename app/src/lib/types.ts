@@ -46,7 +46,7 @@ export type Story = {
 };
 
 // the tabs along the top; Saved has its own bookmark button in the header instead
-export const FILTERS = ['For you', 'All', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy', 'History'] as const;
+export const FILTERS = ['For you', 'All', 'Critical', 'Zero-day', 'Breaches', 'Scams', 'Vulnerabilities', 'Ransomware', 'Tools', 'Policy'] as const;
 export type Filter = (typeof FILTERS)[number] | 'Saved' | 'Search';
 
 export const STORY_FIELDS =

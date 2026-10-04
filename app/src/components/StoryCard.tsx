@@ -189,7 +189,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           </View>
         </View>
         <Text style={{ color: C.muted, fontSize: L.metaSize, marginTop: 6, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
-          {historyCard ? historyDate(story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
+          {historyCard ? historyDate(story.id, story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
         </Text>
 
         <Pressable onPress={openArticle}>
@@ -360,13 +360,19 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
 export const StoryCard = memo(StoryCardBase);
 
-/** History cards show the real date, and "On this day" on its anniversary. */
-function historyDate(iso: string) {
-  const d = new Date(iso);
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** History cards show the date of the event (kept in the card id: history:2017-05-12:wannacry),
+ *  with "On this day" on its anniversary. */
+function historyDate(id: string, posted: string) {
+  const m = /^history:(\d{4})-(\d{2})(?:-(\d{2}))?:/.exec(id);
+  if (!m) return `Cyber history · ${timeAgo(posted)}`;
+  const [year, month, day] = [Number(m[1]), Number(m[2]), m[3] ? Number(m[3]) : 0];
+  const name = MONTHS[month - 1] ?? '';
+  if (!day) return `${name} ${year}`;
   const now = new Date();
-  const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const same = d.getUTCDate() === now.getUTCDate() && d.getUTCMonth() === now.getUTCMonth();
-  return same ? `On this day · ${label}` : label;
+  const today = now.getDate() === day && now.getMonth() + 1 === month;
+  return today ? `On this day · ${day} ${name} ${year}` : `${day} ${name} ${year}`;
 }
 
 const makeStyles = (C: Palette) =>
