@@ -900,11 +900,22 @@ def main():
         print("AI used: " + ", ".join(f"{k} x{v}" for k, v in ai.used.items()))
     print(f"AI pictures: {covers_note}")
     titles = [r["source"] for r in health if r["added"]]
+    top_note = ""
+    if db:
+        try:   # what the top of the app's feed shows right now (news only)
+            top = (db.table("stories").select("headline,source,published_at,created_at")
+                   .or_("category.is.null,category.not.in.(Tips,History)")
+                   .order("published_at", desc=True).limit(3).execute().data)
+            top_note = " | feed top: " + " ; ".join(
+                f"{(started - datetime.fromisoformat(t['published_at'].replace('Z', '+00:00'))).total_seconds() / 3600:.1f}h ago "
+                f"({t['source']}: {t['headline'][:50]})" for t in top)
+        except Exception as ex:
+            top_note = f" | feed top: {str(ex)[:60]}"
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
             f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | alerts: {alerts_note[:120]} | "
-            f"stopped early: {stopped}")
+            f"stopped early: {stopped}{top_note}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
