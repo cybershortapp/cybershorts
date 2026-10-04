@@ -297,6 +297,14 @@ export function Preferences({ onDone }: Props) {
         <Text style={[styles.small, { textAlign: 'center', marginTop: 6 }]}>
           Your products are saved on this phone. They're only sent to us to match your alerts and emails.
         </Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://cybershortapp.github.io/cybershorts/').catch(() => {})}
+          hitSlop={8}
+          style={{ alignSelf: 'center', marginTop: 12 }}
+          accessibilityRole="link"
+        >
+          <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>About CyberSid, privacy and contact</Text>
+        </Pressable>
         {!!appError && (
           <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]} selectable>
             Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}
