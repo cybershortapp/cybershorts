@@ -20,11 +20,16 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
       - name: Latest store builds
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          npx --yes eas-cli build:list --platform android --buildProfile production --limit 3 --json --non-interactive > builds.json
-          jq -r '.[] | "\(.status) | \(.createdAt) | version \(.appVersion) (\(.appBuildVersion)) | \(.artifacts.applicationArchiveUrl // .artifacts.buildUrl // "not ready")"' builds.json | while read -r line; do
+          if ! npx eas-cli build:list --platform android --limit 5 --json --non-interactive > builds.json 2> err.txt; then
+            echo "::error title=Expo::$(tail -c 400 err.txt | tr '\n' ' ')"; exit 1
+          fi
+          jq -r '.[] | select(.buildProfile == "production") | "\(.status) | \(.createdAt) | version \(.appVersion) (\(.appBuildVersion)) | \(.artifacts.applicationArchiveUrl // .artifacts.buildUrl // "not ready")"' builds.json | while read -r line; do
             echo "::notice title=Store build::$line"
           done
