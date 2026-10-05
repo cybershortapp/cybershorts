@@ -1,0 +1,37 @@
+name: check-aab
+
+# Checks a finished Play Store build before it is uploaded: the permissions it asks for,
+# its version, and that the news settings are inside it. Run by hand with the .aab link from store-build-status.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Link to the .aab on expo.dev"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download the build and bundletool
+        run: |
+          curl -sSL -o app.aab "${{ inputs.url }}"
+          curl -sSL -o bundletool.jar https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+          ls -la app.aab
+      - name: Check it
+        run: |
+          java -jar bundletool.jar dump manifest --bundle app.aab > manifest.xml
+          version=$(grep -o 'android:versionName="[^"]*"' manifest.xml | head -1)
+          code=$(grep -o 'android:versionCode="[^"]*"' manifest.xml | head -1)
+          perms=$(grep -o 'uses-permission[^>]*android:name="[^"]*"' manifest.xml | grep -o '"[^"]*"$' | tr -d '"' | sort -u | tr '\n' ' ')
+          echo "::notice title=Version::$version $code"
+          echo "::notice title=Permissions::$perms"
+          if echo "$perms" | grep -q 'AD_ID'; then echo "::error title=Advertising ID::the build still asks for AD_ID"; else echo "::notice title=Advertising ID::not in the build (matches Play Console: No)"; fi
+          url=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_URL' app/eas.json)
+          unzip -o -q app.aab -d aab
+          if grep -raq "$url" aab/base/assets; then echo "::notice title=News settings::inside the build"; else echo "::error title=News settings::Supabase address not found in the build"; fi
