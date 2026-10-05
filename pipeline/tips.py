@@ -2,7 +2,8 @@
 One tip card a day for each region, posted at 8am local time (or the first run after it), shown in the main feed:
   GB    readers in the UK (8am UK time): UK tips (Action Fraud, 7726...) and tips for everyone
   IN    readers in India (8am India time): Indian tips (1930, cybercrime.gov.in, Sanchar Saathi...) and tips for everyone
-  INTL  everyone else (8am UTC): tips for everyone only
+  INTL  everyone else (8am UTC): tips for everyone only. These cards are tagged XX (not INTL), so readers in the
+        UK and India don't also get them: each reader gets exactly one tip a day, and never the same one twice.
 Each tip in tips.json has "country": GB, IN or ALL (for everyone). The card's country tells the app who sees it.
 
 The hand-written tips in tips.json come first, each used once only. After that the AI writes a new tip
@@ -67,8 +68,14 @@ def load_tips():
         return json.load(f)
 
 
+def card_country(region):
+    """Country tag on the card: the region itself, except the rest-of-the-world tip (XX), which must not
+    show up for UK or India readers on top of their own tip."""
+    return "XX" if region == "INTL" else region
+
+
 def _used(db, region):
-    rows = (db.table("stories").select("id,headline").eq("source", SOURCE).eq("country", region)
+    rows = (db.table("stories").select("id,headline").eq("source", SOURCE).eq("country", card_country(region))
             .limit(5000).execute().data)
     keys = {r["id"].split(":")[1] for r in rows if r["id"].startswith("tip:")}
     return keys, [r["headline"] for r in rows if r.get("headline")]
@@ -133,7 +140,7 @@ def post_region_tip(db, region, ai=None, now=None, dry_run=False):
     """Post today's tip for one region if it's due and not posted yet. Returns (story or None, note, ai_calls)."""
     now = now or datetime.now(timezone.utc)
     tz = REGIONS[region]["tz"]
-    if not dry_run and (not due(now, POST_HOUR, tz) or posted_today(db, SOURCE, now, tz, region)):
+    if not dry_run and (not due(now, POST_HOUR, tz) or posted_today(db, SOURCE, now, tz, card_country(region))):
         return None, "none due", 0
     keys, headlines = _used(db, region)
     pool = [t for t in load_tips() if t.get("country", "ALL") in (region, "ALL")]
@@ -148,7 +155,7 @@ def post_region_tip(db, region, ai=None, now=None, dry_run=False):
         t, calls = new_ai_tip(ai, headlines + [x["headline"] for x in pool], now.date(), region)
         if not t:
             return None, f"AI could not write a new tip ({calls} calls)", calls
-    story = story_row(f"tip:{t['key']}:{region}{now.strftime('%Y%m%d%H')}", SOURCE, "Tips", t["url"], t, now, region)
+    story = story_row(f"tip:{t['key']}:{region}{now.strftime('%Y%m%d%H')}", SOURCE, "Tips", t["url"], t, now, card_country(region))
     if not dry_run:
         db.table("stories").upsert(story).execute()
     story["scene"] = t.get("scene", "")
@@ -160,6 +167,9 @@ def post_daily_tip(db, ai=None, now=None, dry_run=False, regions=None):
     """Post each region's tip when it's due.
     Returns (last story or None, note for the run summary, ai_calls, [(id, scene, headline)] needing a picture)."""
     now = now or datetime.now(timezone.utc)
+    if not dry_run:
+        # rest-of-the-world tips posted before the XX tag existed were shown to everyone; hide them from UK/India
+        db.table("stories").update({"country": "XX"}).eq("source", SOURCE).eq("country", "INTL").execute()
     retry = [(r["id"], "", r["headline"]) for r in missing_pictures(db, SOURCE, now)]
     notes, calls, story, new = [], 0, None, []
     for region in regions or REGIONS:

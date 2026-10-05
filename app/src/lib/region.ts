@@ -49,7 +49,8 @@ export function getRegion(): Region {
   return chosen === 'GB' || chosen === 'IN' || chosen === 'INTL' ? chosen : detectRegion();
 }
 
-/** Stories this reader sees: news for everyone plus their own country's local news and tips. */
+/** Stories this reader sees: news for everyone plus their own country's local news and tips.
+ *  XX = the daily tip for readers outside the UK and India (UK and India readers get their own). */
 export function regionCountries(region: Region = getRegion()): string[] {
-  return region === 'INTL' ? ['INTL'] : ['INTL', region];
+  return region === 'INTL' ? ['INTL', 'XX'] : ['INTL', region];
 }
