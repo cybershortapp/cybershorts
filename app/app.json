@@ -12,6 +12,9 @@
     "android": {
       "package": "app.cybersid.news",
       "versionCode": 1,
+      "blockedPermissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#05070F",
         "foregroundImage": "./assets/android-icon-foreground.png",
