@@ -138,7 +138,8 @@ def send_alerts(db):
     messages, handled = [], []
     for d in devices:
         # each reader gets news for everyone plus their own country's local news and tips
-        mine = {"INTL", d.get("country") or "GB"}
+        home = d.get("country") or "GB"
+        mine = {"INTL", home} | ({"XX"} if home == "INTL" else set())   # XX: the rest-of-the-world tip
         m = plan([s for s in stories if (s.get("country") or "INTL") in mine], d, now)
         messages += m
         # remember what this phone has been sent; in quiet hours only when something was sent, so the
