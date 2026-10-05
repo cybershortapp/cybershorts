@@ -168,7 +168,12 @@ def send_alerts(db):
         db.table("devices").update({"last_push_at": now.isoformat()}).in_("token", handled[i:i + 100]).execute()
     for i in range(0, len(gone), 100):
         db.table("devices").delete().in_("token", gone[i:i + 100]).execute()
-    return f"{len(messages)} alerts to {len(sent)} of {len(devices)} phones" + (" (quiet hours)" if quiet else "") + \
+    regions = {}
+    for d in devices:
+        k = d.get("country") or ("GB?" if "country" not in d else "GB")
+        regions[k] = regions.get(k, 0) + 1
+    where = ", ".join(f"{k} {v}" for k, v in sorted(regions.items()))
+    return f"{len(messages)} alerts to {len(sent)} of {len(devices)} phones ({where})" + (" (quiet hours)" if quiet else "") + \
         (f", {len(gone)} uninstalled phones removed" if gone else "") + \
         (f", problems: {' | '.join(dict.fromkeys(problems))}" if problems else "")
 
