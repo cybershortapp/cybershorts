@@ -1,0 +1,45 @@
+name: store-build
+
+# Builds the Play Store version of the app (.aab) on Expo's servers. Run it by hand from the Actions tab.
+# The finished file appears at expo.dev > CyberSid > Builds, ready to download and upload to Play Console.
+# Uses the same EXPO_TOKEN secret as app-update, and the signing key Expo already keeps for this app.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build profile (production = Play Store .aab)"
+        required: true
+        default: "production"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Check the app settings are in eas.json
+        run: |
+          jq -e '.build.${{ inputs.profile }}.env.EXPO_PUBLIC_SUPABASE_KEY | startswith("sb_publishable_")' eas.json \
+            || { echo "::error::Supabase settings missing from the ${{ inputs.profile }} profile in eas.json"; exit 1; }
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Start the build on Expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli build --platform android --profile "${{ inputs.profile }}" --non-interactive --no-wait --json > build.json
+          cat build.json
+          id=$(jq -r '.[0].id' build.json)
+          echo "::notice title=Store build started::https://expo.dev/accounts/$(jq -r '.[0].project.ownerAccount.name // empty' build.json)/projects/$(jq -r '.[0].project.slug // empty' build.json)/builds/$id"
