@@ -34,6 +34,14 @@ def check(db, now):
         problems.append(("runs", age, RUN_LIMIT,
                          f"No successful news run for {fmt(age)}. Check GitHub Actions (news-pipeline) "
                          "and githubstatus.com." if age else "No successful news run found."))
+    # the AI's daily allowance used up: news waits until midnight UTC (happened 7 Oct, 12 hours with no news)
+    cap = int(os.getenv("DAILY_AI_CAP", "2000"))
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today = db.table("pipeline_runs").select("ai_calls").gte("started_at", day_start.isoformat()).execute().data
+    used = sum(r["ai_calls"] or 0 for r in today)
+    if used >= cap * 0.98:
+        problems.append(("ai", None, None, f"The AI daily limit is used up ({used} of {cap} calls). New stories wait "
+                         "until midnight UTC. Raise DAILY_AI_CAP in .github/workflows/pipeline.yml if this repeats."))
     if runs:
         r = runs[0]
         if r.get("sources_total") and r["sources_ok"] < r["sources_total"] * 0.8:
@@ -60,6 +68,8 @@ def fmt(td):
 def due(problem, now):
     """Email when the problem has just started (crossed its limit in the last hour) or once a day after."""
     kind, age, limit, _ = problem
+    if kind == "ai":
+        return True     # rare and urgent: it stops all new news until midnight UTC
     if age is None or limit is None:
         return now.astimezone(ZoneInfo("Europe/London")).hour == 9      # no clock: once a day at 9am
     over = age - limit
