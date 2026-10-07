@@ -53,4 +53,4 @@ jobs:
           TEST_MODE: "false"
           USE_AI: "true"
           MAX_AI_CALLS: "40"
-          DAILY_AI_CAP: "600"
+          DAILY_AI_CAP: "2000"
