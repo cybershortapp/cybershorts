@@ -41,7 +41,7 @@ class LimitHit(Exception):
     """Free limit reached for this model (HTTP 429) or model not available."""
 
 
-def _post(url, headers, body, timeout=90):
+def _post(url, headers, body, timeout=40):
     # a proper User-Agent: some AI services' security walls block the default Python one (error 1010)
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={
         "Content-Type": "application/json", "Accept": "application/json",
@@ -137,6 +137,10 @@ class AI:
                 self.dead.add((provider, model))
             except Exception as ex:
                 errors.append(f"{provider}:{model}: {ex}")
+                if "timed out" in str(ex).lower() or isinstance(ex, TimeoutError):
+                    # a model that hangs would eat the whole run: skip it for the rest of this run
+                    print(f"[slow]  {provider}:{model} timed out, using the next model for the rest of this run")
+                    self.dead.add((provider, model))
                 continue
         raise RuntimeError("All AI options failed: " + " | ".join(e[:120] for e in errors[-3:]))
 

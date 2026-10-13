@@ -101,9 +101,14 @@ def main():
     html_body = "<p>CyberSid health check found a problem:</p><ul>" + "".join(f"<li>{l}</li>" for l in lines) + \
         "</ul><p><a href='https://github.com/cybershortapp/cybershorts/actions'>Open GitHub Actions</a></p>" \
         "<p>This email repeats once a day until it's fixed.</p>"
-    mailer.send(to, "CyberSid problem: " + lines[0][:70], text, html_body)
-    mailer.close()
-    print(f"Emailed {to}")
+    try:
+        mailer.send(to, "CyberSid problem: " + lines[0][:70], text, html_body)
+        mailer.close()
+        print(f"Emailed {to}")
+    except Exception as ex:
+        # Gmail refused: say so plainly in the run (GitHub also emails the owner about the failed run)
+        print(f"::error title=Health watch could not send its email::{str(ex)[:200]} | Problems: {' | '.join(lines)}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
