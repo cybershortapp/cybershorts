@@ -1,8 +1,8 @@
 """
-One tip card a day for each region, posted at 8am local time (or the first run after it), shown in the main feed:
-  GB    readers in the UK (8am UK time): UK tips (Action Fraud, 7726...) and tips for everyone
-  IN    readers in India (8am India time): Indian tips (1930, cybercrime.gov.in, Sanchar Saathi...) and tips for everyone
-  INTL  everyone else (8am UTC): tips for everyone only. These cards are tagged XX (not INTL), so readers in the
+One tip card a day for each region, posted at 9am local time (or the first run after it), shown in the main feed:
+  GB    readers in the UK (9am UK time): UK tips (Action Fraud, 7726...) and tips for everyone
+  IN    readers in India (9am India time): Indian tips (1930, cybercrime.gov.in, Sanchar Saathi...) and tips for everyone
+  INTL  everyone else (9am UTC): tips for everyone only. These cards are tagged XX (not INTL), so readers in the
         UK and India don't also get them: each reader gets exactly one tip a day, and never the same one twice.
 Each tip in tips.json has "country": GB, IN or ALL (for everyone). The card's country tells the app who sees it.
 
@@ -20,7 +20,7 @@ from daily import (UK, card_ok, due, is_repeat, missing_pictures, page_text, pos
                    too_similar, wikipedia)
 
 SOURCE = "CyberSid Tips"
-POST_HOUR = 8
+POST_HOUR = 9
 TRUSTED = ("ncsc.gov.uk", "cisa.gov", "actionfraud.police.uk", "getsafeonline.org", "ico.org.uk", "gov.uk",
            "consumer.ftc.gov", "ftc.gov", "nist.gov", "owasp.org", "haveibeenpwned.com", "support.google.com",
            "support.apple.com", "support.microsoft.com", "learn.microsoft.com", "which.co.uk", "en.wikipedia.org",
