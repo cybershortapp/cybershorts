@@ -818,7 +818,7 @@ def main():
         left = sum(1 for c in candidates if c[3] not in seen_ids)
         print(f"[stop] AI budget used up ({ai_budget} calls). {left} older stories wait for the next run.")
 
-    # ---- 2b. the daily cards: one tip (8am UK) and one cyber history card (12pm UK), never repeated ----
+    # ---- 2b. the daily cards: one tip (9am local time) and one cyber history card (9am UK), never repeated ----
     # Their pictures go to the front of the queue, so they always have one, even on busy news days.
     daily_cover, tip_note, history_note = [], "off", "off"
     if db and not TEST_MODE:

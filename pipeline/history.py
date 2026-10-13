@@ -1,5 +1,5 @@
 """
-One cyber history card a day, posted at 12pm UK time (or the first run after it), shown in the main feed:
+One cyber history card a day, posted at 9am UK time (or the first run after it), shown in the main feed:
 a famous attack, breach or turning point, with its real date and a link to read more.
 
 The hand-written events in history.json come first, each used once only. An event whose anniversary is today
@@ -8,6 +8,9 @@ so the others are kept for their own day. When the list runs out, the AI suggest
 date), the pipeline reads its Wikipedia article, and the card is written only from that article. The date is
 checked against the article text too. The card id carries the event date: history:<YYYY-MM-DD>:<key>.
 History cards never trigger phone alerts or appear in the daily email.
+
+The summary itself says when it happened, so nobody mistakes it for today's news: it starts with
+"Nine years ago, ..." or, on the anniversary, "On this day in 2017, ...". The date shows on the card too.
 """
 import json, os, re
 from datetime import date, datetime, timezone
@@ -16,7 +19,7 @@ from daily import (MONTHS, UK, card_ok, date_in_text, due, is_repeat, missing_pi
                    slug, story_row, too_similar, wiki_title, wikipedia)
 
 SOURCE = "CyberSid History"
-POST_HOUR = 12
+POST_HOUR = 9
 CYBER = re.compile(r"\b(cyber|hack|malware|ransomware|virus|worm|trojan|breach|exploit|vulnerab|phishing|botnet|"
                    r"denial-of-service|ddos|encryption|cryptograph|spyware|backdoor|data leak|intrusion|security|"
                    r"unauthori[sz]ed access|computer fraud|password|stolen data|personal data|attacker)", re.I)
@@ -40,6 +43,65 @@ event, e.g. its discovery or takedown). If the article is not about a cyber secu
  "why": "one sentence, max 18 words, the lesson for today",
  "date": "the date it happened as stated in the article: YYYY-MM-DD, or YYYY-MM if the day isn't given",
  "scene": "one simple picture idea, max 20 words, objects only, no people, no text, no logos"}"""
+
+
+WHEN_PROMPT = """Rewrite the summary of a cyber history card so it starts with the exact words the user gives,
+followed by a comma, and still reads naturally as one flowing text. Keep every fact and about the same length.
+UK English, plain words, no em dashes. Reply with ONLY JSON: {"technical": "the rewritten summary"}"""
+
+NUMBERS = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+           "seventeen eighteen nineteen").split()
+TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+# first words that are ordinary words (lower-cased after "Nine years ago, "); anything else is kept as written,
+# because it is usually a name (WannaCry, Google, Heartbleed...)
+COMMON = set("a an the after before when during while released security hackers attackers researchers criminals "
+             "police in on at for over more some many two three four five it this that one an unknown".split())
+
+
+def _words(n):
+    if n < 20:
+        return NUMBERS[n]
+    return TENS[n // 10] + ("" if n % 10 == 0 else "-" + NUMBERS[n % 10])
+
+
+def when_phrase(event_date, today):
+    """'On this day in 2017' on the anniversary, otherwise 'Nine years ago' (or 'A year ago', 'Earlier this year')."""
+    m = re.fullmatch(r"(\d{4})-(\d{2})(?:-(\d{2}))?", event_date or "")
+    if not m:
+        return ""
+    y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
+    if d and (mo, d) == (today.month, today.day) and y < today.year:
+        return f"On this day in {y}"
+    years = today.year - y - (1 if (mo, d or 1) > (today.month, today.day) else 0)
+    if years < 1:
+        return "Earlier this year" if y == today.year else "Last year"
+    return "A year ago" if years == 1 else f"{_words(years).capitalize() if years < 100 else years} years ago"
+
+
+def has_when(text):
+    return bool(re.match(r"(On this day in \d{4}|A year ago|Earlier this year|Last year|[A-Z][a-z-]+ years ago|\d+ years ago),",
+                         text or ""))
+
+
+def add_when(ai, technical, phrase):
+    """The summary with the 'when' at the start. Asks the AI for a natural rewrite, else simply puts it in front.
+    Returns (text, ai_calls)."""
+    if not phrase or has_when(technical):
+        return technical, 0
+    calls = 0
+    if ai:
+        calls = 1
+        try:
+            out = str(ai.json(WHEN_PROMPT, f"Start with: {phrase}\n\nSummary: {technical}", 400).get("technical") or "")
+            n, m = len(technical.split()), len(out.split())
+            if out.startswith(phrase + ",") and n - 8 <= m <= n + 10 and "\u2014" not in out:
+                return out.strip(), calls
+        except Exception:
+            pass
+    first = technical.split(" ", 1)[0].strip(",.'\"")
+    if first.lower() in COMMON and not first.isupper():
+        technical = technical[0].lower() + technical[1:]
+    return f"{phrase}, {technical}", calls
 
 
 def load_history():
@@ -140,30 +202,56 @@ def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
     return None, calls
 
 
+def add_when_to_old_cards(db, ai=None):
+    """One-off: history cards posted before the summary said when it happened get the opening added,
+    worked out from the day each card was posted. Returns a note for the log."""
+    rows = db.table("stories").select("id,technical,published_at").eq("category", "History").limit(500).execute().data
+    done, calls = [], 0
+    for r in rows:
+        m = re.match(r"history:(\d{4}-\d{2}(?:-\d{2})?):", r["id"])
+        if not m or has_when(r["technical"]):
+            continue
+        posted = datetime.fromisoformat(r["published_at"].replace("Z", "+00:00")).astimezone(UK).date()
+        text, c = add_when(ai, r["technical"], when_phrase(m.group(1), posted))
+        calls += c
+        if text != r["technical"]:
+            db.table("stories").update({"technical": text}).eq("id", r["id"]).execute()
+            done.append(f"{r['id']}: {text[:90]}")
+    return done, calls
+
+
 def post_daily_history(db, ai=None, now=None, dry_run=False):
     """Post today's history card if it's due and not posted yet.
     Returns (story or None, note for the run summary, ai_calls, [(id, scene, headline)] needing a picture)."""
     now = now or datetime.now(timezone.utc)
+    calls = 0
     if not dry_run:
         remove_old_cards(db)
+        done, calls = add_when_to_old_cards(db, ai)     # does nothing once every card has it
+        for line in done:
+            print(f"  [history] wording updated: {line}")
     retry = [(r["id"], "", r["headline"]) for r in missing_pictures(db, SOURCE, now)]
     if not dry_run and (not due(now, POST_HOUR) or posted_today(db, SOURCE, now)):
-        return None, "none due", 0, retry
+        return None, "none due", calls, retry
     today = now.astimezone(UK).date()
     keys, urls, headlines = _used(db)
     entries = load_history()
     fresh = [e for e in entries if e["key"] not in keys and norm_url(e["url"]) not in urls]
-    calls, origin = 0, "list"
+    origin = "list"
     if fresh and not (dry_run and ai):
         e = pick_from_list(fresh, today)
     else:
         if not ai:
-            return None, "list used up, AI off", 0, retry
+            return None, "list used up, AI off", calls, retry
         origin = "AI"
-        e, calls = new_ai_event(ai, today, urls | {norm_url(x["url"]) for x in entries},
+        e, c = new_ai_event(ai, today, urls | {norm_url(x["url"]) for x in entries},
                                 headlines + [x["headline"] for x in entries])
+        calls += c
         if not e:
             return None, f"AI could not find a new event ({calls} calls)", calls, retry
+    e = dict(e)
+    e["technical"], c = add_when(ai, e["technical"], when_phrase(e["date"], today))
+    calls += c
     story = story_row(f"history:{e['date']}:{e['key']}", SOURCE, "History", e["url"], e, now)
     if not dry_run:
         db.table("stories").upsert(story).execute()
