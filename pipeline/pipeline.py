@@ -47,7 +47,8 @@ RESEARCH_PER_DAY = int(os.getenv("RESEARCH_PER_DAY", "10" if TEST_MODE else "40"
 COVERS = flag("COVERS", "true")                                                   # AI pictures for stories without one
 COVERS_PER_RUN = int(os.getenv("COVERS_PER_RUN", "3" if TEST_MODE else "12"))
 COVERS_PER_DAY = int(os.getenv("COVERS_PER_DAY", "140"))    # Cloudflare free tier is about 150 a day
-RUN_SECONDS = int(os.getenv("RUN_SECONDS", "540"))           # stop making pictures after 9 minutes (Actions limit is 12)   # vendor blogs post less often and include more marketing
+RUN_SECONDS = int(os.getenv("RUN_SECONDS", "540"))
+STORY_SECONDS = int(os.getenv("STORY_SECONDS", "390"))   # stop starting new stories after 6.5 minutes, so the run always finishes           # stop making pictures after 9 minutes (Actions limit is 12)   # vendor blogs post less often and include more marketing
 
 MODEL = os.getenv("AI_MODEL", "claude-haiku-4-5-20251001")   # change model here only
 RESEARCH_MODEL = os.getenv("RESEARCH_MODEL", MODEL)
@@ -701,6 +702,10 @@ def main():
     for published, src, e, sid in candidates:
         if stopped:
             break
+        if (datetime.now(timezone.utc) - started).total_seconds() > STORY_SECONDS:
+            stopped = True      # out of time this run (slow AI or sites): the rest waits for the next run
+            print(f"[stop] {STORY_SECONDS}s used, leaving the remaining stories for the next run")
+            break
         row = rows[src["name"]]
         pub = e.get("publisher") or src["name"]     # search feeds: the real publisher
         if sid in seen_ids:          # a link can appear in two feeds
@@ -920,8 +925,9 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | alerts: {alerts_note[:120]} | "
-            f"stopped early: {stopped}{top_note}")
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
+            f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
+            f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
