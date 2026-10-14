@@ -24,7 +24,7 @@ export function SheetRow({ label, onPress, icon }: { label: string; onPress: () 
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { backgroundColor: C.card }]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { backgroundColor: C.border }]}>
       {icon}
       <Text style={styles.rowText}>{label}</Text>
     </Pressable>
@@ -34,9 +34,9 @@ export function SheetRow({ label, onPress, icon }: { label: string; onPress: () 
 const makeStyles = (C: Palette) =>
   StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(9,1,1,0.35)' },
-  sheet: { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 12 },
+  sheet: { backgroundColor: C.sheet, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 12 },
   handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, marginTop: 8, marginBottom: 10 },
   title: { fontSize: 17, fontFamily: F.head, color: C.text, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 6, borderRadius: 10 },
-  rowText: { fontSize: 15, color: C.text, flex: 1 },
+  rowText: { fontSize: 15, color: C.text, flex: 1, fontFamily: F.body },
 });

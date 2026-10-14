@@ -1,14 +1,21 @@
-import { Oswald_500Medium, Oswald_700Bold } from '@expo-google-fonts/oswald';
-import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, useFonts } from '@expo-google-fonts/poppins';
+// only the five weights we use, imported one by one so the other weights aren't bundled into the app
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+import { useFonts } from 'expo-font';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   AppState,
   Dimensions,
   FlatList,
@@ -19,7 +26,7 @@ import {
   View,
   type ViewToken,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Header } from './src/components/Header';
@@ -32,8 +39,8 @@ import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { getRegion, regionCountries } from './src/lib/region';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
-import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
-import { F, type Palette, useTheme } from './src/theme';
+import { storyFields, tintMissing, type Filter, type Story } from './src/lib/types';
+import { F, type Palette, storyTint, useTheme } from './src/theme';
 
 const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are quick
 const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
@@ -75,6 +82,8 @@ function Main() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pageHeight, setPageHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
   // search: the box in the header; results show as normal cards
   const [searching, setSearching] = useState(false);
@@ -118,7 +127,7 @@ function Main() {
       // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
       let query = supabase
         .from('stories')
-        .select(STORY_FIELDS)
+        .select(storyFields())
         .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, from + size - 1);
@@ -157,11 +166,12 @@ function Main() {
       return;
     }
     const { data, error: err } = await query;
+    if (tintMissing(err)) return load(opts); // database without the colour column yet: ask again without it
     if (err) {
       setError("Couldn't load stories. Check your connection and try again.");
       return;
     }
-    let rows = cleanStories(data as Story[]);
+    let rows = cleanStories(data as unknown as Story[]);
     lastLoaded.current = Date.now();
     if (rows.length < FIRST_PAGE) noMore.current.add(filter);
     else noMore.current.delete(filter);
@@ -195,8 +205,9 @@ function Main() {
     loadingMore.current = true;
     try {
       const { data, error: err } = await query;
+      if (tintMissing(err)) noMore.current.delete(f); // asked for the colour column; the next scroll asks without it
       if (err || shownFilter.current !== f) return;
-      const rows = cleanStories(data as Story[]);
+      const rows = cleanStories(data as unknown as Story[]);
       if (rows.length < PAGE_SIZE) noMore.current.add(f);
       if (rows.length) {
         setStories((cur) => {
@@ -304,8 +315,8 @@ function Main() {
       pendingJump.current = id;
       setView('feed');
       changeFilter('All');
-      const { data } = await supabase.from('stories').select(STORY_FIELDS).eq('id', id).maybeSingle();
-      const [story] = cleanStories(data ? [data as Story] : []);
+      const { data } = await supabase.from('stories').select(storyFields()).eq('id', id).maybeSingle();
+      const [story] = cleanStories(data ? [data as unknown as Story] : []);
       if (story) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [story, ...cur]));
     });
   }, []);
@@ -352,12 +363,16 @@ function Main() {
   // NEW tags, and a "caught up" note on the first story they had already seen
   const marker = seenBefore.current;
   const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
+  // Vivid: the cards fill the whole screen, under a see-through header, in the colour of the story on screen
+  const immersive = C.mode === 'vivid' && view === 'feed';
+  const screenColour = C.mode === 'vivid' && view === 'feed' && stories[index] ? storyTint(stories[index]) : C.bg;
   const renderItem = useCallback(
     ({ item, index: i }: { item: Story; index: number }) => (
       <ErrorBoundary resetKey={item.id} fallback={() => <BrokenCard height={pageHeight} />}>
       <StoryCard
         story={item}
         height={pageHeight}
+        topInset={immersive ? headerHeight : 0}
         active={index === i}
         saved={savedSet.has(item.id)}
         onToggleSave={toggleSaved}
@@ -366,7 +381,7 @@ function Main() {
       />
       </ErrorBoundary>
     ),
-    [pageHeight, index, savedSet, toggleSaved, marker, firstOld],
+    [pageHeight, index, savedSet, toggleSaved, marker, firstOld, immersive, headerHeight],
   );
   const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}|${marker}|${firstOld}`;
 
@@ -425,14 +440,13 @@ function Main() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         getItemLayout={(_, i) => ({ length: pageHeight, offset: pageHeight * i, index: i })}
         onScrollToIndexFailed={() => {}}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.brand]} progressBackgroundColor={C.surface} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.glass ? '#000000' : C.brand]} progressBackgroundColor={C.glass ? '#FFFFFF' : C.surface} progressViewOffset={immersive ? headerHeight : 0} />}
       />
     );
   }
 
-  return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <Header
+  const header = (
+    <Header
         view={view}
         onSaved={() => {
           setView('feed');
@@ -467,16 +481,50 @@ function Main() {
           changeFilter(beforeSearch.current);
         }}
       />
-      <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
+  );
+
+  return (
+    <SafeAreaView style={[styles.root, { backgroundColor: C.mode === 'aurora' ? '#0A0F2C' : C.bg }]} edges={immersive ? ['bottom'] : ['top', 'bottom']}>
+      {C.mode === 'aurora' && (
+        <Image source={require('./assets/aurora.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      )}
+      {C.mode === 'vivid' && <ScreenColour colour={screenColour} />}
+      {!immersive && header}
+      <View style={[styles.feed, immersive && StyleSheet.absoluteFill, immersive && { bottom: insets.bottom }]} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
         {view === 'feed' && index >= 2 && stories.length > 0 && !loading && (
-          <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
+          <Pressable onPress={goLatest} style={[styles.latest, immersive && { top: headerHeight + 6 }]} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
             <MaterialCommunityIcons name="arrow-up" size={16} color={C.onBrand} />
             <Text style={styles.latestText}>Latest</Text>
           </Pressable>
         )}
       </View>
+      {immersive && (
+        // the header floats over the top of the card's picture; a soft shade keeps it readable on bright pictures
+        <View style={styles.floating} onLayout={(e) => setHeaderHeight(Math.ceil(e.nativeEvent.layout.height))} pointerEvents="box-none">
+          <LinearGradient colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          <View style={{ paddingTop: insets.top }} pointerEvents="box-none">{header}</View>
+        </View>
+      )}
     </SafeAreaView>
+  );
+}
+
+/** Vivid: the screen behind the cards fades smoothly to the colour of the story on screen. */
+function ScreenColour({ colour }: { colour: string }) {
+  const [shown, setShown] = useState({ from: colour, to: colour });
+  const fade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (colour === shown.to) return;
+    setShown((cur) => ({ from: cur.to, to: colour }));
+    fade.setValue(0);
+    Animated.timing(fade, { toValue: 1, duration: 320, useNativeDriver: true }).start();
+  }, [colour]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: shown.from }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: shown.to, opacity: fade }]} />
+    </View>
   );
 }
 
@@ -526,7 +574,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 }
 
 export default function App() {
-  const [fontsLoaded, fontError] = useFonts({ Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Oswald_500Medium, Oswald_700Bold });
+  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();
   useEffect(() => {
@@ -563,8 +611,9 @@ const makeStyles = (C: Palette) =>
   StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   feed: { flex: 1 },
+  floating: { position: 'absolute', top: 0, left: 0, right: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted },
+  message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted, fontFamily: F.body },
   retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   latest: {
     position: 'absolute', top: 10, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4,

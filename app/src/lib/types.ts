@@ -39,6 +39,8 @@ export type Story = {
   actor_group: string | null;
   category: string;
   image_url: string | null;
+  /** main colour of the picture, for the Vivid theme ('#2a0a0d'); missing on older stories */
+  tint?: string | null;
   published_at: string;
   created_at: string;
   products: string[] | null;
@@ -51,6 +53,18 @@ export type Filter = (typeof FILTERS)[number] | 'Saved' | 'Search';
 
 export const STORY_FIELDS =
   'id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,incident,actor_group,category,image_url,published_at,created_at,products,zero_day';
+
+// the picture colour column is new: if the database doesn't have it yet, the app carries on without it
+let withTint = true;
+export const storyFields = () => (withTint ? STORY_FIELDS + ',tint' : STORY_FIELDS);
+/** True (and stops asking for it) when a database error was about the missing colour column. */
+export function tintMissing(err: { message?: string } | null | undefined) {
+  if (withTint && err && /tint/i.test(err.message ?? '')) {
+    withTint = false;
+    return true;
+  }
+  return false;
+}
 
 export const REPORT_REASONS = ['Wrong facts', 'Wrong severity', 'Broken link', 'Duplicate story', 'Not cyber news', 'Other'] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];

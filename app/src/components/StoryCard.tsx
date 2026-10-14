@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
 import { SHOW_SOURCE_IMAGES } from '../lib/config';
@@ -10,7 +11,7 @@ import { REPORT_REASONS, type ReportReason } from '../lib/types';
 import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
-import { F, type Palette, severityOf, tabColour, useTheme } from '../theme';
+import { F, type Palette, severityOf, storyTint, tabColour, useTheme } from '../theme';
 import { AttackChain } from './AttackChain';
 import { Cover } from './Cover';
 import { Sheet, SheetRow } from './Sheet';
@@ -21,6 +22,8 @@ let peekShownThisSession = false;
 type Props = {
   story: Story;
   height: number;
+  /** Vivid: height of the see-through header floating over the top of the card */
+  topInset?: number;
   active: boolean;
   saved: boolean;
   onToggleSave: (id: string) => void;
@@ -28,10 +31,17 @@ type Props = {
   caughtUp?: boolean; // first story they have already seen
 };
 
-function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
+function StoryCardBase({ story, height, topInset = 0, active, saved, onToggleSave, isNew, caughtUp }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
-  const L = useCardLayout(height);
+  const L = useCardLayout(height - topInset);
+  const { width: screenWidth } = useWindowDimensions();
+  // Vivid: edge to edge in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
+  const vivid = C.mode === 'vivid';
+  const tint = storyTint(story);
+  const cardWidth = vivid ? screenWidth : L.cardWidth;
+  const imageHeight = L.imageHeight + topInset + (vivid ? Math.round(L.imageHeight * 0.18) : 0);
+  const pagePad = vivid ? 0 : 8;
   const sev = severityOf(story.severity, C);
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
@@ -64,7 +74,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     let anim: Animated.CompositeAnimation | null = null;
     if (!peekShownThisSession) {
       peekShownThisSession = true;
-      const peek = Math.round(L.cardWidth * 0.2);
+      const peek = Math.round(cardWidth * 0.2);
       anim = Animated.sequence([
         Animated.delay(700),
         Animated.timing(nudge, { toValue: -peek, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
@@ -88,7 +98,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
       pulse.setValue(0);
       nudge.setValue(0);
     };
-  }, [active, hasChain, pulse, L.cardWidth]);
+  }, [active, hasChain, pulse, cardWidth]);
 
   // build the chain page quietly while the reader is on this card (after scrolling has finished),
   // so tapping CHAIN opens instantly instead of building it on the tap
@@ -133,8 +143,8 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     }).catch(() => {});
 
   const cardFace = (
-    <View style={{ width: L.cardWidth, flex: 1 }}>
-      <Pressable onPress={openArticle} style={{ height: L.imageHeight, backgroundColor: C.imageBg }} accessibilityLabel="Open article">
+    <View style={{ width: cardWidth, flex: 1 }}>
+      <Pressable onPress={openArticle} style={{ height: imageHeight, backgroundColor: C.imageBg }} accessibilityLabel="Open article">
         {showImage ? (
           <>
             <View style={[StyleSheet.absoluteFill, styles.center]}>
@@ -151,12 +161,24 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               onError={() => setImageFailed(true)}
               accessibilityIgnoresInvertColors
             />
-            <View style={styles.credit} pointerEvents="none">
-              <Text style={styles.creditText} numberOfLines={1}>{aiImage ? 'AI illustration' : `Image: ${story.source}`}</Text>
-            </View>
           </>
         ) : (
-          <Cover story={story} height={L.imageHeight} width={L.cardWidth} iconSize={L.iconSize} />
+          <Cover story={story} height={imageHeight} width={cardWidth} iconSize={L.iconSize} />
+        )}
+        {vivid && (
+          // the picture fades into the story's colour, so picture and text read as one
+          <LinearGradient
+            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', tint + 'B3', tint]}
+            locations={[0, 0.45, 0.82, 1]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+        )}
+        {showImage && (
+          // small and faint, so the eye isn't drawn to it, but still there to credit the picture
+          <Text style={styles.credit} numberOfLines={1} pointerEvents="none">
+            {aiImage ? 'AI illustration' : `Image: ${story.source}`}
+          </Text>
         )}
       </Pressable>
 
@@ -170,30 +192,35 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         <View style={[styles.tagRow, hasChain && { paddingRight: 52 * scale }]}>
           {isNew && (
             <View style={[styles.pill, { backgroundColor: C.brand }]}>
-              <Text style={{ color: C.onBrand, fontSize: L.metaSize - 1, fontFamily: F.brand, letterSpacing: 0.5 }}>NEW</Text>
+              <Text style={{ color: C.onBrand, fontSize: L.metaSize - 1, fontFamily: F.head }}>New</Text>
             </View>
           )}
-          {showSeverity && (
+          {showSeverity && (C.glass ? (
+            <View style={[styles.pill, styles.glassPill]}>
+              <View style={[styles.sevDot, { backgroundColor: sev.accent, shadowColor: sev.accent }]} />
+              <Text style={{ color: C.text, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
+            </View>
+          ) : (
             <View style={[styles.pill, { backgroundColor: sev.bg }]}>
               <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
             </View>
-          )}
+          ))}
           {story.zero_day && (
             <View style={[styles.pill, styles.zeroPill]}>
               <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color={C.zeroText} />
               <Text style={{ color: C.zeroText, fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
             </View>
           )}
-          <View style={[styles.pill, { backgroundColor: tabColour(story.category, C) + (C.dark ? '26' : '17') }]}>
-            <Text style={{ color: tabColour(story.category, C), fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
+          <View style={[styles.pill, C.glass ? styles.glassPill : { backgroundColor: tabColour(story.category, C) + (C.dark ? '26' : '17') }]}>
+            <Text style={{ color: C.glass ? C.text : tabColour(story.category, C), fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
           </View>
         </View>
-        <Text style={{ color: C.muted, fontSize: L.metaSize, marginTop: 6, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
+        <Text style={{ color: C.muted, opacity: 0.85, fontSize: L.metaSize - 1, fontFamily: F.body, marginTop: 7, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
           {historyCard ? historyDate(story.id, story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
         </Text>
 
         <Pressable onPress={openArticle}>
-          <Text numberOfLines={4} style={{ color: C.text, fontFamily: F.head, fontSize: L.headlineSize, lineHeight: L.headlineLine, marginVertical: L.pad * 0.5 }}>
+          <Text numberOfLines={4} style={{ color: C.text, fontFamily: F.head, fontSize: L.headlineSize + (C.glass ? 2 : 1), lineHeight: L.headlineLine + (C.glass ? 2 : 1), letterSpacing: -0.4, marginVertical: L.pad * 0.5 }}>
             {story.headline}
           </Text>
         </Pressable>
@@ -210,14 +237,14 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         >
           {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
           <Text
-            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine }}
+            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
             onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / L.bodyLine))}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
             {story.technical}
           </Text>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail">
+          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail">
             {story.technical}
           </Text>
           {truncated && (
@@ -227,9 +254,8 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
 
         {!!story.why_it_matters && (
-          <View style={[styles.why, { padding: L.pad * 0.7, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
-            <View style={[styles.whyDot, { marginTop: L.bodyLine / 2 - 4 }]} />
-            <Text numberOfLines={3} style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontWeight: '600', flex: 1 }}>
+          <View style={[styles.why, { padding: L.pad * 0.75, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
+            <Text numberOfLines={3} style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label, flex: 1 }}>
               {story.why_it_matters}
             </Text>
           </View>
@@ -247,7 +273,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         )}
       </View>
 
-      <View style={[styles.footer, { paddingHorizontal: L.pad }]}>
+      <View style={[styles.dock, { marginHorizontal: vivid ? L.pad : 10, marginBottom: vivid ? 10 : 10, paddingLeft: L.pad }]}>
         <View style={styles.iconRow}>
           <Pressable onPress={() => onToggleSave(story.id)} hitSlop={12} accessibilityLabel={saved ? 'Remove from saved' : 'Save story'}>
             <MaterialCommunityIcons name={saved ? 'bookmark' : 'bookmark-outline'} size={L.buttonIcon} color={saved ? C.brandDark : C.muted} />
@@ -259,8 +285,10 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             <MaterialCommunityIcons name="flag-outline" size={L.buttonIcon} color={C.muted} />
           </Pressable>
         </View>
-        <Pressable onPress={openArticle} hitSlop={12} accessibilityRole="link" accessibilityLabel={`Read full story on ${story.source}`}>
-          <Text style={{ color: C.brandDark, fontSize: L.metaSize + 1.5, fontFamily: F.label }}>Read full story</Text>
+        <Pressable onPress={openArticle} hitSlop={8} style={styles.read} accessibilityRole="link" accessibilityLabel={`Read full story on ${story.source}`}>
+          <Text style={{ color: C.glass || C.dark ? '#000000' : '#FFFFFF', fontSize: L.metaSize + 1.5, fontFamily: F.label }}>
+            {historyCard ? 'Read the story' : 'Read full story'}
+          </Text>
         </Pressable>
       </View>
 
@@ -270,7 +298,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             styles.tabWrap,
             {
               // just below the picture, beside the tags, never covering the image
-              top: L.imageHeight + L.pad * 0.85 - 2,
+              top: imageHeight + L.pad * 0.85 - 2,
               opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.25] }),
             },
           ]}
@@ -285,15 +313,22 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   );
 
   return (
-    <View style={[styles.page, { height }]}>
-      <View style={[styles.card, { width: L.cardWidth, borderRadius: L.isTablet ? 24 : 18 }]}>
-        {hasChain && (
-          // revealed for a moment when the card slides to hint at the chain
-          <View style={[styles.peekPanel, { width: L.cardWidth * 0.3 }]}>
+    <View style={[styles.page, { height, paddingTop: vivid ? 0 : topInset + pagePad, paddingBottom: pagePad }]}>
+      <View
+        style={[
+          styles.card,
+          { width: cardWidth, borderRadius: vivid ? 0 : L.isTablet ? 28 : 24 },
+          vivid && { backgroundColor: tint, borderWidth: 0 },
+          C.mode === 'aurora' && { backgroundColor: 'rgba(255,255,255,0.08)' },
+        ]}
+      >
+        {hasChain && C.mode !== 'aurora' && (
+          // revealed for a moment when the card slides to hint at the chain (Aurora's see-through card would show it all the time)
+          <View style={[styles.peekPanel, { width: cardWidth * 0.3 }]}>
             <MaterialCommunityIcons name="link-variant" size={26 * scale} color={C.onBrand} />
           </View>
         )}
-        <Animated.View style={{ flex: 1, backgroundColor: C.card, transform: [{ translateX: nudge }] }}>
+        <Animated.View style={{ flex: 1, backgroundColor: vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
           {hasChain ? (
             <ScrollView
               ref={pager}
@@ -305,11 +340,11 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               onScrollBeginDrag={() => setChainReady(true)}
             >
               {cardFace}
-              <View style={{ width: L.cardWidth, flex: 1 }}>
+              <View style={{ width: cardWidth, flex: 1, paddingTop: vivid ? topInset : 0 }}>
                 {chainReady ? (
-                  <AttackChain story={story} scale={scale} width={L.cardWidth} onBack={hideChain} />
+                  <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} bg={vivid ? tint : undefined} />
                 ) : (
-                  <View style={{ flex: 1, backgroundColor: '#221C1D' }} />
+                  <View style={{ flex: 1, backgroundColor: vivid ? tint : C.card }} />
                 )}
               </View>
             </ScrollView>
@@ -377,15 +412,16 @@ function historyDate(id: string, posted: string) {
 
 const makeStyles = (C: Palette) =>
   StyleSheet.create({
-  page: { alignItems: 'center', paddingVertical: 8 },
+  page: { alignItems: 'center' },
   card: { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  glassPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
+  sevDot: { width: 6, height: 6, borderRadius: 3, shadowOpacity: 0.9, shadowRadius: 4, elevation: 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
   zeroPill: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 7, backgroundColor: C.zeroBg, borderWidth: 1, borderColor: C.zeroBorder },
   caught: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.imageBg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 8 },
-  why: { flexDirection: 'row', gap: 9, backgroundColor: C.surface, borderWidth: 1, borderColor: C.borderSoft, borderRadius: 12 },
-  whyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.brandDark },
+  why: { flexDirection: 'row', backgroundColor: C.glass ? C.surface : C.dark ? '#1E2638' : '#F1F3F8', borderWidth: C.glass ? 1 : 0, borderColor: C.border, borderRadius: 18 },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,19 +433,26 @@ const makeStyles = (C: Palette) =>
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  footer: {
+  // the floating bar at the bottom: save, share, report, and the main button
+  dock: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: C.border,
+    paddingVertical: 6,
+    paddingRight: 6,
+    borderRadius: 999,
+    backgroundColor: C.glass ? C.surface : C.dark ? '#1E2638' : '#F1F3F8',
+    borderWidth: C.glass ? 1 : 0,
+    borderColor: C.border,
   },
+  read: { backgroundColor: C.glass || C.dark ? '#FFFFFF' : '#111827', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
   iconRow: { flexDirection: 'row', gap: 22 },
   sheetMsg: { fontSize: 15, color: C.body, paddingVertical: 16, paddingHorizontal: 6 },
   tabWrap: { position: 'absolute', right: 0 },
-  credit: { position: 'absolute', left: 8, bottom: 8, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, maxWidth: '70%' },
-  creditText: { color: '#fff', fontSize: 10.5, fontWeight: '600' },
+  credit: {
+    position: 'absolute', right: 12, bottom: 8, maxWidth: '70%', color: 'rgba(255,255,255,0.5)', fontSize: 9.5, fontFamily: F.medium,
+    textShadowColor: 'rgba(0,0,0,0.35)', textShadowRadius: 3,
+  },
   peekPanel: { position: 'absolute', right: 0, top: 0, bottom: 0, backgroundColor: C.brand, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 },
   tab: {
     alignItems: 'center',
