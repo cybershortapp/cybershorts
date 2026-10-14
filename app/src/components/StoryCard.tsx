@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
 import { SHOW_SOURCE_IMAGES } from '../lib/config';
@@ -22,8 +22,6 @@ let peekShownThisSession = false;
 type Props = {
   story: Story;
   height: number;
-  /** Vivid: height of the see-through header floating over the top of the card */
-  topInset?: number;
   active: boolean;
   saved: boolean;
   onToggleSave: (id: string) => void;
@@ -31,17 +29,15 @@ type Props = {
   caughtUp?: boolean; // first story they have already seen
 };
 
-function StoryCardBase({ story, height, topInset = 0, active, saved, onToggleSave, isNew, caughtUp }: Props) {
+function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
-  const L = useCardLayout(height - topInset);
-  const { width: screenWidth } = useWindowDimensions();
-  // Vivid: edge to edge in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
+  const L = useCardLayout(height);
+  // Vivid: a card in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
   const vivid = C.mode === 'vivid';
   const tint = storyTint(story);
-  const cardWidth = vivid ? screenWidth : L.cardWidth;
-  const imageHeight = L.imageHeight + topInset + (vivid ? Math.round(L.imageHeight * 0.18) : 0);
-  const pagePad = vivid ? 0 : 8;
+  const cardWidth = L.cardWidth;
+  const imageHeight = L.imageHeight;
   const sev = severityOf(story.severity, C);
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
@@ -273,7 +269,7 @@ function StoryCardBase({ story, height, topInset = 0, active, saved, onToggleSav
         )}
       </View>
 
-      <View style={[styles.dock, { marginHorizontal: vivid ? L.pad : 10, marginBottom: vivid ? 10 : 10, paddingLeft: L.pad }]}>
+      <View style={[styles.dock, { marginHorizontal: 10, marginBottom: 10, paddingLeft: L.pad }]}>
         <View style={styles.iconRow}>
           <Pressable onPress={() => onToggleSave(story.id)} hitSlop={12} accessibilityLabel={saved ? 'Remove from saved' : 'Save story'}>
             <MaterialCommunityIcons name={saved ? 'bookmark' : 'bookmark-outline'} size={L.buttonIcon} color={saved ? C.brandDark : C.muted} />
@@ -313,12 +309,12 @@ function StoryCardBase({ story, height, topInset = 0, active, saved, onToggleSav
   );
 
   return (
-    <View style={[styles.page, { height, paddingTop: vivid ? 0 : topInset + pagePad, paddingBottom: pagePad }]}>
+    <View style={[styles.page, { height }]}>
       <View
         style={[
           styles.card,
-          { width: cardWidth, borderRadius: vivid ? 0 : L.isTablet ? 28 : 24 },
-          vivid && { backgroundColor: tint, borderWidth: 0 },
+          { width: cardWidth, borderRadius: L.isTablet ? 28 : 24 },
+          vivid && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
           C.mode === 'aurora' && { backgroundColor: 'rgba(255,255,255,0.08)' },
         ]}
       >
@@ -340,7 +336,7 @@ function StoryCardBase({ story, height, topInset = 0, active, saved, onToggleSav
               onScrollBeginDrag={() => setChainReady(true)}
             >
               {cardFace}
-              <View style={{ width: cardWidth, flex: 1, paddingTop: vivid ? topInset : 0 }}>
+              <View style={{ width: cardWidth, flex: 1 }}>
                 {chainReady ? (
                   <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} bg={vivid ? tint : undefined} />
                 ) : (
@@ -412,7 +408,7 @@ function historyDate(id: string, posted: string) {
 
 const makeStyles = (C: Palette) =>
   StyleSheet.create({
-  page: { alignItems: 'center' },
+  page: { alignItems: 'center', paddingVertical: 8 },
   card: { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   glassPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   sevDot: { width: 6, height: 6, borderRadius: 3, shadowOpacity: 0.9, shadowRadius: 4, elevation: 2 },

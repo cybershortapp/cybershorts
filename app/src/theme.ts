@@ -122,7 +122,7 @@ const GLASS = {
   zeroBorder: 'rgba(255,255,255,0.22)',
   zeroText: '#FFFFFF',
 };
-/** Vivid: every story takes the colour of its own picture (the default). */
+/** Vivid: every story takes the colour of its own picture. */
 const VIVID: typeof LIGHT = { ...GLASS, mode: 'vivid' };
 /** Aurora: CyberSid's logo colours glowing behind glass, the same on every story. */
 const AURORA: typeof LIGHT = { ...GLASS, mode: 'aurora', bg: '#0A0F2C' };
@@ -136,18 +136,18 @@ export const F = {
   body: 'Inter_400Regular',
 };
 
-// ---- the reader's theme: Vivid (default), Aurora, Light or Dark, or follow the phone's light/dark mode ----
+// ---- the reader's theme: Light (default), Vivid, Aurora or Dark, or follow the phone's light/dark mode ----
 export type ThemeChoice = 'vivid' | 'aurora' | 'light' | 'dark';
 export const THEMES: ThemeChoice[] = ['vivid', 'aurora', 'light', 'dark'];
 const KEY = 'theme-choice';
 const FOLLOW_KEY = 'theme-follow-phone';
-let choice: ThemeChoice = 'vivid';
+let choice: ThemeChoice = 'light';
 let follow = false;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
 AsyncStorage.multiGet([KEY, FOLLOW_KEY])
   .then(([[, v], [, f]]) => {
-    // older versions saved 'system' (follow the phone) by default: everyone starts on Vivid now
+    // anything else (older versions saved 'system'): everyone starts on Light
     if (v === 'vivid' || v === 'aurora' || v === 'light' || v === 'dark') choice = v;
     follow = f === '1';
     notify();
@@ -197,6 +197,9 @@ function mix(hex: string, target: number, amount: number) {
   const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (target - v) * amount));
   return '#' + ch.map((v) => v.toString(16).padStart(2, '0')).join('');
 }
+
+/** The screen behind a Vivid card: a deeper shade of the card's own colour, so the card stands out. */
+export const deepen = (hex: string) => mix(hex, 0, 0.45);
 
 /** A deep, rich colour for a story: the main colour of its picture (worked out by the news pipeline),
  *  or, when there isn't one yet, a deep shade of its section colour. White text always reads well on it. */

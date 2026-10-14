@@ -8,7 +8,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { useFonts } from 'expo-font';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -26,7 +25,7 @@ import {
   View,
   type ViewToken,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Header } from './src/components/Header';
@@ -40,7 +39,7 @@ import { getRegion, regionCountries } from './src/lib/region';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
 import { storyFields, tintMissing, type Filter, type Story } from './src/lib/types';
-import { F, type Palette, storyTint, useTheme } from './src/theme';
+import { deepen, F, type Palette, storyTint, useTheme } from './src/theme';
 
 const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are quick
 const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
@@ -82,8 +81,6 @@ function Main() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pageHeight, setPageHeight] = useState(0);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
   // search: the box in the header; results show as normal cards
   const [searching, setSearching] = useState(false);
@@ -363,16 +360,14 @@ function Main() {
   // NEW tags, and a "caught up" note on the first story they had already seen
   const marker = seenBefore.current;
   const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
-  // Vivid: the cards fill the whole screen, under a see-through header, in the colour of the story on screen
-  const immersive = C.mode === 'vivid' && view === 'feed';
-  const screenColour = C.mode === 'vivid' && view === 'feed' && stories[index] ? storyTint(stories[index]) : C.bg;
+  // Vivid: the screen takes a deep shade of the colour of the story on screen
+  const screenColour = C.mode === 'vivid' && view === 'feed' && stories[index] ? deepen(storyTint(stories[index])) : C.bg;
   const renderItem = useCallback(
     ({ item, index: i }: { item: Story; index: number }) => (
       <ErrorBoundary resetKey={item.id} fallback={() => <BrokenCard height={pageHeight} />}>
       <StoryCard
         story={item}
         height={pageHeight}
-        topInset={immersive ? headerHeight : 0}
         active={index === i}
         saved={savedSet.has(item.id)}
         onToggleSave={toggleSaved}
@@ -381,7 +376,7 @@ function Main() {
       />
       </ErrorBoundary>
     ),
-    [pageHeight, index, savedSet, toggleSaved, marker, firstOld, immersive, headerHeight],
+    [pageHeight, index, savedSet, toggleSaved, marker, firstOld],
   );
   const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}|${marker}|${firstOld}`;
 
@@ -440,7 +435,7 @@ function Main() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         getItemLayout={(_, i) => ({ length: pageHeight, offset: pageHeight * i, index: i })}
         onScrollToIndexFailed={() => {}}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.glass ? '#000000' : C.brand]} progressBackgroundColor={C.glass ? '#FFFFFF' : C.surface} progressViewOffset={immersive ? headerHeight : 0} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.glass ? '#000000' : C.brand]} progressBackgroundColor={C.glass ? '#FFFFFF' : C.surface} />}
       />
     );
   }
@@ -484,28 +479,21 @@ function Main() {
   );
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.mode === 'aurora' ? '#0A0F2C' : C.bg }]} edges={immersive ? ['bottom'] : ['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: C.mode === 'aurora' ? '#0A0F2C' : C.bg }]} edges={['top', 'bottom']}>
       {C.mode === 'aurora' && (
         <Image source={require('./assets/aurora.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
       )}
       {C.mode === 'vivid' && <ScreenColour colour={screenColour} />}
-      {!immersive && header}
-      <View style={[styles.feed, immersive && StyleSheet.absoluteFill, immersive && { bottom: insets.bottom }]} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
+      {header}
+      <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
         {view === 'feed' && index >= 2 && stories.length > 0 && !loading && (
-          <Pressable onPress={goLatest} style={[styles.latest, immersive && { top: headerHeight + 6 }]} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
+          <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
             <MaterialCommunityIcons name="arrow-up" size={16} color={C.onBrand} />
             <Text style={styles.latestText}>Latest</Text>
           </Pressable>
         )}
       </View>
-      {immersive && (
-        // the header floats over the top of the card's picture; a soft shade keeps it readable on bright pictures
-        <View style={styles.floating} onLayout={(e) => setHeaderHeight(Math.ceil(e.nativeEvent.layout.height))} pointerEvents="box-none">
-          <LinearGradient colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
-          <View style={{ paddingTop: insets.top }} pointerEvents="box-none">{header}</View>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -611,7 +599,6 @@ const makeStyles = (C: Palette) =>
   StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   feed: { flex: 1 },
-  floating: { position: 'absolute', top: 0, left: 0, right: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted, fontFamily: F.body },
   retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
