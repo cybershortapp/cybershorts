@@ -3,12 +3,14 @@ import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, useFonts } fro
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   AppState,
+  Dimensions,
   FlatList,
   Pressable,
   RefreshControl,
@@ -513,6 +515,15 @@ function AppCrashed({ onReload, message }: { onReload: () => void; message?: str
 
 // keep the splash screen up until the logo fonts are ready, so text is never measured with the wrong font
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Phones stay upright (the cards are made for it). Tablets and foldables can turn, which Google asks for
+// on large screens, so the lock is only applied when the shorter side is under 600dp.
+{
+  const { width, height } = Dimensions.get('screen');
+  if (Math.min(width, height) < 600) {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }
+}
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({ Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Oswald_500Medium, Oswald_700Bold });
