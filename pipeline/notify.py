@@ -2,8 +2,8 @@
 Phone alerts. Runs at the end of every pipeline run (every 30 minutes).
 
 Rules:
-  - every new card gets an alert: news, the daily tip and the daily history card, as long as the story itself
-    is recent (published in the last 24 hours); older stories found late go in the feed quietly
+  - only Zero-day, Critical and High stories send an alert, and only when the story itself is recent (published
+    in the last 24 hours). Medium and Info news, tips and history cards go in the feed quietly
   - more than 4 new cards in one run: the 3 most important get their own alert, the rest come as one
     "more new stories" alert, so a busy moment doesn't buzz the phone ten times
   - quiet hours 22:00-07:00 UK time: only Critical stories about the person's products, or zero-days;
@@ -40,6 +40,11 @@ def _quiet(t):
 def _urgent(s, hit):
     """Important enough to wake someone: critical news about their products, or a zero-day."""
     return bool(s.get("zero_day")) or (bool(hit) and s.get("severity") == "Critical")
+
+
+def alertable(s):
+    """Serious enough for an alert: zero-days, Critical and High. Everything else is feed only."""
+    return bool(s.get("zero_day")) or s.get("severity") in ("Critical", "High")
 
 
 def _score(s, hit):
@@ -79,6 +84,7 @@ def plan(stories, device, now):
     last = device.get("last_push_at")
     last = datetime.fromisoformat(last.replace("Z", "+00:00")) if last else now - NEW_PHONE
     token = device["token"]
+    stories = [s for s in stories if alertable(s)]
     hits = {s["id"]: matches(s, device.get("products"), device.get("terms")) for s in stories}
     if _quiet(now):
         return [_message(token, s, hits[s["id"]]) for s in stories
