@@ -878,7 +878,16 @@ def main():
         except Exception as ex:
             print(f"[warn] old picture clean-up failed: {ex}")
 
-    # ---- 4. phone alerts (one for every new card, quiet at night) and email ----
+    # ---- 3b. the colour of each picture, for the app's Vivid theme (no AI, a few seconds) ----
+    tint_note = "off"
+    if db and not TEST_MODE:
+        try:
+            from tint import fill_tints
+            tint_note = fill_tints(db, started + timedelta(seconds=RUN_SECONDS))
+        except Exception as ex:
+            tint_note = f"problem: {str(ex)[:80]}"
+
+    # ---- 4. phone alerts (only zero-day, Critical and High, quiet at night) and email ----
     alerts_note = email_note = "off"
     if db and not TEST_MODE:
         try:
@@ -925,7 +934,7 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | colours: {tint_note} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
             f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
             f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
     print(f"Tip card: {tip_note}")
