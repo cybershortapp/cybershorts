@@ -185,32 +185,26 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             <Text style={{ color: C.brandText, fontSize: L.metaSize - 0.5, fontFamily: F.label }}>You're all caught up. Earlier stories below.</Text>
           </View>
         )}
-        <View style={[styles.tagRow, hasChain && { paddingRight: 52 * scale }]}>
-          {isNew && (
-            <View style={[styles.pill, { backgroundColor: C.brand }]}>
-              <Text style={{ color: C.onBrand, fontSize: L.metaSize - 1, fontFamily: F.head }}>New</Text>
-            </View>
-          )}
-          {showSeverity && (C.glass ? (
-            <View style={[styles.pill, styles.glassPill]}>
-              <View style={[styles.sevDot, { backgroundColor: sev.accent, shadowColor: sev.accent }]} />
-              <Text style={{ color: C.text, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
-            </View>
-          ) : (
-            <View style={[styles.pill, { backgroundColor: sev.bg }]}>
-              <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.severity}</Text>
-            </View>
-          ))}
-          {story.zero_day && (
-            <View style={[styles.pill, styles.zeroPill]}>
-              <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color={C.zeroText} />
-              <Text style={{ color: C.zeroText, fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
-            </View>
-          )}
-          <View style={[styles.pill, C.glass ? styles.glassPill : { backgroundColor: tabColour(story.category, C) + (C.dark ? '26' : '17') }]}>
-            <Text style={{ color: C.glass ? C.text : tabColour(story.category, C), fontSize: L.metaSize - 1, fontFamily: F.label }}>{story.category}</Text>
+        {/* one label only, and only when it matters: Zero-day first, otherwise Critical */}
+        {(story.zero_day || story.severity === 'Critical') && (
+          <View style={[styles.tagRow, hasChain && { paddingRight: 52 * scale }]}>
+            {story.zero_day ? (
+              <View style={[styles.pill, C.glass ? styles.glassPill : styles.zeroPill]}>
+                <MaterialCommunityIcons name="lightning-bolt" size={L.metaSize} color={C.glass ? '#FF8A65' : C.zeroText} />
+                <Text style={{ color: C.glass ? C.text : C.zeroText, fontSize: L.metaSize - 1, fontFamily: F.label }}>Zero-day</Text>
+              </View>
+            ) : C.glass ? (
+              <View style={[styles.pill, styles.glassPill]}>
+                <View style={[styles.sevDot, { backgroundColor: sev.accent, shadowColor: sev.accent }]} />
+                <Text style={{ color: C.text, fontSize: L.metaSize - 1, fontFamily: F.label }}>Critical</Text>
+              </View>
+            ) : (
+              <View style={[styles.pill, { backgroundColor: sev.bg }]}>
+                <Text style={{ color: sev.fg, fontSize: L.metaSize - 1, fontFamily: F.label }}>Critical</Text>
+              </View>
+            )}
           </View>
-        </View>
+        )}
         <Text style={{ color: C.muted, opacity: 0.85, fontSize: L.metaSize - 1, fontFamily: F.body, marginTop: 7, paddingRight: hasChain ? 52 * scale : 0 }} numberOfLines={1}>
           {historyCard ? historyDate(story.id, story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
         </Text>

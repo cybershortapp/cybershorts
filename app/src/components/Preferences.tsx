@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
@@ -13,9 +14,9 @@ import { F, type Palette, setFollowPhone, setThemeChoice, THEMES, type ThemeChoi
 
 const POPULAR = ['Microsoft Defender', 'Mimecast', 'Microsoft 365', 'Windows', 'Fortinet', 'Cisco', 'Okta', 'Google Chrome', 'VMware ESXi', 'Citrix NetScaler'];
 
-type Props = { onDone: () => void };
+type Props = { onDone: () => void; onShowWelcome?: () => void };
 
-export function Preferences({ onDone }: Props) {
+export function Preferences({ onDone, onShowWelcome }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const prefs = usePrefs();
@@ -350,6 +351,23 @@ export function Preferences({ onDone }: Props) {
         >
           <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>About CyberSid, privacy and contact</Text>
         </Pressable>
+        <Pressable
+          onPress={() =>
+            Linking.openURL(
+              `mailto:cybershort.app@gmail.com?subject=${encodeURIComponent(`CyberSid feedback (version ${Constants.expoConfig?.version ?? ''})`)}`,
+            ).catch(() => {})
+          }
+          hitSlop={8}
+          style={{ alignSelf: 'center', marginTop: 12 }}
+          accessibilityRole="link"
+        >
+          <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>Send feedback</Text>
+        </Pressable>
+        {!!onShowWelcome && (
+          <Pressable onPress={onShowWelcome} hitSlop={8} style={{ alignSelf: 'center', marginTop: 12 }} accessibilityRole="button">
+            <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>How CyberSid works</Text>
+          </Pressable>
+        )}
         {!!appError && (
           <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]} selectable>
             Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}

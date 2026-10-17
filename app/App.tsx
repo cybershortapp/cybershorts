@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   Animated,
   AppState,
+  BackHandler,
   Dimensions,
   FlatList,
   Pressable,
@@ -30,6 +31,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
+import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
@@ -74,6 +76,11 @@ function Main() {
   const prefs = usePrefs();
   // the app opens straight on the news
   const [view, setView] = useState<'feed' | 'prefs'>('feed');
+  // first open: a short welcome (null while we check whether it was already seen)
+  const [welcome, setWelcome] = useState<boolean | null>(null);
+  useEffect(() => {
+    welcomeDone().then((done) => setWelcome(!done));
+  }, []);
   const [filter, setFilter] = useState<Filter>('All');
   const [ready, setReady] = useState(prefsLoaded());
   const [stories, setStories] = useState<Story[]>([]);
@@ -285,12 +292,36 @@ function Main() {
     load({ markSeen }).finally(() => setLoading(false));
   }, [load, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // first open only: after a moment, Android asks "Allow CyberSid to send notifications?"
+  // readers who skipped the welcome (or had the app before it): after a moment, Android asks once
+  // "Allow CyberSid to send notifications?" (the welcome's last screen asks itself)
   useEffect(() => {
-    if (!ready || getPrefs().alertsAsked || !alertsAvailable) return;
+    if (!ready || welcome !== false || getPrefs().alertsAsked || !alertsAvailable || !getPrefs().alerts) return;
     const t = setTimeout(() => enableAlerts(), 2500);
     return () => clearTimeout(t);
-  }, [ready]);
+  }, [ready, welcome]);
+
+  // Android back button: settings or search close first, then back to the latest story, then the app closes
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (welcome) return false;
+      if (view === 'prefs') {
+        setView('feed');
+        return true;
+      }
+      if (searching) {
+        setSearching(false);
+        tabMemory.current.delete('Search');
+        changeFilter(beforeSearch.current);
+        return true;
+      }
+      if (index > 0) {
+        latestRef.current();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [welcome, view, searching, index]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
@@ -395,7 +426,7 @@ function Main() {
       </View>
     );
   } else if (view === 'prefs') {
-    content = <Preferences onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
+    content = <Preferences onShowWelcome={() => setWelcome(true)} onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
   } else if (stories.length === 0) {
     const noPrefs = filter === 'For you' && prefs.products.length + prefs.terms.length === 0;
     content = (
@@ -439,6 +470,8 @@ function Main() {
       />
     );
   }
+
+  if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
 
   const header = (
     <Header
