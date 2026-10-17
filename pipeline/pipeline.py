@@ -598,6 +598,92 @@ def read_again(src):
     return name, feed, err
 
 
+# ---- vendor fix days: when a vendor's advisory feed brings 3+ new fixes in one run, they become one card ----
+ROUNDUP_SOURCES = {"Cisco Security Advisories": "Cisco", "Palo Alto Networks Advisories": "Palo Alto Networks",
+                   "Microsoft Security Response Center": "Microsoft", "FortiGuard PSIRT": "Fortinet"}
+ROUNDUP_MIN = 3
+SEV_RANK = {"Critical": 4, "High": 3, "Medium": 2, "Info": 1}
+
+ROUNDUP_PROMPT = """You write one news card for CyberSid, a cyber security news app, that sums up several security fixes
+a vendor released at the same time. UK English, plain words, no hype, no em dashes. Use ONLY the fixes the user lists.
+Reply with ONLY JSON:
+{"headline": "max 12 words, e.g. 'Palo Alto Networks fixes 6 flaws in PAN-OS, GlobalProtect and Cortex'",
+ "technical": "40 to 60 words: how many fixes, which products, and the most serious ones with their CVE IDs",
+ "why": "one sentence, max 18 words, what readers should do"}"""
+
+
+def cover_rank(severity, zero_day):
+    """Who gets an AI picture first when the daily picture allowance is short: zero-days, then Critical, High..."""
+    return (5 if zero_day else 0) + SEV_RANK.get(severity or "Info", 1)
+
+
+def make_roundup(ai, src, items):
+    """One card for several fixes from the same vendor advisory feed. Returns (story, ai_calls)."""
+    vendor = ROUNDUP_SOURCES.get(src["name"], src["name"])
+    items = sorted(items, key=lambda x: -SEV_RANK.get(x["severity"], 1))
+    top = items[0]
+    products = []
+    for x in items:
+        for p in x.get("products") or []:
+            if p not in products and p != vendor:
+                products.append(p)
+    cves = []
+    for x in items:
+        for c in x.get("cves") or []:
+            if c not in cves:
+                cves.append(c)
+    lines = "\n".join(f"- [{x['severity']}] {x['headline']} ({', '.join(x.get('cves') or []) or 'no CVE'}): {x['technical'][:300]}"
+                      for x in items)
+    card, calls = None, 0
+    if ai:
+        calls = 1
+        try:
+            card = ai.json(ROUNDUP_PROMPT, f"Vendor: {vendor}\nFixes released together ({len(items)}):\n{lines}", 500)
+            ok = all(isinstance(card.get(k), str) and len(card[k].strip()) > 10 for k in ("headline", "technical", "why"))
+            if not ok or len(card["headline"].split()) > 16 or "\u2014" in card["technical"]:
+                card = None
+        except Exception as ex:
+            print(f"[warn] roundup AI failed: {str(ex)[:80]}")
+            card = None
+    if not card:   # plain wording without the AI
+        names = products[:3]
+        where = f" in {', '.join(names[:-1])} and {names[-1]}" if len(names) > 1 else (f" in {names[0]}" if names else "")
+        worst = "; ".join(f"{x['headline']} ({x['severity']})" for x in items[:3])
+        card = {"headline": f"{vendor} fixes {len(items)} security flaws{where}",
+                "technical": f"{vendor} released {len(items)} security fixes at the same time. The most serious: {worst}. "
+                             f"Updates are available from {vendor}.",
+                "why": "Check which of these products you run and install the updates."}
+    rid = "roundup:" + hashlib.sha1(",".join(sorted(x["id"] for x in items)).encode()).hexdigest()[:14]
+    story = {
+        "id": rid, "source": src["name"], "url": top["url"], "orig_title": card["headline"].strip(),
+        "headline": card["headline"].strip(), "technical": card["technical"].strip(),
+        "why_it_matters": card["why"].strip(), "severity": top["severity"], "action": top.get("action") or "none",
+        "cves": cves[:12], "attack_chain": None, "chain_checked": True, "also_reported": [], "incident": None,
+        "actor_group": None, "category": "Vulnerabilities", "country": src["country"], "language": "en",
+        "image_url": None, "published_at": max(x["published_at"] for x in items),
+        "products": products[:12] or top.get("products") or [], "zero_day": False,
+    }
+    return story, calls
+
+
+def recheck_pictures(db, since, limit=15):
+    """Recent stories whose news-site picture no longer loads in the app (some sites start blocking apps
+    after a while): the picture is removed, so the AI picture step gives the card a new one."""
+    from concurrent.futures import ThreadPoolExecutor
+    rows = (db.table("stories").select("id,source,image_url").not_.is_("image_url", "null")
+            .gte("created_at", since).order("created_at", desc=True).limit(60).execute().data)
+    rows = [r for r in rows if "/object/public/covers/" not in r["image_url"]][:limit]
+    with ThreadPoolExecutor(8) as pool:
+        problems = list(pool.map(lambda r: image_problem(r["image_url"]), rows))
+    bad = []
+    for r, why in zip(rows, problems):
+        # only clear refusals; a slow or flaky site this minute keeps its picture
+        if why and not why.startswith("could not load"):
+            db.table("stories").update({"image_url": None, "tint": None}).eq("id", r["id"]).execute()
+            bad.append(f"{r['source']} ({why})")
+    return bad
+
+
 def main():
     # Python 3.14 prints harmless "Exception ignored while finalizing file" noise after network timeouts; hide it
     sys.unraisablehook = lambda unraisable: None
@@ -697,6 +783,12 @@ def main():
 
     # ---- 2. newest stories first, across all sources, so the AI budget goes to the freshest news ----
     candidates.sort(key=lambda c: c[0], reverse=True)
+    per_source = {}
+    for c in candidates:
+        per_source[c[1]["name"]] = per_source.get(c[1]["name"], 0) + 1
+    roundup_names = {n for n in ROUNDUP_SOURCES if per_source.get(n, 0) >= ROUNDUP_MIN}
+    roundups = {}       # vendor fix day: the ordinary fixes wait here and become one card after the loop
+    cover_ranks = {}
     print(f"{len(candidates)} new stories to check (newest first)\n")
 
     for published, src, e, sid in candidates:
@@ -795,11 +887,17 @@ def main():
                 "products": tag_products(title, s["headline"], s["technical"], body[:3000], ai_products=s.get("products")),
                 "zero_day": is_zero_day(title, s["technical"], excerpt, ai_flag=s.get("zero_day")),
             }
+            if src["name"] in roundup_names and not story["zero_day"] and story["severity"] != "Critical":
+                roundups.setdefault(src["name"], (src, []))[1].append(dict(story, _scene=s.get("scene")))
+                seen_ids.add(sid)
+                print(f"[fix] {pub}: {s['headline']} (goes into one card for this vendor)")
+                continue
             if db:
                 db.table("stories").upsert(story).execute()
             seen_ids.add(sid)
             if not image:
                 need_cover.append((sid, cover_prompt(s.get("scene"), s["category"]), s["headline"]))
+                cover_ranks[sid] = cover_rank(story["severity"], story["zero_day"])
             recent.append({"id": sid, "orig_title": title, "cves": cves, "source": pub, "technical": s["technical"],
                            "url": link, "also_reported": [], "_words": words(f"{title} {s['technical'][:300]}")})
             row["added"] += 1
@@ -817,6 +915,38 @@ def main():
     if stopped:
         left = sum(1 for c in candidates if c[3] not in seen_ids)
         print(f"[stop] AI budget used up ({ai_budget} calls). {left} older stories wait for the next run.")
+
+    # ---- 2a. vendor fix days: one card per vendor for the ordinary fixes (Critical and zero-days stay separate) ----
+    for name, (src, items) in roundups.items():
+        row = rows[name]
+        try:
+            if len(items) == 1:
+                story = {k: v for k, v in items[0].items() if not k.startswith("_")}
+                card_sid = story["id"]
+                if db:
+                    db.table("stories").upsert(story).execute()
+                if not story["image_url"]:
+                    need_cover.append((card_sid, cover_prompt(items[0].get("_scene"), story["category"]), story["headline"]))
+                    cover_ranks[card_sid] = cover_rank(story["severity"], False)
+                row["added"] += 1
+                continue
+            story, calls = make_roundup(ai if USE_AI and ai_calls < ai_budget else None, src, items)
+            ai_calls += calls
+            if db:
+                db.table("stories").upsert(story).execute()
+                for x in items:
+                    remember(x["id"], "duplicate", story["id"])
+            need_cover.append((story["id"], cover_prompt("", "Vulnerabilities"), story["headline"]))
+            cover_ranks[story["id"]] = cover_rank(story["severity"], False)
+            recent.append({"id": story["id"], "orig_title": story["headline"], "cves": story["cves"], "source": name,
+                           "technical": story["technical"], "url": story["url"], "also_reported": [],
+                           "_words": words(f"{story['headline']} {story['technical'][:300]}")})
+            row["added"] += 1
+            row["merged"] += len(items) - 1
+            print(f"[roundup] {name}: {len(items)} fixes -> {story['headline']}")
+        except Exception as ex:
+            row["failed"] += 1
+            print(f"[fail] roundup {name}: {str(ex)[:100]}")
 
     # ---- 2b. the daily cards: one tip (9am local time) and one cyber history card (9am UK), never repeated ----
     # Their pictures go to the front of the queue, so they always have one, even on busy news days.
@@ -841,15 +971,25 @@ def main():
     # ---- 2c. recent stories that still have no picture (the picture service was busy or failed last time) ----
     if db and COVERS and not TEST_MODE:
         try:
+            try:
+                blocked = recheck_pictures(db, (started - timedelta(hours=12)).isoformat())
+                if blocked:
+                    print(f"[pic] news-site pictures that stopped loading, getting an AI picture: {'; '.join(blocked)}")
+            except Exception as ex:
+                print(f"[warn] picture re-check: {str(ex)[:80]}")
             have = {c[0] for c in need_cover + daily_cover}
             since = (started - timedelta(days=2)).isoformat()
-            missing = (db.table("stories").select("id,headline,category").is_("image_url", "null")
-                       .gte("created_at", since).order("created_at", desc=True).limit(20).execute().data)
+            missing = (db.table("stories").select("id,headline,category,severity,zero_day").is_("image_url", "null")
+                       .gte("created_at", since).order("created_at", desc=True).limit(30).execute().data)
+            # the most important stories first, so a busy day's allowance goes where it matters
+            missing.sort(key=lambda r: -cover_rank(r.get("severity"), r.get("zero_day")))
             for r in [r for r in missing if r["id"] not in have][:int(os.getenv("COVERS_RETRY", "6"))]:
                 need_cover.append((r["id"], cover_prompt("", r["category"] or "Other"), r["headline"]))
+                cover_ranks[r["id"]] = cover_rank(r.get("severity"), r.get("zero_day"))
         except Exception as ex:
             print(f"[warn] picture retry list: {str(ex)[:80]}")
-    need_cover = daily_cover + need_cover
+    # daily tip and history first, then zero-days, Critical, High... (stable: newest first within each level)
+    need_cover = daily_cover + sorted(need_cover, key=lambda c: -cover_ranks.get(c[0], 0))
 
     # ---- 3. AI pictures for new stories that have no usable picture ----
     covers_made, covers_note = 0, "off"
@@ -867,7 +1007,7 @@ def main():
                 url = None
                 maker.errors.append(str(ex)[:80])
             if url:
-                db.table("stories").update({"image_url": url}).eq("id", sid).execute()
+                db.table("stories").update({"image_url": url, "tint": None}).eq("id", sid).execute()
                 covers_made += 1
                 print(f"[pic] {headline[:70]}")
         covers_note = f"{covers_made} made ({maker.used})" + (f", problems: {' | '.join(dict.fromkeys(maker.errors))[:300]}" if maker.errors else "")
