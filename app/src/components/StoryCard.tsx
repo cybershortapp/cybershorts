@@ -11,8 +11,9 @@ import { REPORT_REASONS, type ReportReason } from '../lib/types';
 import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
-import { F, type Palette, severityOf, storyTint, tabColour, useTheme } from '../theme';
+import { F, type Palette, severityOf, storyTint, tabColour, useCardStyle, useTheme } from '../theme';
 import { AttackChain } from './AttackChain';
+import { STYLE_BG, StyledCard } from './CardStyles';
 import { Cover } from './Cover';
 import { Sheet, SheetRow } from './Sheet';
 
@@ -27,10 +28,13 @@ type Props = {
   onToggleSave: (id: string) => void;
   isNew?: boolean; // added since the reader last opened the app
   caughtUp?: boolean; // first story they have already seen
+  onNext?: () => void; // Magazine: a quick flick on the cover goes to the next story
 };
 
-function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
+function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp, onNext }: Props) {
   const C = useTheme();
+  const cardStyle = useCardStyle();
+  const styled = cardStyle !== 'standard';
   const styles = useMemo(() => makeStyles(C), [C]);
   const L = useCardLayout(height);
   // Vivid: a card in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
@@ -138,7 +142,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         `${story.url}\n\nShared from CyberSid`,
     }).catch(() => {});
 
-  const cardFace = (
+  const standardFace = (
     <View style={{ width: cardWidth, flex: 1 }}>
       <Pressable onPress={openArticle} style={{ height: imageHeight, backgroundColor: C.imageBg }} accessibilityLabel="Open article">
         {showImage ? (
@@ -302,23 +306,48 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     </View>
   );
 
+  // the reader's card style (Standard, Magazine, Newspaper or Terminal); all of them can open the attack chain
+  const cardFace = styled ? (
+    <View style={{ width: cardWidth, flex: 1 }}>
+      <StyledCard
+        story={story}
+        kind={cardStyle as Exclude<typeof cardStyle, 'standard'>}
+        width={cardWidth}
+        height={height - 16}
+        saved={saved}
+        showImage={showImage}
+        onImageError={() => setImageFailed(true)}
+        onOpen={openArticle}
+        onSave={() => onToggleSave(story.id)}
+        onShare={share}
+        onReport={() => { setReportState('idle'); setSheet('report'); }}
+        onReadMore={() => setSheet('summary')}
+        onChain={hasChain ? showChain : undefined}
+        onNext={onNext}
+      />
+    </View>
+  ) : (
+    standardFace
+  );
+
   return (
     <View style={[styles.page, { height }]}>
       <View
         style={[
           styles.card,
           { width: cardWidth, borderRadius: L.isTablet ? 28 : 24 },
-          vivid && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
-          C.mode === 'aurora' && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          vivid && !styled && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
+          C.mode === 'aurora' && !styled && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          styled && { backgroundColor: STYLE_BG[cardStyle as keyof typeof STYLE_BG], borderColor: cardStyle === 'newspaper' ? '#D9D0BB' : '#22262E' },
         ]}
       >
-        {hasChain && C.mode !== 'aurora' && (
+        {hasChain && C.mode !== 'aurora' && !styled && (
           // revealed for a moment when the card slides to hint at the chain (Aurora's see-through card would show it all the time)
           <View style={[styles.peekPanel, { width: cardWidth * 0.3 }]}>
             <MaterialCommunityIcons name="link-variant" size={26 * scale} color={C.onBrand} />
           </View>
         )}
-        <Animated.View style={{ flex: 1, backgroundColor: vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
+        <Animated.View style={{ flex: 1, backgroundColor: styled ? STYLE_BG[cardStyle as keyof typeof STYLE_BG] : vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
           {hasChain ? (
             <ScrollView
               ref={pager}

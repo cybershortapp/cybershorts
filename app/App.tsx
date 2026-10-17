@@ -4,6 +4,13 @@ import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
+import { JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono/400Regular';
+import { JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono/700Bold';
+import { LibreBaskerville_400Regular } from '@expo-google-fonts/libre-baskerville/400Regular';
+import { LibreBaskerville_400Regular_Italic } from '@expo-google-fonts/libre-baskerville/400Regular_Italic';
+import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville/700Bold';
+import { PlayfairDisplay_900Black } from '@expo-google-fonts/playfair-display/900Black';
+import { UnifrakturMaguntia_400Regular } from '@expo-google-fonts/unifrakturmaguntia/400Regular';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -404,6 +411,10 @@ function Main() {
         onToggleSave={toggleSaved}
         isNew={!!marker && item.created_at > marker}
         caughtUp={i === firstOld && i > 0}
+        onNext={() => {
+          const n = storiesRef.current.length;
+          if (i + 1 < n) listRef.current?.scrollToIndex({ index: i + 1, animated: true });
+        }}
       />
       </ErrorBoundary>
     ),
@@ -595,7 +606,12 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 }
 
 export default function App() {
-  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold,
+    // card styles: Newspaper (Baskerville, Playfair, the masthead) and Terminal (JetBrains Mono)
+    LibreBaskerville_400Regular, LibreBaskerville_400Regular_Italic, LibreBaskerville_700Bold, PlayfairDisplay_900Black,
+    UnifrakturMaguntia_400Regular, JetBrainsMono_400Regular, JetBrainsMono_700Bold,
+  });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();
   useEffect(() => {
