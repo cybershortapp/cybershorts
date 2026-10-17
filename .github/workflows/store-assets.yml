@@ -1,0 +1,67 @@
+name: store-assets
+
+# Copies a few real recent stories and their pictures to the "store-assets" branch, so the Play Store
+# screenshots can show real news. Run by hand. Only public story data (the same the app shows), no reader data.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install supabase==2.*
+      - name: Export stories and pictures
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          mkdir -p out/img
+          python - <<'PY'
+          import json, os, urllib.request
+          from supabase import create_client
+          db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+          fields = ("id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,"
+                    "incident,actor_group,category,image_url,published_at,created_at,products,zero_day,country,tint")
+          rows = db.table("stories").select(fields).not_.is_("image_url", "null").order("created_at", desc=True).limit(400).execute().data
+          pick, seen = [], set()
+          def take(cond, n):
+              for r in rows:
+                  if len([p for p in pick if cond(p)]) >= n: break
+                  if r["id"] not in seen and cond(r):
+                      pick.append(r); seen.add(r["id"])
+          take(lambda r: r.get("zero_day"), 2)
+          take(lambda r: r.get("severity") == "Critical", 3)
+          take(lambda r: (r.get("attack_chain") or []) and len(r["attack_chain"]) >= 4, 3)
+          take(lambda r: r.get("category") == "History", 1)
+          take(lambda r: r.get("category") == "Tips", 1)
+          take(lambda r: r.get("severity") == "High", 3)
+          out = []
+          for i, r in enumerate(pick):
+              try:
+                  req = urllib.request.Request(r["image_url"], headers={"User-Agent": "Mozilla/5.0"})
+                  data = urllib.request.urlopen(req, timeout=20).read(4_000_000)
+                  name = f"img/{i}.jpg"
+                  open("out/" + name, "wb").write(data)
+                  r["image_file"] = name
+              except Exception as ex:
+                  print("no picture:", r["id"], ex)
+              out.append(r)
+          json.dump(out, open("out/stories.json", "w"), indent=1)
+          print(len(out), "stories")
+          PY
+      - name: Save to the store-assets branch
+        run: |
+          cd out
+          git init -q -b store-assets
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Stories for store screenshots"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" store-assets
