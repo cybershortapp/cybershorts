@@ -1,0 +1,425 @@
+[
+ {
+  "id": "affcb6cb16bc4094",
+  "source": "The Tech Edvocate",
+  "url": "https://www.thetechedvocate.org/warning-this-zero-day-exploit-just-exposed-your-companys-deepest-secrets-to-china/",
+  "headline": "Chinese State Actor Exploits BeyondTrust Zero\u2011Day to Harvest Credentials",
+  "technical": "A Chinese state\u2011backed group identified as Armory Castle (UNC5221) is exploiting a zero\u2011day vulnerability in BeyondTrust's remote support tool. The flaw permits unauthenticated remote code execution, enabling attackers to obtain privileged credentials and move laterally into downstream networks, exfiltrating sensitive data. No patch has been released yet.",
+  "why_it_matters": "Patch BeyondTrust tool immediately; audit remote support usage",
+  "severity": "Critical",
+  "action": "patch",
+  "cves": [],
+  "attack_chain": [
+   {
+    "stage": "Initial Access",
+    "detail": "Exploited zero\u2011day in remote support tool for unauthenticated access",
+    "source": "article",
+    "tactic": "TA0001"
+   },
+   {
+    "stage": "Credential Access",
+    "detail": "Harvested privileged credentials from compromised systems",
+    "source": "article",
+    "tactic": "TA0006"
+   },
+   {
+    "stage": "Exfiltration",
+    "detail": "Stealed sensitive data from downstream networks",
+    "source": "article",
+    "tactic": "TA0010"
+   }
+  ],
+  "also_reported": [],
+  "incident": {
+   "actor": "Armory Castle",
+   "victim": "companies using BeyondTrust"
+  },
+  "actor_group": null,
+  "category": "Vulnerabilities",
+  "image_url": "https://www.thetechedvocate.org/wp-content/uploads/2026/10/featured-image-1792215689818.png",
+  "published_at": "2026-10-16T17:00:00+00:00",
+  "created_at": "2026-10-17T05:57:12.834985+00:00",
+  "products": [
+   "BeyondTrust",
+   "BeyondTrust Remote Support"
+  ],
+  "zero_day": true,
+  "country": "INTL",
+  "tint": "#3f0d0f",
+  "image_file": "img/0.jpg"
+ },
+ {
+  "id": "33661c320779708d",
+  "source": "Zscaler ThreatLabz",
+  "url": "https://www.zscaler.com/blogs/security-research/cve-2026-88771-inside-exploitation-critical-netscaler-rce-vulnerability",
+  "headline": "Critical Citrix NetScaler RCE under active attack globally",
+  "technical": "Citrix disclosed CVE-2026-88771, a critical remote code execution vulnerability in NetScaler ADC and NetScaler Gateway with a CVSS score of 9.8. Unauthenticated attackers can execute arbitrary commands. Zscaler ThreatLabz observed exploitation involving access-log poisoning, unauthenticated RCE, fingerprinting, web shell deployment, and a FreeBSD x64 implant. CISA added the flaw to its Known Exploited Vulnerabilities catalog.",
+  "why_it_matters": "Update NetScaler appliances immediately to patched builds.",
+  "severity": "Critical",
+  "action": "patch",
+  "cves": [
+   "CVE-2026-88771",
+   "CVE-2026-107406",
+   "CVE-2026-75650"
+  ],
+  "attack_chain": [
+   {
+    "stage": "Initial Access",
+    "detail": "Attackers exploited the vulnerability on unmitigated NetScaler appliances.",
+    "source": "article",
+    "tactic": "TA0001"
+   },
+   {
+    "stage": "Execution",
+    "detail": "Attackers achieved remote command execution before authentication.",
+    "source": "article",
+    "tactic": "TA0002"
+   },
+   {
+    "stage": "Persistence",
+    "detail": "Attackers attempted to deploy multiple web shells.",
+    "source": "article",
+    "tactic": "TA0003"
+   }
+  ],
+  "also_reported": [],
+  "incident": null,
+  "actor_group": null,
+  "category": "Vulnerabilities",
+  "image_url": "https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/33661c320779708d-1792186341.jpg",
+  "published_at": "2026-10-16T21:28:21+00:00",
+  "created_at": "2026-10-16T21:32:11.761211+00:00",
+  "products": [
+   "Citrix",
+   "Citrix NetScaler",
+   "Zscaler",
+   "Apache",
+   "Magento",
+   "Adobe",
+   "NetScaler ADC",
+   "NetScaler Gateway"
+  ],
+  "zero_day": true,
+  "country": "INTL",
+  "tint": "#141538",
+  "image_file": "img/1.jpg"
+ },
+ {
+  "id": "84bc97ae9be7a7cd",
+  "source": "note",
+  "url": "https://note.com/imaoka_ryo/n/na43e71f85736?hl=en",
+  "headline": "Temairazu Hotel Reservation System Breached, Exposing 4.45M Records",
+  "technical": "Temairazu, Inc. confirmed unauthorised access to its TEMAIRAZU.NET hotel and ryokan reservation management platform. Up to approximately 4,452,000 records, including accommodation facility accounts, login IDs, contact details, and past guest reservation histories, may have been exfiltrated. Credit card data was not stored and remains unaffected. The company blocked the access, reported the incident to authorities, and is notifying impacted operators.",
+  "why_it_matters": "Check for targeted phishing and credential stuffing targeting hotel reservation data.",
+  "severity": "Critical",
+  "action": "check_breach",
+  "cves": [],
+  "attack_chain": null,
+  "also_reported": [],
+  "incident": {
+   "victim": "Temairazu, Inc.",
+   "victim_country": "Japan"
+  },
+  "actor_group": null,
+  "category": "Breaches",
+  "image_url": "https://assets.st-note.com/production/uploads/images/325127831/rectangle_large_type_2_15aaab2ae423919c13c959f5ea812ffe.jpeg?fit=bounds&quality=85&width=1280",
+  "published_at": "2026-10-16T07:26:00+00:00",
+  "created_at": "2026-10-17T09:25:25.669212+00:00",
+  "products": [
+   "Temairazu"
+  ],
+  "zero_day": false,
+  "country": "GB",
+  "tint": "#18342d",
+  "image_file": "img/2.jpg"
+ },
+ {
+  "id": "f2639c17d1047835",
+  "source": "ESET WeLiveSecurity",
+  "url": "https://www.welivesecurity.com/en/cybersecurity/inbox-flooded-signup-messages-email-bombing/",
+  "headline": "Email bombing floods inboxes to hide fraud alerts",
+  "technical": "Email bombing (also called form, list or subscription bombing) uses automated bots to sign a victim's email up for hundreds of legitimate services, generating welcome messages that overwhelm the inbox. Attackers first obtain the address from breaches or leaks, then flood the mailbox to distract from BEC, ransomware or extortion attempts.",
+  "why_it_matters": "Check for unauthorised activity and enable 2FA on all accounts",
+  "severity": "Info",
+  "action": "none",
+  "cves": [],
+  "attack_chain": [
+   {
+    "stage": "Reconnaissance",
+    "detail": "Attacker gathers victim email from breaches or leaks",
+    "source": "article",
+    "tactic": "TA0043"
+   },
+   {
+    "stage": "Resource Development",
+    "detail": "Uses bot\u2011powered tools to automate mass sign\u2011ups",
+    "source": "article",
+    "tactic": "TA0042"
+   },
+   {
+    "stage": "Initial Access",
+    "detail": "Registers victim email on many legitimate services",
+    "source": "article",
+    "tactic": "TA0001"
+   },
+   {
+    "stage": "Impact",
+    "detail": "Generates thousands of welcome emails flooding the inbox",
+    "source": "article",
+    "tactic": "TA0040"
+   }
+  ],
+  "also_reported": [],
+  "incident": {
+   "victim": "Virginia woman",
+   "victim_country": "United States"
+  },
+  "actor_group": null,
+  "category": "Scams",
+  "image_url": "https://web-assets.esetstatic.com/wls/2026/10-26/email-bombing-explained.jpg",
+  "published_at": "2026-10-16T09:00:00+00:00",
+  "created_at": "2026-10-17T06:31:54.233419+00:00",
+  "products": [],
+  "zero_day": false,
+  "country": "INTL",
+  "tint": "#1b2130",
+  "image_file": "img/3.jpg"
+ },
+ {
+  "id": "b3ee6ef0b05585cf",
+  "source": "Cyber Security News",
+  "url": "https://cybersecuritynews.com/breach-440-papercut-servers/",
+  "headline": "AI agents breach 440 PaperCut servers worldwide",
+  "technical": "A campaign used OpenAI Codex and DeepSeek AI agents to target internet\u2011facing PaperCut NG and MF print\u2011management servers. Exploits CVE\u20112026\u201181578 (unauthenticated settings change) and CVE\u20112026\u201182078 (unsafe class\u2011loading leading to RCE) were automated, compromising at least 440 instances across 395 organisations in 48 countries, with domain\u2011admin access gained within hours.",
+  "why_it_matters": "Patch PaperCut servers and harden internet exposure immediately",
+  "severity": "Critical",
+  "action": "patch",
+  "cves": [
+   "CVE-2026-81578",
+   "CVE-2026-82078"
+  ],
+  "attack_chain": [
+   {
+    "stage": "Reconnaissance",
+    "detail": "Scanned internet\u2011facing PaperCut servers for vulnerable configurations",
+    "source": "article",
+    "tactic": "TA0043"
+   },
+   {
+    "stage": "Initial Access",
+    "detail": "Exploited CVE\u20112026\u201181578 and CVE\u20112026\u201182078 to execute code on the server",
+    "source": "article",
+    "tactic": "TA0001"
+   },
+   {
+    "stage": "Privilege Escalation",
+    "detail": "Gained domain administrator access within a few hours",
+    "source": "article",
+    "tactic": "TA0004"
+   },
+   {
+    "stage": "Credential Access",
+    "detail": "Harvested credentials from compromised print servers to reach internal networks",
+    "source": "article",
+    "tactic": "TA0006"
+   }
+  ],
+  "also_reported": [],
+  "incident": {
+   "victim": "PaperCut NG/MF servers",
+   "attributed_by": "GreyNoise"
+  },
+  "actor_group": null,
+  "category": "Breaches",
+  "image_url": "https://cybersecuritynews.com/wp-content/uploads/2026/10/Hackers-Use-Codex-and-DeepSeek-AI-Agents-to-Breach-440-PaperCut-Servers-WorldwideCopy.webp",
+  "published_at": "2026-10-16T12:23:47+00:00",
+  "created_at": "2026-10-16T12:32:28.728581+00:00",
+  "products": [
+   "WhatsApp",
+   "Meta",
+   "X (Twitter)",
+   "X",
+   "LinkedIn",
+   "Microsoft",
+   "OpenAI",
+   "PaperCut NG"
+  ],
+  "zero_day": false,
+  "country": "INTL",
+  "tint": "#381915",
+  "image_file": "img/4.jpg"
+ },
+ {
+  "id": "1d1aba7eaaba8e67",
+  "source": "Cyber Security News",
+  "url": "https://cybersecuritynews.com/ghostbat-android-malware/",
+  "headline": "GhostBat Android malware targets 60 Indian banking apps",
+  "technical": "GhostBat\u2019s new Android variant abuses the Accessibility Service to monitor selected banking, UPI and fintech apps, capturing PIN\u2011like input via a transparent overlay. Distributed through smishing links masquerading as traffic\u2011fine notices, it installs malicious APKs, harvests SMS, call logs and commands, and can replay taps on Google Pay and MobiKwik.",
+  "why_it_matters": "Avoid installing APKs from unknown sources; monitor app permissions",
+  "severity": "High",
+  "action": "none",
+  "cves": [],
+  "attack_chain": [
+   {
+    "stage": "Initial Access",
+    "detail": "Victims receive smishing link posing as traffic fine",
+    "source": "article",
+    "tactic": "TA0001"
+   },
+   {
+    "stage": "Execution",
+    "detail": "Install malicious APK and grant Accessibility Service",
+    "source": "article",
+    "tactic": "TA0002"
+   },
+   {
+    "stage": "Collection",
+    "detail": "Capture PIN via overlay and harvest messages, call logs",
+    "source": "article",
+    "tactic": "TA0009"
+   },
+   {
+    "stage": "Command and Control",
+    "detail": "Malware receives commands from operator backend",
+    "source": "article",
+    "tactic": "TA0011"
+   }
+  ],
+  "also_reported": [],
+  "incident": {
+   "victim": "Banking and payment app users",
+   "attributed_by": "Cyble",
+   "victim_country": "India"
+  },
+  "actor_group": "G1040",
+  "category": "Tools",
+  "image_url": "https://cybersecuritynews.com/wp-content/uploads/2026/10/Hackers-Target-60-Indian-Banking-and-UPI-Apps-With-New-GhostBat-Android-Malware.webp",
+  "published_at": "2026-10-16T05:33:05+00:00",
+  "created_at": "2026-10-16T06:01:14.479918+00:00",
+  "products": [
+   "GitHub",
+   "Microsoft",
+   "Android",
+   "Google",
+   "WhatsApp",
+   "Meta",
+   "X (Twitter)",
+   "X"
+  ],
+  "zero_day": false,
+  "country": "INTL",
+  "tint": "#321b23",
+  "image_file": "img/5.jpg"
+ },
+ {
+  "id": "history:2015-06-04:opm",
+  "source": "CyberSid History",
+  "url": "https://en.wikipedia.org/wiki/Office_of_Personnel_Management_data_breach",
+  "headline": "US government personnel agency reveals huge breach",
+  "technical": "Eleven years ago, the US Office of Personnel Management disclosed that records belonging to millions of federal employees had been stolen, later revealing that background check files and fingerprints of about 5.6 million people were also taken. Widely attributed to China, it remains one of the most damaging government data breaches.",
+  "why_it_matters": "Some data, like security clearance files, can never be changed after a leak.",
+  "severity": "Info",
+  "action": "none",
+  "cves": [],
+  "attack_chain": null,
+  "also_reported": [],
+  "incident": null,
+  "actor_group": null,
+  "category": "History",
+  "image_url": "https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/2015-06-04:opm-1792224108.jpg",
+  "published_at": "2026-10-17T08:01:10.261668+00:00",
+  "created_at": "2026-10-17T08:01:18.913307+00:00",
+  "products": [],
+  "zero_day": false,
+  "country": "INTL",
+  "tint": "#0d203f",
+  "image_file": "img/6.jpg"
+ },
+ {
+  "id": "tip:kev:INTL2026101709",
+  "source": "CyberSid Tips",
+  "url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+  "headline": "Explainer: CISA's Known Exploited Vulnerabilities list",
+  "technical": "CISA, the US cyber agency, keeps a public list of vulnerabilities that attackers are actually using, not just theoretical ones. US federal agencies must patch them by a deadline, and many companies worldwide use it to decide what to fix first. CyberSid shows new entries as 'CISA Known Exploited'.",
+  "why_it_matters": "It's the best free signal for which patches can't wait.",
+  "severity": "Info",
+  "action": "none",
+  "cves": [],
+  "attack_chain": null,
+  "also_reported": [],
+  "incident": null,
+  "actor_group": null,
+  "category": "Tips",
+  "image_url": "https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/kev:INTL2026101709-1792227683.jpg",
+  "published_at": "2026-10-17T09:01:19.132853+00:00",
+  "created_at": "2026-10-17T09:01:20.385554+00:00",
+  "products": [],
+  "zero_day": false,
+  "country": "XX",
+  "tint": "#1d133a",
+  "image_file": "img/7.jpg"
+ },
+ {
+  "id": "e28159629681626c",
+  "source": "Free Press Journal",
+  "url": "https://www.freepressjournal.in/business/sbi-subsidiaries-customer-data-allegedly-on-dark-web-375-lakh-records-2722-documents-claimed-in-data-breach",
+  "headline": "State Bank of India customer data claimed on BreachForums",
+  "technical": "A threat actor named Siriusim published samples of 3.75 lakh customer records and 2,722 PDF documents allegedly linked to the State Bank of India on BreachForums. The leaked data includes loan applications, KYC files, and personal identifiers. Validation of sample phone numbers and documents suggests some records are genuine, though the source remains unconfirmed.",
+  "why_it_matters": "Check your accounts for suspicious financial activity if you are a customer.",
+  "severity": "High",
+  "action": "check_breach",
+  "cves": [],
+  "attack_chain": null,
+  "also_reported": [],
+  "incident": {
+   "actor": "Siriusim",
+   "victim": "State Bank of India customers",
+   "victim_country": "India"
+  },
+  "actor_group": null,
+  "category": "Breaches",
+  "image_url": "https://media.assettype.com/freepressjournal/2026-10-17/mzkn2qtu/Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Copy-of-Queen-Of-All-Mayhem-2026-10-17T204244.778.jpg",
+  "published_at": "2026-10-17T08:13:00+00:00",
+  "created_at": "2026-10-17T15:31:39.346772+00:00",
+  "products": [
+   "WhatsApp",
+   "Meta"
+  ],
+  "zero_day": false,
+  "country": "IN",
+  "tint": "#1b1c32",
+  "image_file": "img/8.jpg"
+ },
+ {
+  "id": "30ca019e2c0aabac",
+  "source": "The Daily Hodl",
+  "url": "https://dailyhodl.com/2026/10/17/florida-dermatology-group-hit-by-cyberattack-social-security-numbers-and-medical-records-of-85585-patients-at-risk/",
+  "headline": "Florida dermatology practice data breach exposes 85,000 patient records",
+  "technical": "Mid Florida Dermatology & Plastic Surgery suffered a cyberattack impacting 85,585 patients. Unauthorized actors accessed systems between March 26th and March 30th, compromising sensitive data including Social Security numbers, financial details, and medical records. The ransomware group Qilin claimed responsibility for the incident.",
+  "why_it_matters": "Check your credit reports and patient statements if you are a patient.",
+  "severity": "High",
+  "action": "check_breach",
+  "cves": [],
+  "attack_chain": null,
+  "also_reported": [],
+  "incident": {
+   "actor": "Qilin",
+   "victim": "Mid Florida Dermatology & Plastic Surgery",
+   "victim_country": "United States"
+  },
+  "actor_group": null,
+  "category": "Breaches",
+  "image_url": "https://dailyhodl.com/wp-content/uploads/2026/10/mid-florida-dermatology-breach.jpg?resize=1365,800",
+  "published_at": "2026-10-17T07:30:00+00:00",
+  "created_at": "2026-10-17T14:56:02.822034+00:00",
+  "products": [
+   "Facebook",
+   "Meta",
+   "Telegram"
+  ],
+  "zero_day": false,
+  "country": "INTL",
+  "tint": "#410b22",
+  "image_file": "img/9.jpg"
+ }
+]
