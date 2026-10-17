@@ -51,7 +51,7 @@ export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChang
         </View>
         <View style={[styles.row, { flexShrink: 1, justifyContent: 'flex-end' }]}>
           {view === 'feed' && !!counter && (
-            <Text style={{ fontSize: 12 * k, color: C.muted }} numberOfLines={1}>
+            <Text style={{ fontSize: 12 * k, color: C.muted, fontFamily: F.medium }} numberOfLines={1}>
               {counter}
             </Text>
           )}
@@ -100,19 +100,20 @@ export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChang
             const tint = tabColour(f, C);
             const icon = TAB_ICON[f];
             // selected tab: white text on the deep light-mode colours, dark text on the softer dark-mode colours
-            const onText = C.dark ? '#0A0E17' : '#FFFFFF';
+            const onText = C.glass ? '#000000' : C.dark ? '#0A0E17' : '#FFFFFF';
+            const onBg = C.glass ? '#FFFFFF' : tint;
             return (
               <Pressable
                 key={f}
                 onPress={() => onFilterChange(f)}
-                style={[styles.chip, on ? { backgroundColor: tint, borderColor: tint } : { borderColor: C.chipBorder, backgroundColor: C.surface }]}
+                style={[styles.chip, on ? { backgroundColor: onBg, borderColor: onBg } : { borderColor: C.chipBorder, backgroundColor: C.surface }]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
               >
                 {icon ? (
-                  <MaterialCommunityIcons name={f === 'For you' && !hasPrefs ? 'star-four-points-outline' : icon} size={13 * k} color={on ? onText : tint} />
+                  <MaterialCommunityIcons name={f === 'For you' && !hasPrefs ? 'star-four-points-outline' : icon} size={13 * k} color={on ? onText : C.glass ? '#FFFFFF' : tint} />
                 ) : (
-                  <View style={[styles.dot, { backgroundColor: on ? onText : tint }]} />
+                  <View style={[styles.dot, { backgroundColor: on ? onText : C.glass ? 'rgba(255,255,255,0.85)' : tint }]} />
                 )}
                 <Text style={{ fontSize: 13 * k, color: on ? onText : C.text, fontFamily: on ? F.label : F.medium }}>{f}</Text>
               </Pressable>
@@ -128,7 +129,7 @@ const makeStyles = (C: Palette) =>
   StyleSheet.create({
     topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 2, paddingTop: 8, paddingBottom: 10 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    brand: { fontFamily: F.brand, color: C.text, paddingRight: 2 },
+    brand: { fontFamily: F.brand, color: C.text, paddingRight: 2, letterSpacing: -0.5 },
     iconBtn: { borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.surface, borderRadius: 999, padding: 6 },
     iconOn: { backgroundColor: C.brand, borderColor: C.brand },
     chips: { paddingBottom: 10, gap: 8 },

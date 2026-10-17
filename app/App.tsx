@@ -1,15 +1,22 @@
-import { Oswald_500Medium, Oswald_700Bold } from '@expo-google-fonts/oswald';
-import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, useFonts } from '@expo-google-fonts/poppins';
+// only the five weights we use, imported one by one so the other weights aren't bundled into the app
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+import { useFonts } from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   AppState,
+  BackHandler,
   Dimensions,
   FlatList,
   Pressable,
@@ -24,6 +31,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
+import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
@@ -32,8 +40,8 @@ import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { getRegion, regionCountries } from './src/lib/region';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
-import { STORY_FIELDS, type Filter, type Story } from './src/lib/types';
-import { F, type Palette, useTheme } from './src/theme';
+import { storyFields, tintMissing, type Filter, type Story } from './src/lib/types';
+import { deepen, F, type Palette, storyTint, useTheme } from './src/theme';
 
 const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are quick
 const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
@@ -68,6 +76,11 @@ function Main() {
   const prefs = usePrefs();
   // the app opens straight on the news
   const [view, setView] = useState<'feed' | 'prefs'>('feed');
+  // first open: a short welcome (null while we check whether it was already seen)
+  const [welcome, setWelcome] = useState<boolean | null>(null);
+  useEffect(() => {
+    welcomeDone().then((done) => setWelcome(!done));
+  }, []);
   const [filter, setFilter] = useState<Filter>('All');
   const [ready, setReady] = useState(prefsLoaded());
   const [stories, setStories] = useState<Story[]>([]);
@@ -118,7 +131,7 @@ function Main() {
       // newest PUBLISHED first, so the order always matches the "x min ago" shown on each card
       let query = supabase
         .from('stories')
-        .select(STORY_FIELDS)
+        .select(storyFields())
         .order('published_at', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, from + size - 1);
@@ -157,11 +170,12 @@ function Main() {
       return;
     }
     const { data, error: err } = await query;
+    if (tintMissing(err)) return load(opts); // database without the colour column yet: ask again without it
     if (err) {
       setError("Couldn't load stories. Check your connection and try again.");
       return;
     }
-    let rows = cleanStories(data as Story[]);
+    let rows = cleanStories(data as unknown as Story[]);
     lastLoaded.current = Date.now();
     if (rows.length < FIRST_PAGE) noMore.current.add(filter);
     else noMore.current.delete(filter);
@@ -195,8 +209,9 @@ function Main() {
     loadingMore.current = true;
     try {
       const { data, error: err } = await query;
+      if (tintMissing(err)) noMore.current.delete(f); // asked for the colour column; the next scroll asks without it
       if (err || shownFilter.current !== f) return;
-      const rows = cleanStories(data as Story[]);
+      const rows = cleanStories(data as unknown as Story[]);
       if (rows.length < PAGE_SIZE) noMore.current.add(f);
       if (rows.length) {
         setStories((cur) => {
@@ -277,12 +292,36 @@ function Main() {
     load({ markSeen }).finally(() => setLoading(false));
   }, [load, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // first open only: after a moment, Android asks "Allow CyberSid to send notifications?"
+  // readers who skipped the welcome (or had the app before it): after a moment, Android asks once
+  // "Allow CyberSid to send notifications?" (the welcome's last screen asks itself)
   useEffect(() => {
-    if (!ready || getPrefs().alertsAsked || !alertsAvailable) return;
+    if (!ready || welcome !== false || getPrefs().alertsAsked || !alertsAvailable || !getPrefs().alerts) return;
     const t = setTimeout(() => enableAlerts(), 2500);
     return () => clearTimeout(t);
-  }, [ready]);
+  }, [ready, welcome]);
+
+  // Android back button: settings or search close first, then back to the latest story, then the app closes
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (welcome) return false;
+      if (view === 'prefs') {
+        setView('feed');
+        return true;
+      }
+      if (searching) {
+        setSearching(false);
+        tabMemory.current.delete('Search');
+        changeFilter(beforeSearch.current);
+        return true;
+      }
+      if (index > 0) {
+        latestRef.current();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [welcome, view, searching, index]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
@@ -304,8 +343,8 @@ function Main() {
       pendingJump.current = id;
       setView('feed');
       changeFilter('All');
-      const { data } = await supabase.from('stories').select(STORY_FIELDS).eq('id', id).maybeSingle();
-      const [story] = cleanStories(data ? [data as Story] : []);
+      const { data } = await supabase.from('stories').select(storyFields()).eq('id', id).maybeSingle();
+      const [story] = cleanStories(data ? [data as unknown as Story] : []);
       if (story) setStories((cur) => (cur.some((x) => x.id === id) ? cur : [story, ...cur]));
     });
   }, []);
@@ -352,6 +391,8 @@ function Main() {
   // NEW tags, and a "caught up" note on the first story they had already seen
   const marker = seenBefore.current;
   const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
+  // Vivid: the screen takes a deep shade of the colour of the story on screen
+  const screenColour = C.mode === 'vivid' && view === 'feed' && stories[index] ? deepen(storyTint(stories[index])) : C.bg;
   const renderItem = useCallback(
     ({ item, index: i }: { item: Story; index: number }) => (
       <ErrorBoundary resetKey={item.id} fallback={() => <BrokenCard height={pageHeight} />}>
@@ -385,7 +426,7 @@ function Main() {
       </View>
     );
   } else if (view === 'prefs') {
-    content = <Preferences onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
+    content = <Preferences onShowWelcome={() => setWelcome(true)} onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
   } else if (stories.length === 0) {
     const noPrefs = filter === 'For you' && prefs.products.length + prefs.terms.length === 0;
     content = (
@@ -425,14 +466,15 @@ function Main() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         getItemLayout={(_, i) => ({ length: pageHeight, offset: pageHeight * i, index: i })}
         onScrollToIndexFailed={() => {}}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.brand]} progressBackgroundColor={C.surface} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.brand} colors={[C.glass ? '#000000' : C.brand]} progressBackgroundColor={C.glass ? '#FFFFFF' : C.surface} />}
       />
     );
   }
 
-  return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <Header
+  if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
+
+  const header = (
+    <Header
         view={view}
         onSaved={() => {
           setView('feed');
@@ -467,6 +509,15 @@ function Main() {
           changeFilter(beforeSearch.current);
         }}
       />
+  );
+
+  return (
+    <SafeAreaView style={[styles.root, { backgroundColor: C.mode === 'aurora' ? '#0A0F2C' : C.bg }]} edges={['top', 'bottom']}>
+      {C.mode === 'aurora' && (
+        <Image source={require('./assets/aurora.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+      )}
+      {C.mode === 'vivid' && <ScreenColour colour={screenColour} />}
+      {header}
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
         {view === 'feed' && index >= 2 && stories.length > 0 && !loading && (
@@ -477,6 +528,24 @@ function Main() {
         )}
       </View>
     </SafeAreaView>
+  );
+}
+
+/** Vivid: the screen behind the cards fades smoothly to the colour of the story on screen. */
+function ScreenColour({ colour }: { colour: string }) {
+  const [shown, setShown] = useState({ from: colour, to: colour });
+  const fade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (colour === shown.to) return;
+    setShown((cur) => ({ from: cur.to, to: colour }));
+    fade.setValue(0);
+    Animated.timing(fade, { toValue: 1, duration: 320, useNativeDriver: true }).start();
+  }, [colour]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: shown.from }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: shown.to, opacity: fade }]} />
+    </View>
   );
 }
 
@@ -526,7 +595,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 }
 
 export default function App() {
-  const [fontsLoaded, fontError] = useFonts({ Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Oswald_500Medium, Oswald_700Bold });
+  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();
   useEffect(() => {
@@ -564,7 +633,7 @@ const makeStyles = (C: Palette) =>
   root: { flex: 1, backgroundColor: C.bg },
   feed: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted },
+  message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted, fontFamily: F.body },
   retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   latest: {
     position: 'absolute', top: 10, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4,

@@ -1,4 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
@@ -8,17 +10,18 @@ import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
 import { detectRegion, REGION_NAMES, type Region } from '../lib/region';
 import { supabase } from '../lib/supabase';
-import { F, type Palette, setThemeChoice, type ThemeChoice, useTheme, useThemeChoice } from '../theme';
+import { F, type Palette, setFollowPhone, setThemeChoice, THEMES, type ThemeChoice, useFollowPhone, useTheme, useThemeChoice } from '../theme';
 
 const POPULAR = ['Microsoft Defender', 'Mimecast', 'Microsoft 365', 'Windows', 'Fortinet', 'Cisco', 'Okta', 'Google Chrome', 'VMware ESXi', 'Citrix NetScaler'];
 
-type Props = { onDone: () => void };
+type Props = { onDone: () => void; onShowWelcome?: () => void };
 
-export function Preferences({ onDone }: Props) {
+export function Preferences({ onDone, onShowWelcome }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const prefs = usePrefs();
   const themeChoice = useThemeChoice();
+  const followPhone = useFollowPhone();
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const w = Math.min(width - (isTablet ? 48 : 24), 680);
@@ -199,7 +202,7 @@ export function Preferences({ onDone }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={[styles.h, { fontSize: 16 * s }]}>Phone alerts</Text>
               <Text style={[styles.p, { fontSize: 13.5 * s }]}>
-                An alert for every new story, tip and history card. Quiet from 10pm to 7am unless it's critical; the night's news comes in one alert at 7am.
+                Alerts for zero-days, Critical and High stories. Quiet from 10pm to 7am unless it's urgent; the night's news comes in one alert at 7am.
               </Text>
             </View>
             <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
@@ -267,24 +270,36 @@ export function Preferences({ onDone }: Props) {
 
         {/* 3. appearance */}
         <View style={styles.panel}>
-          <Text style={[styles.h, { fontSize: 16 * s }]}>Appearance</Text>
-          <View style={styles.segment}>
-            {(['system', 'light', 'dark'] as ThemeChoice[]).map((t) => {
-              const on = themeChoice === t;
+          <Text style={[styles.h, { fontSize: 16 * s }]}>Look and feel</Text>
+          <View style={styles.themeGrid}>
+            {THEMES.map((t) => {
+              const on = !followPhone && themeChoice === t;
               return (
-                <Pressable key={t} onPress={() => setThemeChoice(t)} style={[styles.segBtn, on && { backgroundColor: C.brand }]} accessibilityState={{ selected: on }}>
-                  <MaterialCommunityIcons
-                    name={t === 'system' ? 'cellphone' : t === 'light' ? 'white-balance-sunny' : 'weather-night'}
-                    size={16}
-                    color={on ? C.onBrand : C.body}
-                  />
-                  <Text style={{ color: on ? C.onBrand : C.body, fontFamily: on ? F.label : F.medium, fontSize: 13.5 * s }}>
-                    {t === 'system' ? 'Phone' : t === 'light' ? 'Light' : 'Dark'}
-                  </Text>
+                <Pressable
+                  key={t}
+                  onPress={() => setThemeChoice(t)}
+                  style={[styles.themeTile, on && { borderColor: C.glass ? '#FFFFFF' : C.brand, borderWidth: 2 }]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${THEME_INFO[t].name} theme`}
+                >
+                  <ThemePreview theme={t} />
+                  <View style={styles.themeNameRow}>
+                    <Text style={{ color: C.text, fontFamily: F.head, fontSize: 14 * s }}>{THEME_INFO[t].name}</Text>
+                    {on && <MaterialCommunityIcons name="check-circle" size={18} color={C.glass ? '#FFFFFF' : C.brand} />}
+                  </View>
+                  <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 11.5 * s, lineHeight: 15 * s, marginTop: 2 }}>{THEME_INFO[t].about}</Text>
                 </Pressable>
               );
             })}
           </View>
+          <View style={[styles.switchRow, { marginTop: 14 }]}>
+            <Text style={{ flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14 * s }}>Match my phone's light or dark mode</Text>
+            <Switch value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
+          </View>
+          <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 12 * s, marginTop: 6, lineHeight: 17 * s }}>
+            When this is on, the app switches between Light and Dark with your phone.
+          </Text>
         </View>
 
         {/* 4. email */}
@@ -336,6 +351,23 @@ export function Preferences({ onDone }: Props) {
         >
           <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>About CyberSid, privacy and contact</Text>
         </Pressable>
+        <Pressable
+          onPress={() =>
+            Linking.openURL(
+              `mailto:cybershort.app@gmail.com?subject=${encodeURIComponent(`CyberSid feedback (version ${Constants.expoConfig?.version ?? ''})`)}`,
+            ).catch(() => {})
+          }
+          hitSlop={8}
+          style={{ alignSelf: 'center', marginTop: 12 }}
+          accessibilityRole="link"
+        >
+          <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>Send feedback</Text>
+        </Pressable>
+        {!!onShowWelcome && (
+          <Pressable onPress={onShowWelcome} hitSlop={8} style={{ alignSelf: 'center', marginTop: 12 }} accessibilityRole="button">
+            <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 13.5 * s }}>How CyberSid works</Text>
+          </Pressable>
+        )}
         {!!appError && (
           <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]} selectable>
             Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}
@@ -346,17 +378,71 @@ export function Preferences({ onDone }: Props) {
   );
 }
 
+const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
+  vivid: { name: 'Vivid', about: 'Each story takes the colours of its picture' },
+  aurora: { name: 'Aurora', about: 'CyberSid blue and purple glow behind glass' },
+  light: { name: 'Light', about: 'Clean white cards' },
+  dark: { name: 'Dark', about: 'Easy on the eyes at night' },
+};
+
+/** A small drawing of each theme, so readers can see it before they pick it. */
+function ThemePreview({ theme }: { theme: ThemeChoice }) {
+  const bar = (top: number, width: string, colour: string, height = 6) => (
+    <View style={{ position: 'absolute', left: 10, top, width: width as `${number}%`, height, borderRadius: 3, backgroundColor: colour }} />
+  );
+  if (theme === 'vivid') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#3a0d12' }]}>
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 52, backgroundColor: '#7a1a22' }} />
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 30, height: 30, backgroundColor: '#3a0d12', opacity: 0.6 }} />
+        {bar(62, '72%', '#FFFFFF')}
+        {bar(73, '50%', '#FFFFFF')}
+        {bar(86, '82%', 'rgba(255,255,255,0.45)', 4)}
+      </View>
+    );
+  }
+  if (theme === 'aurora') {
+    return (
+      <View style={prev.box}>
+        <Image source={require('../../assets/aurora.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <View style={{ position: 'absolute', left: 6, right: 6, top: 8, bottom: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }} />
+        {bar(56, '64%', '#FFFFFF')}
+        {bar(67, '44%', '#FFFFFF')}
+        {bar(80, '70%', 'rgba(255,255,255,0.5)', 4)}
+      </View>
+    );
+  }
+  const dark = theme === 'dark';
+  return (
+    <View style={[prev.box, { backgroundColor: dark ? '#000000' : '#F2F2F7', padding: 6 }]}>
+      <View style={{ flex: 1, borderRadius: 8, overflow: 'hidden', backgroundColor: dark ? '#1C1C1E' : '#FFFFFF' }}>
+        <View style={{ height: 40, backgroundColor: dark ? '#2C3348' : '#D6E0FF' }} />
+      </View>
+      {bar(56, '64%', dark ? '#F5F5F7' : '#1D1D1F')}
+      {bar(67, '44%', dark ? '#F5F5F7' : '#1D1D1F')}
+      {bar(80, '70%', dark ? '#48484A' : '#D1D1D6', 4)}
+    </View>
+  );
+}
+
+const prev = StyleSheet.create({
+  box: { height: 100, borderRadius: 12, overflow: 'hidden' },
+});
+
 const makeStyles = (C: Palette) =>
   StyleSheet.create({
+  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
+  themeTile: { width: '47.5%', flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 7, paddingBottom: 10, backgroundColor: C.glass ? 'rgba(255,255,255,0.06)' : C.dark ? '#121722' : '#FFFFFF' },
+  themeNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 },
   title: { fontFamily: F.brand, color: C.text },
   done: { backgroundColor: C.brand, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7 },
   panel: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 12 },
   h: { fontFamily: F.head, color: C.text },
-  p: { color: C.body, lineHeight: 20, marginTop: 4 },
+  p: { color: C.body, lineHeight: 20, marginTop: 4, fontFamily: F.body },
   small: { color: C.muted, fontFamily: F.label, fontSize: 12, letterSpacing: 0.8, marginTop: 14 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: C.borderSoft, backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 12, marginTop: 12 },
-  input: { flex: 1, color: C.text, paddingVertical: 11 },
+  input: { flex: 1, color: C.text, paddingVertical: 11, fontFamily: F.body },
   suggest: { borderWidth: 1, borderColor: C.border, borderRadius: 12, marginTop: 6, overflow: 'hidden' },
   sRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.border },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
