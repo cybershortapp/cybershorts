@@ -1,0 +1,332 @@
+"""Awareness games and trending decks (release 1.0.4).
+
+Games: a 30 second game written from one story, only for stories where readers can do something
+(scams, breaches, serious flaws in everyday apps). Six styles. A new question that is too close to one
+used in the last 60 days is thrown away, so readers never get the same game twice.
+
+Trending deck: once a day, if a threat group or a product is in several stories at once, a few
+swipeable slides about it, written only from those stories (and the group's MITRE profile), each slide
+with a picture from the news.
+"""
+import hashlib
+import json
+import re
+from datetime import datetime, timedelta, timezone
+from difflib import SequenceMatcher
+
+GAMES_PER_RUN = 4
+GAMES_PER_DAY = 30
+SIMILAR = 0.72          # a new game this close to a recent one is a repeat
+REPEAT_DAYS = 60
+
+# everyday products people have on their own phones and computers: their Critical flaws get a quiz
+CONSUMER = {
+    "Google Chrome", "Chrome", "Windows", "Microsoft 365", "Microsoft Edge", "Firefox", "Safari", "iOS", "iPadOS",
+    "macOS", "Android", "WhatsApp", "Telegram", "Signal", "Zoom", "Samsung", "Pixel", "Outlook", "Microsoft Office",
+}
+
+# official sites for "Which link is real?": the real answer always comes from this list, never from the AI
+OFFICIAL = {
+    "paypal": "www.paypal.com", "amazon": "www.amazon.co.uk", "hmrc": "www.gov.uk", "dvla": "www.gov.uk",
+    "royal mail": "www.royalmail.com", "evri": "www.evri.com", "dpd": "www.dpd.co.uk", "microsoft": "login.microsoftonline.com",
+    "outlook": "outlook.live.com", "apple": "www.apple.com", "icloud": "www.icloud.com", "google": "accounts.google.com",
+    "gmail": "mail.google.com", "netflix": "www.netflix.com", "facebook": "www.facebook.com", "instagram": "www.instagram.com",
+    "whatsapp": "www.whatsapp.com", "linkedin": "www.linkedin.com", "ebay": "www.ebay.co.uk", "booking.com": "www.booking.com",
+    "barclays": "www.barclays.co.uk", "lloyds": "www.lloydsbank.com", "hsbc": "www.hsbc.co.uk", "natwest": "www.natwest.com",
+    "santander": "www.santander.co.uk", "monzo": "monzo.com", "nhs": "www.nhs.uk", "tv licence": "www.tvlicensing.co.uk",
+    "sbi": "onlinesbi.sbi", "state bank of india": "onlinesbi.sbi", "income tax": "www.incometax.gov.in",
+    "india post": "www.indiapost.gov.in", "aadhaar": "uidai.gov.in", "uidai": "uidai.gov.in", "paytm": "paytm.com",
+    "flipkart": "www.flipkart.com", "hdfc": "www.hdfcbank.com", "icici": "www.icicibank.com",
+}
+
+COMMON = """Rules:
+- British English, short, friendly and a little funny, but every fact must be correct.
+- Use only facts from the story below plus general safety advice that is always true. Never invent numbers,
+  company statements or dates.
+- No real phone numbers. Fake web addresses must look plausible but must not be the brand's real site
+  (use typos, extra words or odd endings like .help .info .co, e.g. paypa1-secure.help).
+- No em dashes. Reply with JSON only."""
+
+PROMPTS = {
+    "scam_or_legit": """Write a "Scam or legit?" game for readers of this cyber news story. Players drag each message
+left (scam) or right (legit). Make 4 short messages people might really get that relate to the story: 3 scams
+that copy the tricks in the story and 1 real, safe message (for example a check inside the real app).
+JSON: {"items":[{"from":"sender name, max 24 chars","msg":"the message, max 140 chars","scam":true,
+"why":"one sentence on the giveaway, max 110 chars"}]}""",
+    "patch_or_panic": """Write a 3 question "Patch or panic" quiz for readers of this story about a serious flaw.
+Each question has 3 short options and exactly one right answer about what an ordinary person should do or know.
+JSON: {"questions":[{"q":"max 90 chars","options":["max 60 chars","...","..."],"answer":0,
+"why":"one sentence, max 120 chars"}]}""",
+    "red_flags": """Write a fake message for a "Spot the red flags" game, in the style of the scam in this story.
+Split it into 6 to 7 short lines (sender line, subject, greeting, body lines, a button or link). Exactly 4 lines
+are red flags (odd sender, rush or threat, no name, fake link, odd request). Give each red flag a one sentence
+explanation.
+JSON: {"lines":[{"text":"max 90 chars","flag":true,"why":"max 110 chars"}]}""",
+    "real_link": """Write fake web addresses for a "Which link is real?" game about the brand in this story.
+Give 2 fake addresses that copy the brand in different ways (a letter swap like rn for m or 0 for o, the brand name
+as a sub-part of another site, wrong ending). Mark the part that gives it away.
+JSON: {"ask":"one line question, max 70 chars, e.g. Your parcel. Which link is really Royal Mail?",
+"fakes":[{"url":"address without https://","odd":"the exact part of the address that gives it away",
+"why":"max 100 chars"}]}""",
+    "order_steps": """Write a "What do you do first?" game for readers who may be caught up in this data breach.
+Give the 4 most useful steps in the right order, each max 60 chars, and one sentence on why the first step comes first.
+JSON: {"ask":"max 90 chars, e.g. Your email and password were in this breach. Tap the steps in order.",
+"steps":["first","second","third","fourth"],"why":"max 120 chars"}""",
+}
+
+WORDS = ["Teapot", "Purple", "Rocket", "Pickle", "Lantern", "Otter", "Glacier", "Biscuit", "Cactus", "Marble",
+         "Puffin", "Thunder", "Waffle", "Comet", "Saffron", "Ladder", "Kettle", "Mango", "Falcon", "Velvet", "42", "77"]
+
+
+def _norm(text):
+    return re.sub(r"[^a-z0-9 ]", "", (text or "").lower()).strip()
+
+
+def _core(style, data):
+    """The words that make one game what it is, for spotting repeats."""
+    if style == "scam_or_legit":
+        return " | ".join(i["msg"] for i in data["items"])
+    if style == "patch_or_panic":
+        return " | ".join(q["q"] for q in data["questions"])
+    if style == "red_flags":
+        return " | ".join(l["text"] for l in data["lines"])
+    if style == "real_link":
+        return data["ask"] + " | " + " | ".join(f["url"] for f in data["options"])
+    if style == "order_steps":
+        return " | ".join(data["steps"])
+    return style
+
+
+def _short(s, n):
+    s = re.sub(r"\s+", " ", str(s or "")).strip().replace("—", "-").replace("–", "-")
+    return s if len(s) <= n else s[: n - 1].rstrip() + "…"
+
+
+def _brand(text):
+    t = text.lower()
+    for name, site in OFFICIAL.items():
+        if re.search(rf"\b{re.escape(name)}\b", t):
+            return name, site
+    return None, None
+
+
+def style_for(story, recent_styles):
+    """Which game fits this story (None = no game)."""
+    text = f"{story['headline']} {story['technical']}".lower()
+    cat = story.get("category") or ""
+    if cat in ("Tips", "History", "Other") or story.get("source", "").startswith("CyberSid"):
+        return None
+    scammy = cat == "Scams" or re.search(r"\b(phish\w*|smish\w*|scam\w*|fake (text|email|message|website)s?)\b", text)
+    if scammy:
+        options = ["scam_or_legit", "red_flags"] + (["real_link"] if _brand(text)[0] else [])
+        # take turns with the styles used most recently
+        options.sort(key=lambda s: recent_styles.count(s))
+        return options[0]
+    if cat == "Breaches":
+        if re.search(r"\bpasswords?\b", text) and "crack_meter" not in recent_styles[:6]:
+            return "crack_meter"
+        return "order_steps"
+    serious = story.get("zero_day") or story.get("severity") == "Critical"
+    if serious and set(story.get("products") or []) & CONSUMER:
+        return "patch_or_panic"
+    return None
+
+
+def _check(style, d, story):
+    """Tidy the AI's answer into the exact shape the app draws, or None if it isn't usable."""
+    if style == "scam_or_legit":
+        items = [{"from": _short(i["from"], 24), "msg": _short(i["msg"], 150), "scam": bool(i["scam"]), "why": _short(i["why"], 120)}
+                 for i in d.get("items", []) if i.get("msg") and i.get("from") and i.get("why")][:4]
+        if len(items) < 3 or all(i["scam"] for i in items) or not any(i["scam"] for i in items):
+            return None
+        return {"items": items}
+    if style == "patch_or_panic":
+        qs = []
+        for q in d.get("questions", [])[:3]:
+            opts = [_short(o, 64) for o in q.get("options", [])][:3]
+            a = q.get("answer")
+            if q.get("q") and len(opts) == 3 and isinstance(a, int) and 0 <= a < 3 and q.get("why"):
+                qs.append({"q": _short(q["q"], 100), "options": opts, "answer": a, "why": _short(q["why"], 130)})
+        return {"questions": qs} if len(qs) == 3 else None
+    if style == "red_flags":
+        lines = [{"text": _short(l["text"], 100), "flag": bool(l.get("flag")), "why": _short(l.get("why", ""), 120)}
+                 for l in d.get("lines", []) if l.get("text")][:7]
+        flags = [l for l in lines if l["flag"] and l["why"]]
+        return {"lines": lines} if len(lines) >= 5 and len(flags) == 4 else None
+    if style == "real_link":
+        name, site = _brand(f"{story['headline']} {story['technical']}")
+        fakes = []
+        for f in d.get("fakes", [])[:2]:
+            url = re.sub(r"^https?://", "", str(f.get("url", ""))).strip().strip("/")
+            odd = str(f.get("odd", "")).strip()
+            # a fake must not be the real site, and the giveaway must really be in it
+            if url and odd and odd in url and site not in url.split("/")[0] and f.get("why"):
+                fakes.append({"url": url[:60], "odd": odd, "why": _short(f["why"], 110)})
+        if len(fakes) != 2 or not d.get("ask"):
+            return None
+        real = {"url": site + "/", "odd": "", "why": f"The real one. The site is {site}."}
+        h = int(hashlib.sha1(story["id"].encode()).hexdigest(), 16)
+        options = fakes[:]
+        options.insert(h % 3, real)
+        return {"ask": _short(d["ask"], 80), "options": options, "answer": options.index(real)}
+    if style == "order_steps":
+        steps = [_short(s, 64) for s in d.get("steps", [])][:4]
+        return {"ask": _short(d.get("ask", ""), 100), "steps": steps, "why": _short(d.get("why", ""), 130)} \
+            if len(steps) == 4 and d.get("ask") else None
+    return None
+
+
+def make_games(db, ai, budget, deadline):
+    """Write games for recent stories that fit one. Returns (note, ai_calls)."""
+    now = datetime.now(timezone.utc)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    made_today = len(db.table("games").select("id").gte("created_at", day_start).execute().data)
+    room = min(GAMES_PER_RUN, GAMES_PER_DAY - made_today, budget)
+    if room <= 0:
+        return "none due (daily limit or no AI left)", 0
+    recent = (db.table("games").select("story_id,style,data,fingerprint").gte("created_at", (now - timedelta(days=REPEAT_DAYS)).isoformat())
+              .order("created_at", desc=True).limit(400).execute().data)
+    have = {g["story_id"] for g in recent}
+    recent_styles = [g["style"] for g in recent]
+    recent_cores = [_norm(_core(g["style"], g["data"])) for g in recent if g["style"] != "crack_meter"]
+    stories = (db.table("stories").select("id,source,headline,technical,category,severity,zero_day,products")
+               .gte("created_at", (now - timedelta(hours=36)).isoformat()).order("created_at", desc=True).limit(80).execute().data)
+    made, calls, skipped = [], 0, 0
+    for st in stories:
+        if len(made) >= room or datetime.now(timezone.utc) > deadline or calls >= budget:
+            break
+        if st["id"] in have:
+            continue
+        style = style_for(st, recent_styles)
+        if not style:
+            continue
+        if style == "crack_meter":
+            h = int(hashlib.sha1(st["id"].encode()).hexdigest(), 16)
+            pool = WORDS[:]
+            words = [pool.pop((h >> (i * 5)) % len(pool)) for i in range(8)]
+            data = {"words": words}
+        else:
+            name, site = _brand(f"{st['headline']} {st['technical']}")
+            brand_note = f"\nBrand: {name} (real site {site})" if style == "real_link" else ""
+            try:
+                calls += 1
+                raw = ai.json(PROMPTS[style] + "\n\n" + COMMON,
+                              f"Story headline: {st['headline']}\nStory: {st['technical'][:1400]}{brand_note}", 700)
+            except Exception as ex:
+                print(f"[warn] game for {st['id'][:10]}: {str(ex)[:80]}")
+                continue
+            data = _check(style, raw, st)
+            if not data:
+                skipped += 1
+                continue
+            core = _norm(_core(style, data))
+            if any(SequenceMatcher(None, core, c).ratio() > SIMILAR for c in recent_cores):
+                skipped += 1
+                print(f"[game] skipped a repeat for: {st['headline'][:60]}")
+                continue
+            recent_cores.append(core)
+        fp = hashlib.sha1(_norm(_core(style, data) + st["id"]).encode()).hexdigest()
+        db.table("games").upsert({"id": fp[:20], "story_id": st["id"], "style": style, "data": data, "fingerprint": fp}).execute()
+        recent_styles.insert(0, style)
+        have.add(st["id"])
+        made.append(style)
+        print(f"[game] {style}: {st['headline'][:70]}")
+    note = f"{len(made)} made ({', '.join(made)})" if made else "none due"
+    if skipped:
+        note += f", {skipped} skipped (repeat or unusable)"
+    return note, calls
+
+
+# ---------------------------------------------------------------------------------------------------
+DECK_PROMPT = """Write a trending deck: 6 swipeable slides that explain a cyber security topic that is in the news
+right now, for ordinary readers. Use ONLY the facts in the stories and profile below (plus safety advice that is
+always true). Never invent numbers, victims, dates or quotes. British English. No em dashes.
+Slides in this order:
+1 cover: a punchy title (the group or topic name) and one line on why everyone is talking about it
+2 who or what it is
+3 how they get in or how it works
+4 what happened recently (from the stories, name the victims the stories name)
+5 how to stay safe (3 short points)
+6 your takeaway (one strong line people remember)
+JSON: {"slides":[{"kicker":"max 24 chars, capitals","title":"max 60 chars","text":"max 170 chars or empty",
+"points":["max 80 chars each, 0 to 4 of them"]}]}"""
+
+
+def make_trending(db, ai, budget, deadline):
+    """At most one new deck a day, about a group or product in several stories. Returns (note, ai_calls)."""
+    now = datetime.now(timezone.utc)
+    if budget < 1 or datetime.now(timezone.utc) > deadline:
+        return "skipped (no AI left)", 0
+    if db.table("decks").select("id").gte("created_at", (now - timedelta(hours=20)).isoformat()).execute().data:
+        return "none due (one a day)", 0
+    recent_topics = {d["topic"] for d in db.table("decks").select("topic").gte("created_at", (now - timedelta(days=7)).isoformat()).execute().data}
+    rows = (db.table("stories").select("id,headline,technical,actor_group,products,image_url,country,source,category")
+            .gte("created_at", (now - timedelta(hours=48)).isoformat()).order("created_at", desc=True).limit(150).execute().data)
+    rows = [r for r in rows if not (r.get("source") or "").startswith("CyberSid")]
+    by_group, by_product = {}, {}
+    for r in rows:
+        if r.get("actor_group"):
+            by_group.setdefault(r["actor_group"], []).append(r)
+        for p in set(r.get("products") or []):
+            by_product.setdefault(p, []).append(r)
+    topic, kind, picked = None, None, []
+    for gid, items in sorted(by_group.items(), key=lambda x: -len(x[1])):
+        if len(items) >= 2 and gid not in recent_topics:
+            topic, kind, picked = gid, "group", items
+            break
+    if not topic:
+        for p, items in sorted(by_product.items(), key=lambda x: -len(x[1])):
+            if len(items) >= 3 and p not in recent_topics:
+                topic, kind, picked = p, "product", items
+                break
+    if not topic:
+        return "none due (nothing trending)", 0
+    picked = picked[:6]
+    name, profile = topic, ""
+    if kind == "group":
+        g = db.table("threat_groups").select("name,aliases,summary,methods,campaigns").eq("id", topic).limit(1).execute().data
+        if g:
+            g = g[0]
+            name = g["name"]
+            profile = (f"\nGroup profile (MITRE ATT&CK): {g['name']}, also called {', '.join((g.get('aliases') or [])[:4])}. "
+                       f"{(g.get('summary') or '')[:700]}\nKnown methods: {', '.join((g.get('methods') or [])[:8])}")
+    listing = "\n".join(f"- {r['headline']}: {r['technical'][:500]}" for r in picked)
+    try:
+        raw = ai.json(DECK_PROMPT, f"Topic: {name}{profile}\n\nStories:\n{listing}", 1400)
+    except Exception as ex:
+        return f"problem: {str(ex)[:80]}", 1
+    slides = []
+    for s in raw.get("slides", [])[:6]:
+        title = _short(s.get("title"), 70)
+        if not title:
+            continue
+        slides.append({"kicker": _short(s.get("kicker"), 28).upper(), "title": title, "text": _short(s.get("text"), 190),
+                       "points": [_short(p, 90) for p in (s.get("points") or [])[:4] if p]})
+    if len(slides) < 5:
+        return "skipped (AI reply unusable)", 1
+    pics = [r["image_url"] for r in picked if r.get("image_url")]
+    for i, s in enumerate(slides):
+        s["image"] = pics[i % len(pics)] if pics else None
+    countries = {r.get("country") or "INTL" for r in picked}
+    deck = {
+        "id": hashlib.sha1(f"{topic}|{now.date()}".encode()).hexdigest()[:20],
+        "topic": topic, "title": _short(name, 60), "slides": slides,
+        "story_ids": [r["id"] for r in picked],
+        "country": countries.pop() if len(countries) == 1 else "INTL",
+        "expires_at": (now + timedelta(days=3)).isoformat(),
+    }
+    db.table("decks").upsert(deck).execute()
+    print(f"[deck] {name}: {len(slides)} slides from {len(picked)} stories")
+    return f"new deck: {name}", 1
+
+
+if __name__ == "__main__":
+    # quick offline check of the game picker and the answer checks (no database, no AI)
+    s = {"id": "x1", "source": "BBC", "headline": "Fake Royal Mail texts ask for a redelivery fee",
+         "technical": "Scam texts pretending to be Royal Mail ask people to pay a small fee.", "category": "Scams",
+         "severity": "High", "zero_day": False, "products": []}
+    print(style_for(s, []), style_for(s, ["scam_or_legit"]), style_for(s, ["scam_or_legit", "red_flags"]))
+    d = {"ask": "Your parcel. Which link is really Royal Mail?",
+         "fakes": [{"url": "royalmail-redelivery.info/pay", "odd": "-redelivery.info", "why": "Not royalmail.com."},
+                   {"url": "r0yalmail.com/fee", "odd": "0", "why": "A zero instead of an o."}]}
+    print(json.dumps(_check("real_link", d, s)))
