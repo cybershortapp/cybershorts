@@ -49,31 +49,39 @@ APP_UA = "okhttp/4.12.0"   # what the Android app's picture loader sends
 PHONE_FORMATS = ("image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif")
 
 
-def image_problem(url, min_width=480):
-    """Why the story's own picture would NOT show well in the app, or None if it's fine.
-    Checks: https, a format every phone can show, big enough, and the site lets an app load it
+def picture_width(url):
+    """(width, None) when the app can show the picture, else (0, why not).
+    Checks: https, a format every phone can show, and the site lets an app load it
     (some sites only serve pictures to browsers coming from their own pages)."""
     if not url:
-        return "no picture"
+        return 0, "no picture"
     if not url.lower().startswith("https://"):
-        return "plain http (Android blocks it)"
+        return 0, "plain http (Android blocks it)"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": APP_UA, "Accept": "image/webp,image/*"})
         with urllib.request.urlopen(req, timeout=8) as r:
             ctype = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
             if ctype not in PHONE_FORMATS:
-                return f"format {ctype or 'unknown'}"
+                return 0, f"format {ctype or 'unknown'}"
             data = r.read(600_000)
     except urllib.error.HTTPError as ex:
-        return f"site refused the app (HTTP {ex.code})"
+        return 0, f"site refused the app (HTTP {ex.code})"
     except Exception as ex:
-        return f"could not load ({str(ex)[:40]})"
+        return 0, f"could not load ({str(ex)[:40]})"
     if len(data) < 4000:
-        return "too small"
+        return 0, "too small"
     try:
-        w, _ = Image.open(io.BytesIO(data)).size
+        w, _ = Image.open(io.BytesIO(data)).size   # the size is in the header, so a cut-off big file is fine
     except Exception:
-        return "not a readable picture"
+        return 0, "not a readable picture"
+    return w, None
+
+
+def image_problem(url, min_width=480):
+    """Why the story's own picture would NOT show well in the app, or None if it's fine."""
+    w, why = picture_width(url)
+    if why:
+        return why
     return None if w >= min_width else f"too small ({w}px wide)"
 
 
