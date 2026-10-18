@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 from sources import SOURCES
 from data_feeds import READERS
 from tags import tag_products, is_zero_day
-from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, usable_image
+from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, picture_width, usable_image
 
 load_dotenv()
 
@@ -381,6 +381,53 @@ def image_from_html(page_html, base_url):
     return None
 
 
+# Phone screens are 1,080 to 1,290 dots wide and our own AI pictures are 1,024, so a news picture
+# should be at least 1,000 wide to look sharp. 720 is the lowest we accept when nothing bigger exists.
+CLEAR_WIDTH = 1000
+OK_WIDTH = 720
+SIZE_IN_NAME = re.compile(r"-\d{2,4}x\d{2,4}(?=\.(?:jpe?g|png|webp)(?:[?#]|$))", re.I)
+SIZE_PARAMS = {"w", "h", "width", "height", "resize", "fit", "crop", "quality", "q", "strip"}
+
+
+def bigger_versions(url):
+    """The same picture at full size: many sites put a small size in the link
+    (photo-300x200.jpg, photo.jpg?w=400 or ?resize=400,225). Returns the links to try first."""
+    out = []
+    plain = SIZE_IN_NAME.sub("", url)
+    parts = urllib.parse.urlsplit(plain)
+    if parts.query:
+        keep = [(k, v) for k, v in urllib.parse.parse_qsl(parts.query, keep_blank_values=True) if k.lower() not in SIZE_PARAMS]
+        no_size = urllib.parse.urlunsplit(parts._replace(query=urllib.parse.urlencode(keep)))
+    else:
+        no_size = plain
+    for c in (no_size, plain):
+        if c != url and c not in out:
+            out.append(c)
+    return out
+
+
+def clear_image(candidates):
+    """The sharpest picture we can find for a story: the article's own share picture and the feed's,
+    each also tried at full size. First one 1,000+ wide wins; else the first 720+ wide; else None."""
+    from concurrent.futures import ThreadPoolExecutor
+    tries = []
+    for c in candidates:
+        if c and good_image(c):
+            for v in bigger_versions(c) + [c]:
+                if v not in tries:
+                    tries.append(v)
+    tries = tries[:6]
+    if not tries:
+        return None
+    with ThreadPoolExecutor(6) as pool:
+        widths = [w for w, _ in pool.map(picture_width, tries)]
+    for need in (CLEAR_WIDTH, OK_WIDTH):
+        for url, w in zip(tries, widths):
+            if w >= need:
+                return url
+    return None
+
+
 def fetch_article(link):
     """Download the article page once. Returns (html, final_url) or ("", link) on failure."""
     try:
@@ -670,13 +717,23 @@ def recheck_pictures(db, since, limit=15):
     """Recent stories whose news-site picture no longer loads in the app (some sites start blocking apps
     after a while): the picture is removed, so the AI picture step gives the card a new one."""
     from concurrent.futures import ThreadPoolExecutor
-    rows = (db.table("stories").select("id,source,image_url").not_.is_("image_url", "null")
-            .gte("created_at", since).order("created_at", desc=True).limit(60).execute().data)
+    rows = (db.table("stories").select("id,source,url,image_url").not_.is_("image_url", "null")
+            .gte("created_at", since).order("created_at", desc=True).limit(max(60, limit * 3)).execute().data)
     rows = [r for r in rows if "/object/public/covers/" not in r["image_url"]][:limit]
     with ThreadPoolExecutor(8) as pool:
-        problems = list(pool.map(lambda r: image_problem(r["image_url"]), rows))
-    bad = []
-    for r, why in zip(rows, problems):
+        widths = list(pool.map(lambda r: picture_width(r["image_url"]), rows))
+    bad, tries = [], 0
+    for r, (w, why) in zip(rows, widths):
+        if not why and w < CLEAR_WIDTH:
+            tries += 1
+            if tries > 8:      # each look costs a few seconds; the rest wait for the next run
+                continue
+            # shows, but soft on a phone: look for the full size picture (keep this one if there is none)
+            sharper = clear_image([r["image_url"], article_image(r["url"])])
+            if sharper and sharper != r["image_url"] and picture_width(sharper)[0] > w:
+                db.table("stories").update({"image_url": sharper, "tint": None}).eq("id", r["id"]).execute()
+                print(f"[sharper] {r['source']}: {w}px -> {sharper[:80]}")
+            continue
         # only clear refusals; a slow or flaky site this minute keeps its picture
         if why and not why.startswith("could not load"):
             db.table("stories").update({"image_url": None, "tint": None}).eq("id", r["id"]).execute()
@@ -872,9 +929,12 @@ def main():
                                 sources=sorted({x["source"] for x in chain if x.get("source") != "article"}))
             group = match_group(group_index, title, text_for_ai)
 
-            image = feed_image(e) or (image_from_html(page, final_url) if page else None)
-            if image and COVERS and not usable_image(image):
-                image = None   # broken or tiny picture: an AI picture looks better
+            share_pic = image_from_html(page, final_url) if page else None
+            if COVERS:
+                # the sharpest version we can find; a small or broken one gets an AI picture instead
+                image = clear_image([share_pic, feed_image(e)])
+            else:
+                image = share_pic or feed_image(e)
             story = {
                 "id": sid, "source": pub, "url": link, "orig_title": title,
                 "headline": s["headline"], "technical": s["technical"],
@@ -972,7 +1032,10 @@ def main():
     if db and COVERS and not TEST_MODE:
         try:
             try:
-                blocked = recheck_pictures(db, (started - timedelta(hours=12)).isoformat())
+                # once a day, also look back 3 days for pictures that could be sharper
+                deep = started.hour == 3
+                blocked = recheck_pictures(db, (started - timedelta(hours=72 if deep else 12)).isoformat(),
+                                           limit=40 if deep else 15)
                 if blocked:
                     print(f"[pic] news-site pictures that stopped loading, getting an AI picture: {'; '.join(blocked)}")
             except Exception as ex:
