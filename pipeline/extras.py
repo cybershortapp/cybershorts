@@ -176,6 +176,18 @@ def _check(style, d, story):
     return None
 
 
+LIST_KEY = {"scam_or_legit": "items", "patch_or_panic": "questions", "red_flags": "lines", "real_link": "fakes", "order_steps": "steps"}
+
+
+def _as_dict(raw, key):
+    """Some AI models reply with just the list; put it where we expect it."""
+    if isinstance(raw, list):
+        if len(raw) == 1 and isinstance(raw[0], dict) and key not in raw[0]:
+            return raw[0] if any(isinstance(v, list) for v in raw[0].values()) else {key: raw}
+        return {key: raw}
+    return raw if isinstance(raw, dict) else {}
+
+
 def make_games(db, ai, budget, deadline):
     """Write games for recent stories that fit one. Returns (note, ai_calls)."""
     now = datetime.now(timezone.utc)
@@ -215,7 +227,11 @@ def make_games(db, ai, budget, deadline):
             except Exception as ex:
                 print(f"[warn] game for {st['id'][:10]}: {str(ex)[:80]}")
                 continue
-            data = _check(style, raw, st)
+            try:
+                data = _check(style, _as_dict(raw, LIST_KEY[style]), st)
+            except Exception as ex:
+                print(f"[warn] game answer for {st['id'][:10]} unusable: {str(ex)[:60]}")
+                data = None
             if not data:
                 skipped += 1
                 continue
@@ -295,8 +311,9 @@ def make_trending(db, ai, budget, deadline):
         raw = ai.json(DECK_PROMPT, f"Topic: {name}{profile}\n\nStories:\n{listing}", 1400)
     except Exception as ex:
         return f"problem: {str(ex)[:80]}", 1
+    raw = _as_dict(raw, "slides")
     slides = []
-    for s in raw.get("slides", [])[:6]:
+    for s in [x for x in raw.get("slides", []) if isinstance(x, dict)][:6]:
         title = _short(s.get("title"), 70)
         if not title:
             continue
