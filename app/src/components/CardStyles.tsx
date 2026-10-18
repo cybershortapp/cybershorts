@@ -33,12 +33,22 @@ export const STYLE_BG: Record<Props['kind'], string> = { magazine: '#000000', ne
 const labelOf = (s: Story) => (s.zero_day ? 'Zero-day' : s.severity === 'Critical' ? 'Critical' : null);
 const aiPicture = (s: Story) => !!s.image_url && s.image_url.includes('/object/public/covers/');
 
+/** The CHAIN tab, the same as on Standard cards: blue, at the right edge of the card, just below the picture. */
+function ChainTab({ onPress, s, style }: { onPress: () => void; s: number; style?: object }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={6} style={[styles.chainTab, { paddingVertical: 7 * s, width: 46 * s }, style]} accessibilityLabel="Show attack chain">
+      <MaterialCommunityIcons name="link-variant" size={18 * s} color="#FFFFFF" />
+      <Text style={[styles.chainTabText, { fontSize: 9.5 * s }]}>CHAIN</Text>
+    </Pressable>
+  );
+}
+
 /** The summary with its key facts picked out (bold, colour), styled per card style. */
 function Rich({ text, story, base, marks, lines }: {
   text: string; story: Story; base: TextStyle; marks: Record<Exclude<Mark, null>, TextStyle>; lines?: number;
 }) {
   return (
-    <Text style={base} numberOfLines={lines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
+    <Text style={base} numberOfLines={lines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
       {highlight(text, story).map((p, i) => (p.mark ? <Text key={i} style={marks[p.mark]}>{p.text}</Text> : p.text))}
     </Text>
   );
@@ -115,10 +125,15 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
         <Pressable onPress={onOpen} style={{ height: cover - 230 * s }} accessibilityLabel="Open article" />
         <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.85)', '#000']} locations={[0, 0.6, 1]} style={{ height: 90 * s }} />
         <View style={{ backgroundColor: '#000', paddingHorizontal: 22 * s, paddingBottom: 30 }}>
-          {!!label && (
-            <View style={[styles.magPill, { backgroundColor: '#FF4D3D' }]}>
-              {story.zero_day && <MaterialCommunityIcons name="lightning-bolt" size={13 * s} color="#fff" />}
-              <Text style={{ color: '#fff', fontFamily: F.head, fontSize: 12.5 * s }}>{label}</Text>
+          {(!!label || !!onChain) && (
+            <View style={{ minHeight: onChain ? 46 * s : 0, justifyContent: 'center', paddingRight: onChain ? 40 * s : 0 }}>
+              {!!label && (
+                <View style={[styles.magPill, { backgroundColor: '#FF4D3D' }]}>
+                  {story.zero_day && <MaterialCommunityIcons name="lightning-bolt" size={13 * s} color="#fff" />}
+                  <Text style={{ color: '#fff', fontFamily: F.head, fontSize: 12.5 * s }}>{label}</Text>
+                </View>
+              )}
+              {!!onChain && <ChainTab onPress={onChain} s={s} style={{ position: 'absolute', top: 0, right: -22 * s }} />}
             </View>
           )}
           <Text style={{ color: '#fff', fontFamily: F.brand, fontSize: 33 * s, lineHeight: 37 * s, letterSpacing: -1, marginTop: 12 }}>{story.headline}</Text>
@@ -138,10 +153,10 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
           />
           {!!story.why_it_matters && (
             <View style={styles.magBox}>
-              <Text style={{ color: '#FFFFFF', fontFamily: F.label, fontSize: 16 * s, lineHeight: 23 * s }}>{story.why_it_matters}</Text>
+              <Text style={{ color: '#FFFFFF', fontFamily: F.label, fontSize: 16 * s, lineHeight: 23 * s, textAlign: 'justify' }} android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
             </View>
           )}
-          <Actions color="#FFFFFF" muted="#9A9A9A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onChain={onChain} onOpen={onOpen} s={s} pill />
+          <Actions color="#FFFFFF" muted="#9A9A9A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onOpen={onOpen} s={s} pill />
           {!!onNext && (
             <Pressable onPress={onNext} style={{ alignSelf: 'center', marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 6 }} hitSlop={10}>
               <Text style={{ color: '#9A9A9A', fontFamily: F.medium, fontSize: 13 * s }}>Next story</Text>
@@ -206,15 +221,18 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
           />
         </Pressable>
       )}
-      <Text style={{ fontFamily: F.medium, fontSize: 11 * s, color: '#4A453A', marginTop: 4 }} numberOfLines={1}>
-        {showImage ? (aiPicture(story) ? 'Illustration' : 'Picture') + ' · ' : ''}Reported by {story.source}
-      </Text>
+      <View style={{ minHeight: onChain ? 46 * s : 0, paddingRight: onChain ? 36 * s : 0, marginTop: 4, justifyContent: onChain ? 'center' : 'flex-start' }}>
+        <Text style={{ fontFamily: F.medium, fontSize: 11 * s, color: '#4A453A' }} numberOfLines={1}>
+          {showImage ? (aiPicture(story) ? 'Illustration' : 'Picture') + ' · ' : ''}Reported by {story.source}
+        </Text>
+        {!!onChain && <ChainTab onPress={onChain} s={s} style={{ position: 'absolute', top: 0, right: -18 * s }} />}
+      </View>
 
       <Pressable style={{ flex: 1, overflow: 'hidden', marginTop: 10 }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
         <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false} android_hyphenationFrequency="normal">
           {story.technical}
         </Text>
-        <Text style={body} numberOfLines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
+        <Text style={body} numberOfLines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
           <Text style={{ fontFamily: FS.serifBold }}>{lead}</Text>
           {highlight(rest, story).map((pc, i) => (pc.mark ? <Text key={i} style={marks[pc.mark]}>{pc.text}</Text> : pc.text))}
         </Text>
@@ -223,10 +241,10 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
 
       {!!story.why_it_matters && (
         <View style={styles.paperWhy}>
-          <Text style={{ fontFamily: F.label, fontSize: 14.5 * s, lineHeight: 21 * s, color: INK }} numberOfLines={3}>{story.why_it_matters}</Text>
+          <Text style={{ fontFamily: F.label, fontSize: 14.5 * s, lineHeight: 21 * s, color: INK, textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
         </View>
       )}
-      <Actions color={INK} muted="#5C564A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onChain={onChain} onOpen={onOpen} s={s} />
+      <Actions color={INK} muted="#5C564A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onOpen={onOpen} s={s} />
     </View>
   );
 }
@@ -285,7 +303,9 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
           </Pressable>
         )}
 
-        <Pressable onPress={onOpen} style={styles.termBox}>
+        <View>
+        {!!onChain && <ChainTab onPress={onChain} s={s} style={{ position: 'absolute', top: 14, right: -18 * s, zIndex: 2 }} />}
+        <Pressable onPress={onOpen} style={[styles.termBox, !!onChain && { marginRight: 30 * s }]}>
           {!!label && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <Text style={{ backgroundColor: '#FF4D4D', color: '#000', fontFamily: FS.monoBold, fontSize: 12.5 * s, paddingHorizontal: 7, paddingVertical: 1 }}>
@@ -295,6 +315,7 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
           )}
           <Text style={{ color: '#FFFFFF', fontFamily: FS.monoBold, fontSize: 19 * s, lineHeight: 26 * s }} numberOfLines={3}>{story.headline}</Text>
         </Pressable>
+        </View>
 
         <Text style={[mono(13), { marginTop: 16 }]}>&gt; cat summary.txt</Text>
         <Pressable style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
@@ -308,17 +329,10 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
         {!!story.why_it_matters && (
           <>
             <Text style={[mono(13), { marginTop: 10 }]}>&gt; ./takeaway</Text>
-            <Text style={{ color: GREEN, fontFamily: FS.monoBold, fontSize: 14.5 * s, lineHeight: lh }} numberOfLines={3}>
+            <Text style={{ color: GREEN, fontFamily: FS.monoBold, fontSize: 14.5 * s, lineHeight: lh, textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal">
               [!] {story.why_it_matters}
             </Text>
           </>
-        )}
-        {!!onChain && (
-          <Pressable onPress={onChain} hitSlop={8} style={{ marginTop: 10, marginBottom: 6 }} accessibilityLabel="Show attack chain">
-            <Text style={mono(13, GREEN)}>
-              &gt; open attack_chain <Text style={{ backgroundColor: GREEN, color: GREEN }}> </Text>
-            </Text>
-          </Pressable>
         )}
       </View>
       <View style={styles.termBar}>
@@ -383,5 +397,7 @@ const styles = StyleSheet.create({
   termWin: { marginTop: 12, borderWidth: 1, borderColor: '#2A3D32', borderRadius: 8, overflow: 'hidden' },
   termWinBar: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#0E1511', borderBottomWidth: 1, borderBottomColor: '#2A3D32' },
   termDot: { width: 8, height: 8, borderRadius: 4 },
+  chainTab: { alignItems: 'center', gap: 2, backgroundColor: '#2563F5', borderTopLeftRadius: 14, borderBottomLeftRadius: 14 },
+  chainTabText: { color: '#FFFFFF', fontFamily: F.brand, letterSpacing: 0.8, marginTop: 1 },
   termBar: { flexDirection: 'row', alignItems: 'center', gap: 16, height: 44, paddingHorizontal: 18, backgroundColor: '#0E1912', borderTopWidth: 1, borderTopColor: '#1D2B23' },
 });

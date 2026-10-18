@@ -239,7 +239,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           >
             {story.technical}
           </Text>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
+          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
             {story.technical}
           </Text>
           {truncated && (
@@ -250,7 +250,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
         {!!story.why_it_matters && (
           <View style={[styles.why, { padding: L.pad * 0.75, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
-            <Text numberOfLines={3} style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label, flex: 1 }}>
+            <Text numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal" style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label, flex: 1, textAlign: 'justify' }}>
               {story.why_it_matters}
             </Text>
           </View>
@@ -384,7 +384,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 12 }}>
           <Text style={{ color: C.body, fontSize: 16, lineHeight: 24, textAlign: 'justify' }} selectable android_hyphenationFrequency="normal">{story.technical}</Text>
           {!!story.why_it_matters && (
-            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14 }}>{story.why_it_matters}</Text>
+            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14, textAlign: 'justify' }} android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
           )}
           <Pressable onPress={() => { setSheet(null); openArticle(); }} style={{ marginTop: 16 }} accessibilityRole="link">
             <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 15 }}>Read full story on {story.source}</Text>
