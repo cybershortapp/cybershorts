@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, type TextStyle, View } from 'react-native';
+import { Animated, Image as RNImage, Pressable, StyleSheet, Text, type TextStyle, View } from 'react-native';
 
 import { highlight, type Mark } from '../lib/highlight';
 import { timeAgo } from '../lib/time';
@@ -38,7 +38,7 @@ function Rich({ text, story, base, marks, lines }: {
   text: string; story: Story; base: TextStyle; marks: Record<Exclude<Mark, null>, TextStyle>; lines?: number;
 }) {
   return (
-    <Text style={base} numberOfLines={lines} ellipsizeMode="tail">
+    <Text style={base} numberOfLines={lines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
       {highlight(text, story).map((p, i) => (p.mark ? <Text key={i} style={marks[p.mark]}>{p.text}</Text> : p.text))}
     </Text>
   );
@@ -128,7 +128,7 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
           <Rich
             text={story.technical}
             story={story}
-            base={{ color: '#EDEDED', fontFamily: FS.serif, fontSize: 17 * s, lineHeight: 29 * s, marginTop: 18 }}
+            base={{ color: '#EDEDED', fontFamily: FS.serif, fontSize: 17 * s, lineHeight: 29 * s, marginTop: 18, textAlign: 'justify' }}
             marks={{
               cve: { fontFamily: F.head, color: '#FFFFFF' },
               product: { fontFamily: F.head, color: '#FFFFFF' },
@@ -171,7 +171,7 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
   const words = story.technical.split(' ');
   const lead = words.slice(0, 3).join(' ');
   const rest = ' ' + words.slice(3).join(' ');
-  const body = { color: INK, fontFamily: FS.serif, fontSize: 16 * s, lineHeight: lh };
+  const body = { color: INK, fontFamily: FS.serif, fontSize: 16 * s, lineHeight: lh, textAlign: 'justify' as const };
   const marks = {
     cve: { fontFamily: FS.serifBold },
     product: { fontFamily: FS.serifBold },
@@ -211,10 +211,10 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
       </Text>
 
       <Pressable style={{ flex: 1, overflow: 'hidden', marginTop: 10 }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
-        <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false}>
+        <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false} android_hyphenationFrequency="normal">
           {story.technical}
         </Text>
-        <Text style={body} numberOfLines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} ellipsizeMode="tail">
+        <Text style={body} numberOfLines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
           <Text style={{ fontFamily: FS.serifBold }}>{lead}</Text>
           {highlight(rest, story).map((pc, i) => (pc.mark ? <Text key={i} style={marks[pc.mark]}>{pc.text}</Text> : pc.text))}
         </Text>
@@ -237,12 +237,12 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
 const GREEN = '#4ADE80';
 const DIM = '#86A894';
 
-function Terminal({ story, width, saved, onOpen, onSave, onShare, onReport, onReadMore, onChain }: Props) {
+function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave, onShare, onReport, onReadMore, onChain }: Props) {
   const s = Math.min(width / 390, 1.3);
   const lh = 23 * s;
   const fit = useFit(lh);
   const label = labelOf(story);
-  const body = { color: '#E9FFF0', fontFamily: FS.mono, fontSize: 14.5 * s, lineHeight: lh };
+  const body = { color: '#E9FFF0', fontFamily: FS.mono, fontSize: 14.5 * s, lineHeight: lh, textAlign: 'justify' as const };
   const marks = {
     cve: { color: '#7DD3FC', fontFamily: FS.monoBold },
     product: { color: '#FFFFFF', fontFamily: FS.monoBold },
@@ -259,6 +259,32 @@ function Terminal({ story, width, saved, onOpen, onSave, onShare, onReport, onRe
         </Text>
         <Text style={mono(12)} numberOfLines={1}>source: {story.source.toLowerCase()} · {timeAgo(story.published_at)}</Text>
 
+        {showImage && (
+          // the story picture in a terminal window, in green screen colours with scan lines
+          <Pressable onPress={onOpen} style={styles.termWin} accessibilityRole="imagebutton" accessibilityLabel="Story picture, opens the full story">
+            <View style={styles.termWinBar}>
+              <View style={[styles.termDot, { backgroundColor: '#FF5F57' }]} />
+              <View style={[styles.termDot, { backgroundColor: '#FEBC2E' }]} />
+              <View style={[styles.termDot, { backgroundColor: '#28C840' }]} />
+              <Text style={[mono(11), { marginLeft: 6 }]} numberOfLines={1}>{aiPicture(story) ? 'illustration.jpg' : 'cover.jpg'}</Text>
+            </View>
+            <View style={{ height: Math.round((width - 36 * s) * 0.4), backgroundColor: '#0B1A12' }}>
+              <Image
+                source={{ uri: story.image_url! }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                transition={150}
+                onError={onImageError}
+                recyclingKey={story.id}
+                cachePolicy="memory-disk"
+              />
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: '#2BE07A', mixBlendMode: 'color', opacity: 0.9 }]} />
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,20,8,0.18)' }]} />
+              <RNImage source={require('../../assets/scanlines.png')} resizeMode="repeat" style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} />
+            </View>
+          </Pressable>
+        )}
+
         <Pressable onPress={onOpen} style={styles.termBox}>
           {!!label && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -267,12 +293,12 @@ function Terminal({ story, width, saved, onOpen, onSave, onShare, onReport, onRe
               </Text>
             </View>
           )}
-          <Text style={{ color: '#FFFFFF', fontFamily: FS.monoBold, fontSize: 19 * s, lineHeight: 26 * s }} numberOfLines={4}>{story.headline}</Text>
+          <Text style={{ color: '#FFFFFF', fontFamily: FS.monoBold, fontSize: 19 * s, lineHeight: 26 * s }} numberOfLines={3}>{story.headline}</Text>
         </Pressable>
 
         <Text style={[mono(13), { marginTop: 16 }]}>&gt; cat summary.txt</Text>
         <Pressable style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
-          <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false}>
+          <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false} android_hyphenationFrequency="normal">
             {story.technical}
           </Text>
           <Rich text={story.technical} story={story} base={body} marks={marks} lines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} />
@@ -354,5 +380,8 @@ const styles = StyleSheet.create({
   paperMeta: { fontFamily: F.label, color: INK },
   paperWhy: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: INK, paddingVertical: 8, marginTop: 8 },
   termBox: { marginTop: 14, borderWidth: 1, borderColor: '#2A3D32', borderRadius: 8, padding: 14 },
+  termWin: { marginTop: 12, borderWidth: 1, borderColor: '#2A3D32', borderRadius: 8, overflow: 'hidden' },
+  termWinBar: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#0E1511', borderBottomWidth: 1, borderBottomColor: '#2A3D32' },
+  termDot: { width: 8, height: 8, borderRadius: 4 },
   termBar: { flexDirection: 'row', alignItems: 'center', gap: 16, height: 44, paddingHorizontal: 18, backgroundColor: '#0E1912', borderTopWidth: 1, borderTopColor: '#1D2B23' },
 });

@@ -231,14 +231,15 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         >
           {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
           <Text
-            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
+            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }}
+            android_hyphenationFrequency="normal"
             onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / L.bodyLine))}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
             {story.technical}
           </Text>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail">
+          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail" android_hyphenationFrequency="normal">
             {story.technical}
           </Text>
           {truncated && (
@@ -381,7 +382,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
       {sheet === 'summary' && (
       <Sheet visible title={story.headline} onClose={() => setSheet(null)}>
         <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 12 }}>
-          <Text style={{ color: C.body, fontSize: 16, lineHeight: 24 }} selectable>{story.technical}</Text>
+          <Text style={{ color: C.body, fontSize: 16, lineHeight: 24, textAlign: 'justify' }} selectable android_hyphenationFrequency="normal">{story.technical}</Text>
           {!!story.why_it_matters && (
             <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14 }}>{story.why_it_matters}</Text>
           )}
