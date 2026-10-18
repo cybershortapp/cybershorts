@@ -2,13 +2,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alertsAvailable, enableAlerts } from '../lib/notifications';
 import { setPrefs, usePrefs } from '../lib/prefs';
 import { detectRegion, type Region } from '../lib/region';
-import { F, type Palette, useTheme } from '../theme';
+import { CARD_STYLES, F, type Palette, setCardStyle, setFollowPhone, setThemeChoice, THEMES, useCardStyle, useFollowPhone, useTheme, useThemeChoice } from '../theme';
+import { STYLE_INFO, StylePreview, THEME_INFO, ThemePreview } from './Preferences';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -25,7 +26,7 @@ const markDone = () => AsyncStorage.setItem(KEY, '1').catch(() => {});
 
 const QUICK = ['Microsoft 365', 'Windows', 'Google Chrome', 'Android', 'iOS', 'WhatsApp', 'Fortinet', 'Cisco', 'VMware ESXi', 'Okta'];
 
-/** Three short screens on first open: what CyberSid is, what you follow, and alerts. Can be skipped. */
+/** Four short screens on first open: what CyberSid is, what you follow, how it looks, and alerts. Can be skipped. */
 export function Welcome({ onDone }: { onDone: () => void }) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
@@ -33,6 +34,10 @@ export function Welcome({ onDone }: { onDone: () => void }) {
   const { width } = useWindowDimensions();
   const k = width >= 600 ? 1.25 : 1;
   const [step, setStep] = useState(0);
+  const themeChoice = useThemeChoice();
+  const followPhone = useFollowPhone();
+  const cardStyle = useCardStyle();
+  const LAST = 3;
   const region: Region = (prefs.region || detectRegion()) as Region;
 
   const finish = () => {
@@ -63,7 +68,7 @@ export function Welcome({ onDone }: { onDone: () => void }) {
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <View style={styles.top}>
         <View style={styles.dots}>
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2, 3].map((i) => (
             <View key={i} style={[styles.dot, i === step && styles.dotOn]} />
           ))}
         </View>
@@ -120,6 +125,48 @@ export function Welcome({ onDone }: { onDone: () => void }) {
 
         {step === 2 && (
           <>
+            <Text style={[styles.title, { fontSize: 26 * k, lineHeight: 32 * k }]}>Pick your look</Text>
+            <Text style={[styles.lead, { fontSize: 15 * k, lineHeight: 22 * k }]}>Choose a theme and a card style. You can change both any time in settings.</Text>
+            <Text style={[styles.sub, { fontSize: 15 * k, marginTop: 4 }]}>Theme</Text>
+            <View style={styles.grid}>
+              {THEMES.map((t) => {
+                const on = !followPhone && themeChoice === t;
+                return (
+                  <Pressable key={t} onPress={() => setThemeChoice(t)} style={[styles.tile, on && styles.tileOn]} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={`${THEME_INFO[t].name} theme`}>
+                    <ThemePreview theme={t} />
+                    <View style={styles.tileRow}>
+                      <Text style={{ color: C.text, fontFamily: F.head, fontSize: 14 * k }}>{THEME_INFO[t].name}</Text>
+                      {on && <MaterialCommunityIcons name="check-circle" size={18} color={C.glass ? '#FFFFFF' : C.brand} />}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={styles.switchRow}>
+              <Text style={{ flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14 * k }}>Match my phone's light or dark mode</Text>
+              <Switch value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
+            </View>
+            <Text style={[styles.sub, { fontSize: 15 * k }]}>Card style</Text>
+            <View style={styles.grid}>
+              {CARD_STYLES.map((t) => {
+                const on = cardStyle === t;
+                return (
+                  <Pressable key={t} onPress={() => setCardStyle(t)} style={[styles.tile, on && styles.tileOn]} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={`${STYLE_INFO[t].name} card style`}>
+                    <StylePreview kind={t} />
+                    <View style={styles.tileRow}>
+                      <Text style={{ color: C.text, fontFamily: F.head, fontSize: 14 * k }}>{STYLE_INFO[t].name}</Text>
+                      {on && <MaterialCommunityIcons name="check-circle" size={18} color={C.glass ? '#FFFFFF' : C.brand} />}
+                    </View>
+                    <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 11.5 * k, lineHeight: 15 * k, marginTop: 2 }}>{STYLE_INFO[t].about}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
             <View style={[styles.bigIcon, { width: 76 * k, height: 76 * k, borderRadius: 38 * k }]}>
               <MaterialCommunityIcons name="bell-ring-outline" size={36 * k} color={C.brandDark} />
             </View>
@@ -133,7 +180,7 @@ export function Welcome({ onDone }: { onDone: () => void }) {
       </ScrollView>
 
       <View style={[styles.bottom, { maxWidth: 560 }]}>
-        {step < 2 ? (
+        {step < LAST ? (
           <Pressable onPress={() => setStep(step + 1)} style={styles.primary} accessibilityRole="button">
             <Text style={[styles.primaryText, { fontSize: 15.5 * k }]}>Next</Text>
           </Pressable>
@@ -178,4 +225,9 @@ const makeStyles = (C: Palette) =>
     bottom: { paddingHorizontal: 24, paddingBottom: 16, alignSelf: 'center', width: '100%' },
     primary: { backgroundColor: C.brand, borderRadius: 999, paddingVertical: 15, alignItems: 'center' },
     primaryText: { color: C.onBrand, fontFamily: F.label },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
+    tile: { width: '47.5%', flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 7, paddingBottom: 10, backgroundColor: C.glass ? 'rgba(255,255,255,0.06)' : C.dark ? '#121722' : '#FFFFFF' },
+    tileOn: { borderColor: C.glass ? '#FFFFFF' : C.brand, borderWidth: 2 },
+    tileRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+    switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 },
   });

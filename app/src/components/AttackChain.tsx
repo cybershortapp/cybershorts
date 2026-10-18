@@ -6,10 +6,10 @@ import { chainLink } from '../lib/actions';
 import { cleanGroup } from '../lib/clean';
 import { supabase } from '../lib/supabase';
 import type { ChainStep, Story, ThreatGroup } from '../lib/types';
-import { F, type Palette, useTheme } from '../theme';
+import { DARK_PALETTE, F, LIGHT_PALETTE, type Palette, useTheme } from '../theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-type Props = { story: Story; scale: number; width: number; onBack: () => void; bg?: string };
+type Props = { story: Story; scale: number; width: number; onBack: () => void; bg?: string; look?: 'light' | 'dark' };
 type Kit = ReturnType<typeof kit>;
 
 /** Colours for the chain page, from the reader's theme: glass on the story's own colour (Vivid, Aurora),
@@ -184,8 +184,10 @@ function Fact({ icon, label, value, s, K }: { icon: IconName; label: string; val
 }
 
 /** Drawn once, fully, with no animations: it is ready the moment the reader slides across. */
-export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, bg }: Props) {
-  const C = useTheme();
+export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, bg, look }: Props) {
+  const themed = useTheme();
+  // a card style (Newspaper, Magazine, Terminal) has its own paper, so the chain follows the paper, not the theme
+  const C = look === 'light' ? LIGHT_PALETTE : look === 'dark' ? DARK_PALETTE : themed;
   const K = kit(C, bg);
   const steps = story.attack_chain ?? [];
   const inc = story.incident ?? {};

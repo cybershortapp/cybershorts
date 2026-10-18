@@ -11,9 +11,11 @@ import { REPORT_REASONS, type ReportReason } from '../lib/types';
 import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
-import { F, type Palette, severityOf, storyTint, tabColour, useTheme } from '../theme';
+import { F, type Palette, severityOf, storyTint, tabColour, useCardStyle, useTheme } from '../theme';
 import { AttackChain } from './AttackChain';
+import { STYLE_BG, StyledCard } from './CardStyles';
 import { Cover } from './Cover';
+import { Justified } from './Justified';
 import { Sheet, SheetRow } from './Sheet';
 
 // shared across all cards: the slide hint plays once per app session
@@ -27,10 +29,13 @@ type Props = {
   onToggleSave: (id: string) => void;
   isNew?: boolean; // added since the reader last opened the app
   caughtUp?: boolean; // first story they have already seen
+  onNext?: () => void; // Magazine: a quick flick on the cover goes to the next story
 };
 
-function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp }: Props) {
+function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp, onNext }: Props) {
   const C = useTheme();
+  const cardStyle = useCardStyle();
+  const styled = cardStyle !== 'standard';
   const styles = useMemo(() => makeStyles(C), [C]);
   const L = useCardLayout(height);
   // Vivid: a card in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
@@ -138,7 +143,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         `${story.url}\n\nShared from CyberSid`,
     }).catch(() => {});
 
-  const cardFace = (
+  const standardFace = (
     <View style={{ width: cardWidth, flex: 1 }}>
       <Pressable onPress={openArticle} style={{ height: imageHeight, backgroundColor: C.imageBg }} accessibilityLabel="Open article">
         {showImage ? (
@@ -234,9 +239,11 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           >
             {story.technical}
           </Text>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="tail">
-            {story.technical}
-          </Text>
+          <Justified
+            pieces={[{ text: story.technical }]}
+            style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
+            lines={truncated ? Math.max(1, bodyLines - 1) : bodyLines}
+          />
           {truncated && (
             <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: L.metaSize, lineHeight: L.bodyLine }}>Read more</Text>
           )}
@@ -245,9 +252,12 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
         {!!story.why_it_matters && (
           <View style={[styles.why, { padding: L.pad * 0.75, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
-            <Text numberOfLines={3} style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label, flex: 1 }}>
-              {story.why_it_matters}
-            </Text>
+            <Justified
+              pieces={[{ text: story.why_it_matters }]}
+              style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label }}
+              lines={3}
+              containerStyle={{ flex: 1 }}
+            />
           </View>
         )}
 
@@ -302,23 +312,53 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     </View>
   );
 
+  // the chain page matches the card: a styled card's own paper (cream Newspaper, black Magazine and Terminal), else the theme
+  const chainLook: { bg?: string; look?: 'light' | 'dark' } = styled
+    ? { bg: STYLE_BG[cardStyle as keyof typeof STYLE_BG], look: cardStyle === 'newspaper' ? 'light' : 'dark' }
+    : { bg: vivid ? tint : undefined };
+
+  // the reader's card style (Standard, Magazine, Newspaper or Terminal); all of them can open the attack chain
+  const cardFace = styled ? (
+    <View style={{ width: cardWidth, flex: 1 }}>
+      <StyledCard
+        story={story}
+        kind={cardStyle as Exclude<typeof cardStyle, 'standard'>}
+        width={cardWidth}
+        height={height - 16}
+        saved={saved}
+        showImage={showImage}
+        onImageError={() => setImageFailed(true)}
+        onOpen={openArticle}
+        onSave={() => onToggleSave(story.id)}
+        onShare={share}
+        onReport={() => { setReportState('idle'); setSheet('report'); }}
+        onReadMore={() => setSheet('summary')}
+        onChain={hasChain ? showChain : undefined}
+        onNext={onNext}
+      />
+    </View>
+  ) : (
+    standardFace
+  );
+
   return (
     <View style={[styles.page, { height }]}>
       <View
         style={[
           styles.card,
           { width: cardWidth, borderRadius: L.isTablet ? 28 : 24 },
-          vivid && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
-          C.mode === 'aurora' && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          vivid && !styled && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
+          C.mode === 'aurora' && !styled && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          styled && { backgroundColor: STYLE_BG[cardStyle as keyof typeof STYLE_BG], borderColor: cardStyle === 'newspaper' ? '#D9D0BB' : '#22262E' },
         ]}
       >
-        {hasChain && C.mode !== 'aurora' && (
+        {hasChain && C.mode !== 'aurora' && !styled && (
           // revealed for a moment when the card slides to hint at the chain (Aurora's see-through card would show it all the time)
           <View style={[styles.peekPanel, { width: cardWidth * 0.3 }]}>
             <MaterialCommunityIcons name="link-variant" size={26 * scale} color={C.onBrand} />
           </View>
         )}
-        <Animated.View style={{ flex: 1, backgroundColor: vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
+        <Animated.View style={{ flex: 1, backgroundColor: styled ? STYLE_BG[cardStyle as keyof typeof STYLE_BG] : vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
           {hasChain ? (
             <ScrollView
               ref={pager}
@@ -332,9 +372,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               {cardFace}
               <View style={{ width: cardWidth, flex: 1 }}>
                 {chainReady ? (
-                  <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} bg={vivid ? tint : undefined} />
+                  <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} {...chainLook} />
                 ) : (
-                  <View style={{ flex: 1, backgroundColor: vivid ? tint : C.card }} />
+                  <View style={{ flex: 1, backgroundColor: chainLook.bg ?? C.card }} />
                 )}
               </View>
             </ScrollView>
@@ -347,9 +387,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
       {sheet === 'summary' && (
       <Sheet visible title={story.headline} onClose={() => setSheet(null)}>
         <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 12 }}>
-          <Text style={{ color: C.body, fontSize: 16, lineHeight: 24 }} selectable>{story.technical}</Text>
+          <Justified pieces={[{ text: story.technical }]} style={{ color: C.body, fontSize: 16, lineHeight: 24 }} />
           {!!story.why_it_matters && (
-            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14 }}>{story.why_it_matters}</Text>
+            <Justified pieces={[{ text: story.why_it_matters }]} style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600' }} containerStyle={{ marginTop: 14 }} />
           )}
           <Pressable onPress={() => { setSheet(null); openArticle(); }} style={{ marginTop: 16 }} accessibilityRole="link">
             <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 15 }}>Read full story on {story.source}</Text>

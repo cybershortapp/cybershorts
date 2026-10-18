@@ -75,6 +75,9 @@ const DARK: typeof LIGHT = {
 };
 
 export type Palette = typeof LIGHT;
+/** Fixed light and dark palettes, for screens that must ignore the chosen theme (the attack chain inside a card style). */
+export const LIGHT_PALETTE = LIGHT;
+export const DARK_PALETTE = DARK;
 
 /** One calm accent per tab, so each section has its own identity. [light, dark] */
 export const TAB_COLOURS: Record<string, [string, string]> = {
@@ -211,3 +214,38 @@ export function storyTint(story: { tint?: string | null; category: string; id: s
 export function severityOf(s: Severity | null | undefined, C: Palette = LIGHT) {
   return C.sev[s ?? 'Info'] ?? C.sev.Info;
 }
+
+// ---- the reader's card style: Standard (default), Magazine, Newspaper or Terminal ----
+export type CardStyle = 'standard' | 'magazine' | 'newspaper' | 'terminal';
+export const CARD_STYLES: CardStyle[] = ['standard', 'magazine', 'newspaper', 'terminal'];
+const STYLE_KEY = 'card-style';
+let cardStyle: CardStyle = 'standard';
+AsyncStorage.getItem(STYLE_KEY)
+  .then((v) => {
+    if (v === 'magazine' || v === 'newspaper' || v === 'terminal' || v === 'standard') {
+      cardStyle = v;
+      notify();
+    }
+  })
+  .catch(() => {});
+
+export function setCardStyle(s: CardStyle) {
+  cardStyle = s;
+  AsyncStorage.setItem(STYLE_KEY, s).catch(() => {});
+  notify();
+}
+
+export function useCardStyle(): CardStyle {
+  return useSyncExternalStore(subscribe, () => cardStyle);
+}
+
+/** Fonts for the card styles (loaded with the app). */
+export const FS = {
+  serif: 'LibreBaskerville_400Regular',
+  serifItalic: 'LibreBaskerville_400Regular_Italic',
+  serifBold: 'LibreBaskerville_700Bold',
+  display: 'PlayfairDisplay_900Black',
+  masthead: 'UnifrakturMaguntia_400Regular',
+  mono: 'JetBrainsMono_400Regular',
+  monoBold: 'JetBrainsMono_700Bold',
+};

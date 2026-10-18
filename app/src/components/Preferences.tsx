@@ -10,7 +10,7 @@ import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
 import { detectRegion, REGION_NAMES, type Region } from '../lib/region';
 import { supabase } from '../lib/supabase';
-import { F, type Palette, setFollowPhone, setThemeChoice, THEMES, type ThemeChoice, useFollowPhone, useTheme, useThemeChoice } from '../theme';
+import { CARD_STYLES, type CardStyle, F, FS, type Palette, setCardStyle, setFollowPhone, setThemeChoice, THEMES, type ThemeChoice, useCardStyle, useFollowPhone, useTheme, useThemeChoice } from '../theme';
 
 const POPULAR = ['Microsoft Defender', 'Mimecast', 'Microsoft 365', 'Windows', 'Fortinet', 'Cisco', 'Okta', 'Google Chrome', 'VMware ESXi', 'Citrix NetScaler'];
 
@@ -22,6 +22,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
   const prefs = usePrefs();
   const themeChoice = useThemeChoice();
   const followPhone = useFollowPhone();
+  const cardStyle = useCardStyle();
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const w = Math.min(width - (isTablet ? 48 : 24), 680);
@@ -205,7 +206,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
                 Alerts for zero-days, Critical and High stories. Quiet from 10pm to 7am unless it's urgent; the night's news comes in one alert at 7am.
               </Text>
             </View>
-            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
+            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
           </View>
           {alertsAvailable && prefs.alerts && !blocked && !problem && (
             <View style={[styles.statusRow, { backgroundColor: connected ? C.imageBg : C.card }]}>
@@ -302,6 +303,34 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
           </Text>
         </View>
 
+        {/* 3b. card style */}
+        <View style={styles.panel}>
+          <Text style={[styles.h, { fontSize: 16 * s }]}>Card style</Text>
+          <Text style={[styles.p, { fontSize: 13.5 * s }]}>How each story looks. Works with any theme.</Text>
+          <View style={styles.themeGrid}>
+            {CARD_STYLES.map((t) => {
+              const on = cardStyle === t;
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => setCardStyle(t)}
+                  style={[styles.themeTile, on && { borderColor: C.glass ? '#FFFFFF' : C.brand, borderWidth: 2 }]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${STYLE_INFO[t].name} card style`}
+                >
+                  <StylePreview kind={t} />
+                  <View style={styles.themeNameRow}>
+                    <Text style={{ color: C.text, fontFamily: F.head, fontSize: 14 * s }}>{STYLE_INFO[t].name}</Text>
+                    {on && <MaterialCommunityIcons name="check-circle" size={18} color={C.glass ? '#FFFFFF' : C.brand} />}
+                  </View>
+                  <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 11.5 * s, lineHeight: 15 * s, marginTop: 2 }}>{STYLE_INFO[t].about}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {/* 4. email */}
         <View style={styles.panel}>
           <Text style={[styles.h, { fontSize: 16 * s }]}>Daily email</Text>
@@ -378,7 +407,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
   );
 }
 
-const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
+export const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
   vivid: { name: 'Vivid', about: 'Each story takes the colours of its picture' },
   aurora: { name: 'Aurora', about: 'CyberSid blue and purple glow behind glass' },
   light: { name: 'Light', about: 'Clean white cards' },
@@ -386,7 +415,7 @@ const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
 };
 
 /** A small drawing of each theme, so readers can see it before they pick it. */
-function ThemePreview({ theme }: { theme: ThemeChoice }) {
+export function ThemePreview({ theme }: { theme: ThemeChoice }) {
   const bar = (top: number, width: string, colour: string, height = 6) => (
     <View style={{ position: 'absolute', left: 10, top, width: width as `${number}%`, height, borderRadius: 3, backgroundColor: colour }} />
   );
@@ -421,6 +450,63 @@ function ThemePreview({ theme }: { theme: ThemeChoice }) {
       {bar(56, '64%', dark ? '#F5F5F7' : '#1D1D1F')}
       {bar(67, '44%', dark ? '#F5F5F7' : '#1D1D1F')}
       {bar(80, '70%', dark ? '#48484A' : '#D1D1D6', 4)}
+    </View>
+  );
+}
+
+export const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
+  standard: { name: 'Standard', about: 'Picture on top, story below' },
+  magazine: { name: 'Magazine', about: 'A full cover; scroll to read the article' },
+  newspaper: { name: 'Newspaper', about: 'A front page with a classic serif look' },
+  terminal: { name: 'Terminal', about: 'The story as a hacker terminal' },
+};
+
+/** A small drawing of each card style. */
+export function StylePreview({ kind }: { kind: CardStyle }) {
+  if (kind === 'magazine') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#000' }]}>
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 60, backgroundColor: '#5b2a7a' }} />
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 36, height: 26, backgroundColor: '#000', opacity: 0.6 }} />
+        <View style={{ position: 'absolute', left: 10, top: 58, width: '75%', height: 8, borderRadius: 3, backgroundColor: '#fff' }} />
+        <View style={{ position: 'absolute', left: 10, top: 70, width: '55%', height: 8, borderRadius: 3, backgroundColor: '#fff' }} />
+        <View style={{ position: 'absolute', left: 10, top: 86, width: '80%', height: 4, borderRadius: 2, backgroundColor: '#888' }} />
+      </View>
+    );
+  }
+  if (kind === 'newspaper') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#F6F1E4', alignItems: 'center', paddingTop: 6 }]}>
+        <Text style={{ fontFamily: FS.masthead, fontSize: 13, color: '#141210' }}>The CyberSid Times</Text>
+        <View style={{ height: 1.5, alignSelf: 'stretch', marginHorizontal: 8, backgroundColor: '#141210', marginTop: 3 }} />
+        <Text style={{ fontFamily: FS.display, fontSize: 12, color: '#141210', marginTop: 5 }}>Big headline</Text>
+        <View style={{ width: '70%', height: 26, backgroundColor: '#8f8a80', marginTop: 5 }} />
+        <View style={{ width: '80%', height: 3, backgroundColor: '#555', marginTop: 6 }} />
+        <View style={{ width: '80%', height: 3, backgroundColor: '#555', marginTop: 3 }} />
+      </View>
+    );
+  }
+  if (kind === 'terminal') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#05070A', padding: 8 }]}>
+        <Text style={{ fontFamily: FS.mono, fontSize: 9, color: '#4ADE80' }}>~$ news --latest</Text>
+        <View style={{ borderWidth: 1, borderColor: '#2A3D32', borderRadius: 4, padding: 5, marginTop: 5 }}>
+          <Text style={{ fontFamily: FS.monoBold, fontSize: 9.5, color: '#fff' }} numberOfLines={2}>Critical flaw under attack</Text>
+        </View>
+        <Text style={{ fontFamily: FS.mono, fontSize: 8.5, color: '#E9FFF0', marginTop: 5 }} numberOfLines={2}>
+          Attackers can run <Text style={{ color: '#FFB86B' }}>code</Text> on <Text style={{ color: '#7DD3FC' }}>CVE-2026</Text>
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <View style={[prev.box, { backgroundColor: '#F2F2F7', padding: 6 }]}>
+      <View style={{ flex: 1, borderRadius: 8, overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+        <View style={{ height: 40, backgroundColor: '#D6E0FF' }} />
+        <View style={{ marginLeft: 8, marginTop: 8, width: '70%', height: 6, borderRadius: 3, backgroundColor: '#1D1D1F' }} />
+        <View style={{ marginLeft: 8, marginTop: 5, width: '45%', height: 6, borderRadius: 3, backgroundColor: '#1D1D1F' }} />
+        <View style={{ marginLeft: 8, marginTop: 7, width: '80%', height: 4, borderRadius: 2, backgroundColor: '#D1D1D6' }} />
+      </View>
     </View>
   );
 }
