@@ -314,7 +314,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
   // the chain page matches the card: a styled card's own paper (cream Newspaper, black Magazine and Terminal), else the theme
   const chainLook: { bg?: string; look?: 'light' | 'dark' } = styled
-    ? { bg: STYLE_BG[cardStyle as keyof typeof STYLE_BG], look: cardStyle === 'newspaper' ? 'light' : 'dark' }
+    ? { bg: STYLE_BG[cardStyle as keyof typeof STYLE_BG], look: cardStyle === 'newspaper' || cardStyle === 'ronin' ? 'light' : 'dark' }
     : { bg: vivid ? tint : undefined };
 
   // the reader's card style (Standard, Magazine, Newspaper or Terminal); all of them can open the attack chain
@@ -349,7 +349,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           { width: cardWidth, borderRadius: L.isTablet ? 28 : 24 },
           vivid && !styled && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
           C.mode === 'aurora' && !styled && { backgroundColor: 'rgba(255,255,255,0.08)' },
-          styled && { backgroundColor: STYLE_BG[cardStyle as keyof typeof STYLE_BG], borderColor: cardStyle === 'newspaper' ? '#D9D0BB' : '#22262E' },
+          styled && { backgroundColor: STYLE_BG[cardStyle as keyof typeof STYLE_BG], borderColor: cardStyle === 'newspaper' || cardStyle === 'ronin' ? '#D9D0BB' : '#22262E' },
         ]}
       >
         {hasChain && C.mode !== 'aurora' && !styled && (

@@ -269,6 +269,19 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
           </View>
         </View>
 
+        {/* 2b. games */}
+        <View style={styles.panel}>
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.h, { fontSize: 16 * s }]}>Awareness games</Text>
+              <Text style={[styles.p, { fontSize: 13.5 * s }]}>
+                A 30 second game after some scam and safety stories. At most 3 a day, never the same one twice.
+              </Text>
+            </View>
+            <Switch value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+          </View>
+        </View>
+
         {/* 3. appearance */}
         <View style={styles.panel}>
           <Text style={[styles.h, { fontSize: 16 * s }]}>Look and feel</Text>
@@ -459,6 +472,7 @@ export const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
   magazine: { name: 'Magazine', about: 'A full cover; scroll to read the article' },
   newspaper: { name: 'Newspaper', about: 'A front page with a classic serif look' },
   terminal: { name: 'Terminal', about: 'The story as a hacker terminal' },
+  ronin: { name: 'Ronin', about: 'Ink on rice paper, a red seal and a sword slash' },
 };
 
 /** A small drawing of each card style. */
@@ -483,6 +497,19 @@ export function StylePreview({ kind }: { kind: CardStyle }) {
         <View style={{ width: '70%', height: 26, backgroundColor: '#8f8a80', marginTop: 5 }} />
         <View style={{ width: '80%', height: 3, backgroundColor: '#555', marginTop: 6 }} />
         <View style={{ width: '80%', height: 3, backgroundColor: '#555', marginTop: 3 }} />
+      </View>
+    );
+  }
+  if (kind === 'ronin') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#EFE6D2', padding: 8 }]}>
+        <View style={{ height: 40, backgroundColor: '#8f857a' }} />
+        <View style={{ position: 'absolute', right: 10, top: 34, width: 22, height: 22, borderRadius: 4, backgroundColor: '#B3261E', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-8deg' }] }}>
+          <Text style={{ color: '#FFF4EA', fontSize: 11, fontFamily: FS.ink }}>危</Text>
+        </View>
+        <Text style={{ fontFamily: FS.ink, fontSize: 13, color: '#16120E', marginTop: 8 }} numberOfLines={1}>Ink and steel</Text>
+        <View style={{ height: 2, width: '75%', backgroundColor: '#16120E', marginTop: 4, marginLeft: -8 }} />
+        <View style={{ height: 3, width: '85%', backgroundColor: '#7a7064', marginTop: 7, borderRadius: 2 }} />
       </View>
     );
   }

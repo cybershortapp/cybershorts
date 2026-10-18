@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Image as RNImage, Pressable, StyleSheet, Text, type TextStyle, View } from 'react-native';
+import Svg, { Path, Polygon } from 'react-native-svg';
 
 import { highlight, type Mark } from '../lib/highlight';
 import { Justified } from './Justified';
@@ -28,7 +29,7 @@ type Props = {
 };
 
 /** Background of each style, so the card around it matches. */
-export const STYLE_BG: Record<Props['kind'], string> = { magazine: '#000000', newspaper: '#F6F1E4', terminal: '#05070A' };
+export const STYLE_BG: Record<Props['kind'], string> = { magazine: '#000000', newspaper: '#F6F1E4', terminal: '#05070A', ronin: '#EFE6D2' };
 
 /** The one label a card can have: Zero-day first, otherwise Critical. */
 const labelOf = (s: Story) => (s.zero_day ? 'Zero-day' : s.severity === 'Critical' ? 'Critical' : null);
@@ -67,6 +68,7 @@ function useFit(lineHeight: number) {
 export function StyledCard(p: Props) {
   if (p.kind === 'magazine') return <Magazine {...p} />;
   if (p.kind === 'newspaper') return <Newspaper {...p} />;
+  if (p.kind === 'ronin') return <Ronin {...p} />;
   return <Terminal {...p} />;
 }
 
@@ -347,6 +349,119 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
   );
 }
 
+// ---------------------------------------------------------------------------------------------------
+// Ronin: ink on rice paper. A brush-edged picture, a red seal, a sword slash under the headline.
+// ---------------------------------------------------------------------------------------------------
+const PAPER = '#EFE6D2';
+const SUMI = '#16120E';
+const SEAL = '#B3261E';
+
+/** Torn, brush-like paper edges laid over the top and bottom of the picture. */
+function BrushEdges({ width, height }: { width: number; height: number }) {
+  const w = width;
+  const top = `0,0 ${w},0 ${w},7 ${w * 0.88},3 ${w * 0.7},8 ${w * 0.52},2 ${w * 0.33},7 ${w * 0.17},1 0,9`;
+  const bottom = `0,${height} ${w},${height} ${w},${height - 9} ${w * 0.85},${height - 3} ${w * 0.66},${height - 10} ${w * 0.47},${height - 4} ${w * 0.29},${height - 11} ${w * 0.12},${height - 3} 0,${height - 8}`;
+  return (
+    <Svg width={w} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Polygon points={top} fill={PAPER} />
+      <Polygon points={bottom} fill={PAPER} />
+    </Svg>
+  );
+}
+
+function Ronin({ story, width, height, saved, showImage, onImageError, onOpen, onSave, onShare, onReport, onReadMore, onChain }: Props) {
+  const s = Math.min(width / 390, 1.3);
+  const lh = 24 * s;
+  const fit = useFit(lh);
+  const label = labelOf(story);
+  const slash = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(slash, { toValue: 1, duration: 520, delay: 180, useNativeDriver: true }).start();
+  }, [slash]);
+  const picW = width - 40 * s - 26 * s;
+  const picH = Math.round(height * 0.27);
+  const body = { color: '#2E271F', fontFamily: F.body, fontSize: 15 * s, lineHeight: lh };
+  const marks = {
+    cve: { fontFamily: F.head, color: SUMI },
+    product: { fontFamily: F.head, color: SUMI },
+    danger: { fontFamily: F.head, color: SEAL },
+    number: { fontFamily: F.head, color: SEAL },
+  };
+  const kanji = story.zero_day || story.severity === 'Critical' ? '危' : '報';
+  const sealText = label ? label.toUpperCase() : 'NEWS';
+
+  return (
+    <View style={{ flex: 1, backgroundColor: PAPER }}>
+      <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0)', 'rgba(120,90,50,0.10)']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      {/* faint ink mountains and a red sun, behind everything */}
+      <Svg width={width} height={150 * s} viewBox="0 0 390 150" style={{ position: 'absolute', left: 0, bottom: 52 * s }} pointerEvents="none">
+        <Path d="M0 150 L0 98 Q40 70 70 88 Q100 46 135 80 Q160 60 190 86 Q230 30 268 74 Q300 52 330 84 Q360 66 390 80 L390 150 Z" fill={SUMI} opacity={0.07} />
+        <Path d="M0 150 L0 118 Q55 92 96 112 Q140 84 182 110 Q236 80 290 108 Q340 90 390 104 L390 150 Z" fill={SUMI} opacity={0.11} />
+      </Svg>
+      <View style={{ flex: 1, paddingLeft: 20 * s, paddingRight: 26 * s, paddingTop: 18 * s }}>
+        {showImage ? (
+          <Pressable onPress={onOpen} style={{ width: picW, height: picH }} accessibilityRole="imagebutton" accessibilityLabel="Story picture, opens the full story">
+            <Image
+              source={{ uri: story.image_url! }}
+              style={[StyleSheet.absoluteFill, { filter: 'grayscale(0.85) contrast(1.15) sepia(0.3)' } as object]}
+              contentFit="cover"
+              onError={onImageError}
+              recyclingKey={story.id}
+              cachePolicy="memory-disk"
+            />
+            <BrushEdges width={picW} height={picH} />
+          </Pressable>
+        ) : (
+          <View style={{ width: picW, height: picH * 0.55, justifyContent: 'center' }}>
+            <View style={{ height: 3, width: picW * 0.4, backgroundColor: SUMI, opacity: 0.6 }} />
+          </View>
+        )}
+        {/* the red seal, stamped over the corner of the picture */}
+        <View style={[styles.seal, { width: 70 * s, height: 70 * s, top: 18 * s + (showImage ? picH : picH * 0.55) - 46 * s, right: 18 * s }]} pointerEvents="none">
+          <Text style={{ color: '#FFF4EA', fontFamily: FS.ink, fontSize: 28 * s, lineHeight: 30 * s }}>{kanji}</Text>
+          <Text style={{ color: '#FFF4EA', fontFamily: F.head, fontSize: 8 * s, letterSpacing: 1.2, marginTop: 1 }} numberOfLines={1}>{sealText}</Text>
+        </View>
+
+        {/* category and time, with the CHAIN tab at the right edge just below the picture */}
+        <View style={{ minHeight: onChain ? 46 * s : 0, justifyContent: 'center', paddingRight: onChain ? 70 * s : 60 * s, marginTop: 12 * s }}>
+          <Text style={{ color: SEAL, fontFamily: F.head, fontSize: 11 * s, letterSpacing: 2.5 }} numberOfLines={1}>
+            {(story.category || 'News').toUpperCase()} · {story.source.toUpperCase()}
+          </Text>
+          {!!onChain && <ChainTab onPress={onChain} s={s} style={{ position: 'absolute', top: 0, right: -26 * s }} />}
+        </View>
+
+        <Pressable onPress={onOpen}>
+          <Text style={{ color: SUMI, fontFamily: FS.ink, fontSize: 29 * s, lineHeight: 32 * s, marginTop: 6 * s }} numberOfLines={4}>
+            {story.headline}
+          </Text>
+        </Pressable>
+        {/* the sword slash */}
+        <Animated.View style={{ marginTop: 10 * s, marginLeft: -20 * s, width: picW * 0.9, height: 6, transform: [{ scaleX: slash }], transformOrigin: 'left' } as object}>
+          <Svg width={picW * 0.9} height={6}>
+            <Polygon points={`0,2.5 ${picW * 0.9},0 ${picW * 0.9 - 40},3 ${picW * 0.9},6 0,3.5`} fill={SUMI} />
+          </Svg>
+        </Animated.View>
+
+        <Pressable style={{ flex: 1, overflow: 'hidden', marginTop: 10 * s }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
+          <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false}>
+            {story.technical}
+          </Text>
+          <Rich text={story.technical} story={story} base={body} marks={marks} lines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} />
+          {fit.cut && <Text style={{ fontFamily: F.head, fontSize: 13 * s, color: SEAL, lineHeight: lh }}>Read the scroll</Text>}
+        </Pressable>
+
+        {!!story.why_it_matters && (
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 * s }}>
+            <View style={{ width: 3, backgroundColor: SEAL, borderRadius: 2 }} />
+            <Justified pieces={[{ text: story.why_it_matters }]} style={{ color: SUMI, fontFamily: F.label, fontSize: 14 * s, lineHeight: 20 * s }} lines={3} containerStyle={{ flex: 1 }} />
+          </View>
+        )}
+        <Actions color={SUMI} muted="#5A5045" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onOpen={onOpen} s={s} />
+      </View>
+    </View>
+  );
+}
+
 /** Save, share, report, attack chain and "Read full story", in the colours of the style. */
 function Actions({ color, muted, saved, onSave, onShare, onReport, onChain, onOpen, s, pill }: {
   color: string; muted: string; saved: boolean; onSave: () => void; onShare: () => void; onReport: () => void;
@@ -395,6 +510,7 @@ const styles = StyleSheet.create({
   termWin: { marginTop: 12, borderWidth: 1, borderColor: '#2A3D32', borderRadius: 8, overflow: 'hidden' },
   termWinBar: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#0E1511', borderBottomWidth: 1, borderBottomColor: '#2A3D32' },
   termDot: { width: 8, height: 8, borderRadius: 4 },
+  seal: { position: 'absolute', borderRadius: 8, backgroundColor: SEAL, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: PAPER, transform: [{ rotate: '-8deg' }] },
   chainTab: { alignItems: 'center', gap: 2, backgroundColor: '#2563F5', borderTopLeftRadius: 14, borderBottomLeftRadius: 14 },
   chainTabText: { color: '#FFFFFF', fontFamily: F.brand, letterSpacing: 0.8, marginTop: 1 },
   termBar: { flexDirection: 'row', alignItems: 'center', gap: 16, height: 44, paddingHorizontal: 18, backgroundColor: '#0E1912', borderTopWidth: 1, borderTopColor: '#1D2B23' },

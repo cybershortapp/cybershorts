@@ -9,10 +9,11 @@ export type Prefs = {
   alertsAsked: boolean; // we've asked for notification permission once
   email: string; // email they subscribed with ('' if none)
   region: '' | 'GB' | 'IN' | 'INTL'; // where they are ('' = work it out from the phone)
+  games: boolean; // short awareness games after some stories
 };
 
 const KEY = 'prefs-v1';
-const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '', region: '' };
+const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '', region: '', games: true };
 
 let state: Prefs = EMPTY;
 let loaded = false;

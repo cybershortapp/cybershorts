@@ -11,6 +11,7 @@ import { LibreBaskerville_400Regular_Italic } from '@expo-google-fonts/libre-bas
 import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville/700Bold';
 import { PlayfairDisplay_900Black } from '@expo-google-fonts/playfair-display/900Black';
 import { UnifrakturMaguntia_400Regular } from '@expo-google-fonts/unifrakturmaguntia/400Regular';
+import { CormorantGaramond_700Bold } from '@expo-google-fonts/cormorant-garamond/700Bold';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -35,13 +36,18 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { AshIntro } from './src/components/AshIntro';
+import { DeckCard } from './src/components/DeckCard';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { GameCard } from './src/components/Games';
 import { Header } from './src/components/Header';
 import { Preferences } from './src/components/Preferences';
 import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
+import { type Deck, deckSeen, extrasReady, fetchDeck, fetchGames, type Game, GAME_GAP, gameSeen, gamesLeftToday, markDeckSeen, markGameSeen } from './src/lib/extras';
+import { useCardLayout } from './src/lib/layout';
 import { installCrashHandler } from './src/lib/crash';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
 import { getRegion, regionCountries } from './src/lib/region';
@@ -56,6 +62,12 @@ const LOAD_MORE_AT = 8; // start fetching the next page this many cards before t
 const MAX_CARDS = 600; // about 3 weeks of news in one sitting; keeps memory use low
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
 const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
+
+/** One page of the feed: a story, a trending deck, or a short game about the story before it. */
+type FeedItem =
+  | { kind: 'story'; key: string; story: Story }
+  | { kind: 'deck'; key: string; deck: Deck }
+  | { kind: 'game'; key: string; game: Game; story: Story };
 
 const EMPTY_TEXT: Partial<Record<Filter, string>> = {
   'Zero-day': "No zero-days right now. Stay tuned: we'll flag the next one the moment it's reported.",
@@ -102,7 +114,7 @@ function Main() {
   const [searchTerm, setSearchTerm] = useState('');
   const beforeSearch = useRef<Filter>('All');
   const lastLoaded = useRef(0);
-  const listRef = useRef<FlatList<Story>>(null);
+  const listRef = useRef<FlatList<FeedItem>>(null);
   const latestRef = useRef<() => void>(() => {});
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
@@ -118,6 +130,14 @@ function Main() {
   const firstLoad = useRef(true);
   const loadingMore = useRef(false);
   const noMore = useRef(new Set<Filter>()); // tabs where every story is already loaded
+  // games and the trending deck (release 1.0.4)
+  const [games, setGames] = useState<Map<string, Game>>(new Map());
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const [extrasLoaded, setExtrasLoaded] = useState(false);
+  const askedGames = useRef(new Set<string>());
+  const placedGames = useRef(new Set<string>()); // games already given a place, so they don't jump around
+  const placedDeck = useRef<string | null>(null);
+  const feedRef = useRef<FeedItem[]>([]);
 
   // once saved preferences are read: start on "For you" if they follow products, otherwise "All"
   useEffect(() => {
@@ -234,7 +254,7 @@ function Main() {
 
   // jump to a card without ever asking for one that doesn't exist (that throws and closes the app)
   const safeScrollTo = (i: number) => {
-    const n = storiesRef.current.length;
+    const n = feedRef.current.length;
     if (!listRef.current || n === 0) return;
     try {
       listRef.current.scrollToIndex({ index: Math.max(0, Math.min(i, n - 1)), animated: false });
@@ -357,13 +377,77 @@ function Main() {
   }, []);
 
 
+  // what this phone has already played and seen
+  useEffect(() => {
+    extrasReady.then(() => setExtrasLoaded(true));
+  }, []);
+  // games for newly loaded stories (asked once per story)
+  useEffect(() => {
+    const ids = stories.map((s) => s.id).filter((id) => !askedGames.current.has(id));
+    if (!ids.length) return;
+    ids.forEach((id) => askedGames.current.add(id));
+    fetchGames(ids).then((found) => {
+      if (!found.length) return;
+      setGames((cur) => {
+        const next = new Map(cur);
+        found.forEach((g) => next.set(g.story_id, g));
+        return next;
+      });
+    });
+  }, [stories]);
+  // the trending deck for this region, checked again on each fresh load
+  useEffect(() => {
+    if (filter === 'All' && !loading) fetchDeck(regionCountries(region)).then(setDeck);
+  }, [filter, loading, region]);
+
+  // the feed: stories, with the trending deck as the third card and now and then a game after its story.
+  // Games: only if switched on, never one already played, at most one every 8 cards and 3 a day,
+  // never the same kind twice in a row. Once a game has its place it keeps it.
+  const feed = useMemo<FeedItem[]>(() => {
+    const out: FeedItem[] = [];
+    const extrasOn = (filter === 'All' || filter === 'For you') && extrasLoaded;
+    let sinceGame = GAME_GAP - 3;
+    let lastStyle = '';
+    let newAllowed = gamesLeftToday() - [...placedGames.current].filter((id) => !gameSeen(id)).length;
+    for (const s of stories) {
+      out.push({ kind: 'story', key: s.id, story: s });
+      sinceGame++;
+      if (extrasOn && filter === 'All' && deck && out.length === 2 && (placedDeck.current === deck.id || !deckSeen(deck.id))) {
+        placedDeck.current = deck.id;
+        out.push({ kind: 'deck', key: `deck-${deck.id}`, deck });
+      }
+      const g = games.get(s.id);
+      if (!extrasOn || !prefs.games || !g) continue;
+      const kept = placedGames.current.has(g.id);
+      if (kept || (!gameSeen(g.id) && sinceGame >= GAME_GAP && g.style !== lastStyle && newAllowed > 0)) {
+        if (!kept) {
+          placedGames.current.add(g.id);
+          newAllowed--;
+        }
+        out.push({ kind: 'game', key: `game-${g.id}`, game: g, story: s });
+        sinceGame = 0;
+        lastStyle = g.style;
+      }
+    }
+    return out;
+  }, [stories, games, deck, filter, prefs.games, extrasLoaded]);
+  useEffect(() => {
+    feedRef.current = feed;
+  }, [feed]);
+  // a game or deck counts as seen once it's been on screen
+  useEffect(() => {
+    const it = feed[index];
+    if (it?.kind === 'game') markGameSeen(it.game.id);
+    if (it?.kind === 'deck') markDeckSeen(it.deck.id);
+  }, [index, feed]);
+
   // jump to the story picked in the brief once the feed is on screen
   useEffect(() => {
     if (view !== 'feed' || !pendingJump.current || pageHeight === 0 || filter !== 'All') return;
-    const i = stories.findIndex((s) => s.id === pendingJump.current);
+    const i = feed.findIndex((it) => it.kind === 'story' && it.story.id === pendingJump.current);
     pendingJump.current = null;
     if (i > 0) setTimeout(() => safeScrollTo(i), 50);
-  }, [view, stories, pageHeight, filter]);
+  }, [view, feed, pageHeight, filter]);
 
   const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     const i = viewableItems[0]?.index;
@@ -371,14 +455,17 @@ function Main() {
   }).current;
 
   useEffect(() => {
-    if (view === 'feed' && stories.length && index >= stories.length - LOAD_MORE_AT) loadMore();
-  }, [index, stories.length, view, loadMore]);
+    if (view === 'feed' && feed.length && index >= feed.length - LOAD_MORE_AT) loadMore();
+  }, [index, feed.length, view, loadMore]);
 
   // download the next few pictures while the reader is still on this card, so they appear instantly
   useEffect(() => {
-    const next = stories.slice(index + 1, index + 4).map((s) => s.image_url).filter((u): u is string => !!u);
+    const next = feed
+      .slice(index + 1, index + 4)
+      .flatMap((it) => (it.kind === 'story' ? [it.story.image_url] : it.kind === 'deck' ? it.deck.slides.map((s) => s.image) : []))
+      .filter((u): u is string => !!u);
     if (next.length) Image.prefetch(next, 'memory-disk').catch(() => {});
-  }, [index, stories]);
+  }, [index, feed]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -397,32 +484,51 @@ function Main() {
   const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
   // NEW tags, and a "caught up" note on the first story they had already seen
   const marker = seenBefore.current;
-  const firstOld = marker ? stories.findIndex((x) => x.created_at <= marker) : -1;
+  const firstOld = marker ? feed.findIndex((x) => x.kind === 'story' && x.story.created_at <= marker) : -1;
   // Vivid: the screen takes a deep shade of the colour of the story on screen
-  const screenColour = C.mode === 'vivid' && view === 'feed' && stories[index] ? deepen(storyTint(stories[index])) : C.bg;
+  const onScreen = feed[index];
+  const screenColour = C.mode === 'vivid' && view === 'feed' && onScreen?.kind === 'story' ? deepen(storyTint(onScreen.story)) : C.mode === 'vivid' && onScreen ? '#0A0F1F' : C.bg;
+  const goNext = (i: number) => {
+    const n = feedRef.current.length;
+    if (i + 1 < n) listRef.current?.scrollToIndex({ index: i + 1, animated: true });
+  };
   const renderItem = useCallback(
-    ({ item, index: i }: { item: Story; index: number }) => (
-      <ErrorBoundary resetKey={item.id} fallback={() => <BrokenCard height={pageHeight} />}>
-      <StoryCard
-        story={item}
-        height={pageHeight}
-        active={index === i}
-        saved={savedSet.has(item.id)}
-        onToggleSave={toggleSaved}
-        isNew={!!marker && item.created_at > marker}
-        caughtUp={i === firstOld && i > 0}
-        onNext={() => {
-          const n = storiesRef.current.length;
-          if (i + 1 < n) listRef.current?.scrollToIndex({ index: i + 1, animated: true });
-        }}
-      />
-      </ErrorBoundary>
-    ),
-    [pageHeight, index, savedSet, toggleSaved, marker, firstOld],
+    ({ item, index: i }: { item: FeedItem; index: number }) => {
+      if (item.kind === 'deck' || item.kind === 'game') {
+        return (
+          <ErrorBoundary resetKey={item.key} fallback={() => <BrokenCard height={pageHeight} />}>
+            <ExtraPage height={pageHeight}>
+              {(w, h) =>
+                item.kind === 'deck' ? (
+                  <DeckCard deck={item.deck} width={w} height={h} onDone={() => goNext(i)} />
+                ) : (
+                  <GameCard game={item.game} story={item.story} width={w} height={h} active={index === i} />
+                )
+              }
+            </ExtraPage>
+          </ErrorBoundary>
+        );
+      }
+      return (
+        <ErrorBoundary resetKey={item.key} fallback={() => <BrokenCard height={pageHeight} />}>
+          <StoryCard
+            story={item.story}
+            height={pageHeight}
+            active={index === i}
+            saved={savedSet.has(item.story.id)}
+            onToggleSave={toggleSaved}
+            isNew={!!marker && item.story.created_at > marker}
+            caughtUp={i === firstOld && i > 0}
+            onNext={() => goNext(i)}
+          />
+        </ErrorBoundary>
+      );
+    },
+    [pageHeight, index, savedSet, toggleSaved, marker, firstOld], // eslint-disable-line react-hooks/exhaustive-deps
   );
   const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}|${marker}|${firstOld}`;
 
-  const counter = stories.length ? `${String(index + 1).padStart(2, '0')} / ${String(stories.length).padStart(2, '0')}` : '';
+  const counter = feed.length ? `${String(index + 1).padStart(2, '0')} / ${String(feed.length).padStart(2, '0')}` : '';
 
   let content;
   if (loading && stories.length === 0) {
@@ -462,8 +568,8 @@ function Main() {
     content = (
       <FlatList
         ref={listRef}
-        data={stories}
-        keyExtractor={(s) => s.id}
+        data={feed}
+        keyExtractor={(it) => it.key}
         renderItem={renderItem}
         extraData={extraData}
         pagingEnabled
@@ -560,6 +666,12 @@ function ScreenColour({ colour }: { colour: string }) {
   );
 }
 
+/** A full page in the feed for a deck or a game, the same size as a story card. */
+function ExtraPage({ height, children }: { height: number; children: (width: number, height: number) => React.ReactNode }) {
+  const L = useCardLayout(height);
+  return <View style={{ height, alignItems: 'center', paddingVertical: 8 }}>{children(L.cardWidth, height - 16)}</View>;
+}
+
 /** Shown in place of one story that couldn't be drawn, so the rest of the feed keeps working. */
 function BrokenCard({ height }: { height: number }) {
   const C = useTheme();
@@ -611,6 +723,7 @@ export default function App() {
     // card styles: Newspaper (Baskerville, Playfair, the masthead) and Terminal (JetBrains Mono)
     LibreBaskerville_400Regular, LibreBaskerville_400Regular_Italic, LibreBaskerville_700Bold, PlayfairDisplay_900Black,
     UnifrakturMaguntia_400Regular, JetBrainsMono_400Regular, JetBrainsMono_700Bold,
+    CormorantGaramond_700Bold, // Ronin
   });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();
@@ -621,6 +734,7 @@ export default function App() {
   const ready = fontsLoaded || !!fontError || timedOut;
   const [fatal, setFatal] = useState<string | null>(null);
   const [run, setRun] = useState(0); // bumping this rebuilds every screen from scratch
+  const [intro, setIntro] = useState(true); // the ash opening, once per start; the news loads underneath
   useEffect(() => installCrashHandler(setFatal), []);
   const reload = () => {
     setFatal(null);
@@ -640,6 +754,7 @@ export default function App() {
           <Main />
         </ErrorBoundary>
       )}
+      {intro && <AshIntro onDone={() => setIntro(false)} />}
     </SafeAreaProvider>
   );
 }

@@ -216,13 +216,13 @@ export function severityOf(s: Severity | null | undefined, C: Palette = LIGHT) {
 }
 
 // ---- the reader's card style: Standard (default), Magazine, Newspaper or Terminal ----
-export type CardStyle = 'standard' | 'magazine' | 'newspaper' | 'terminal';
-export const CARD_STYLES: CardStyle[] = ['standard', 'magazine', 'newspaper', 'terminal'];
+export type CardStyle = 'standard' | 'magazine' | 'newspaper' | 'terminal' | 'ronin';
+export const CARD_STYLES: CardStyle[] = ['standard', 'magazine', 'newspaper', 'terminal', 'ronin'];
 const STYLE_KEY = 'card-style';
 let cardStyle: CardStyle = 'standard';
 AsyncStorage.getItem(STYLE_KEY)
   .then((v) => {
-    if (v === 'magazine' || v === 'newspaper' || v === 'terminal' || v === 'standard') {
+    if (v === 'magazine' || v === 'newspaper' || v === 'terminal' || v === 'ronin' || v === 'standard') {
       cardStyle = v;
       notify();
     }
@@ -248,4 +248,5 @@ export const FS = {
   masthead: 'UnifrakturMaguntia_400Regular',
   mono: 'JetBrainsMono_400Regular',
   monoBold: 'JetBrainsMono_700Bold',
+  ink: 'CormorantGaramond_700Bold', // Ronin headlines
 };
