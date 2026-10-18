@@ -206,7 +206,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
                 Alerts for zero-days, Critical and High stories. Quiet from 10pm to 7am unless it's urgent; the night's news comes in one alert at 7am.
               </Text>
             </View>
-            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.brand, false: C.border }} thumbColor={C.surface} />
+            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
           </View>
           {alertsAvailable && prefs.alerts && !blocked && !problem && (
             <View style={[styles.statusRow, { backgroundColor: connected ? C.imageBg : C.card }]}>
