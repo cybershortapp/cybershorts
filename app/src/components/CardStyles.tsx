@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { Animated, Image as RNImage, Pressable, StyleSheet, Text, type TextStyle, View } from 'react-native';
 
 import { highlight, type Mark } from '../lib/highlight';
+import { Justified } from './Justified';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
 import { type CardStyle, F, FS } from '../theme';
@@ -44,14 +45,11 @@ function ChainTab({ onPress, s, style }: { onPress: () => void; s: number; style
 }
 
 /** The summary with its key facts picked out (bold, colour), styled per card style. */
-function Rich({ text, story, base, marks, lines }: {
-  text: string; story: Story; base: TextStyle; marks: Record<Exclude<Mark, null>, TextStyle>; lines?: number;
+function Rich({ text, story, base, marks, lines, containerStyle }: {
+  text: string; story: Story; base: TextStyle; marks: Record<Exclude<Mark, null>, TextStyle>; lines?: number; containerStyle?: object;
 }) {
-  return (
-    <Text style={base} numberOfLines={lines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
-      {highlight(text, story).map((p, i) => (p.mark ? <Text key={i} style={marks[p.mark]}>{p.text}</Text> : p.text))}
-    </Text>
-  );
+  const pieces = highlight(text, story).map((p) => ({ text: p.text, style: p.mark ? marks[p.mark] : undefined }));
+  return <Justified pieces={pieces} style={base} lines={lines} containerStyle={containerStyle} />;
 }
 
 /** Works out how many lines of summary fit in the space left, so long stories end with "Read more". */
@@ -143,7 +141,8 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
           <Rich
             text={story.technical}
             story={story}
-            base={{ color: '#EDEDED', fontFamily: FS.serif, fontSize: 17 * s, lineHeight: 29 * s, marginTop: 18, textAlign: 'justify' }}
+            base={{ color: '#EDEDED', fontFamily: FS.serif, fontSize: 17 * s, lineHeight: 29 * s }}
+            containerStyle={{ marginTop: 18 }}
             marks={{
               cve: { fontFamily: F.head, color: '#FFFFFF' },
               product: { fontFamily: F.head, color: '#FFFFFF' },
@@ -153,7 +152,7 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
           />
           {!!story.why_it_matters && (
             <View style={styles.magBox}>
-              <Text style={{ color: '#FFFFFF', fontFamily: F.label, fontSize: 16 * s, lineHeight: 23 * s, textAlign: 'justify' }} android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
+              <Justified pieces={[{ text: story.why_it_matters }]} style={{ color: '#FFFFFF', fontFamily: F.label, fontSize: 16 * s, lineHeight: 23 * s }} />
             </View>
           )}
           <Actions color="#FFFFFF" muted="#9A9A9A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onOpen={onOpen} s={s} pill />
@@ -186,7 +185,7 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
   const words = story.technical.split(' ');
   const lead = words.slice(0, 3).join(' ');
   const rest = ' ' + words.slice(3).join(' ');
-  const body = { color: INK, fontFamily: FS.serif, fontSize: 16 * s, lineHeight: lh, textAlign: 'justify' as const };
+  const body = { color: INK, fontFamily: FS.serif, fontSize: 16 * s, lineHeight: lh };
   const marks = {
     cve: { fontFamily: FS.serifBold },
     product: { fontFamily: FS.serifBold },
@@ -229,19 +228,20 @@ function Newspaper({ story, width, height, saved, showImage, onImageError, onOpe
       </View>
 
       <Pressable style={{ flex: 1, overflow: 'hidden', marginTop: 10 }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
-        <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false} android_hyphenationFrequency="normal">
+        <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false}>
           {story.technical}
         </Text>
-        <Text style={body} numberOfLines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
-          <Text style={{ fontFamily: FS.serifBold }}>{lead}</Text>
-          {highlight(rest, story).map((pc, i) => (pc.mark ? <Text key={i} style={marks[pc.mark]}>{pc.text}</Text> : pc.text))}
-        </Text>
+        <Justified
+          pieces={[{ text: lead, style: { fontFamily: FS.serifBold } }, ...highlight(rest, story).map((pc) => ({ text: pc.text, style: pc.mark ? marks[pc.mark] : undefined }))]}
+          style={body}
+          lines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines}
+        />
         {fit.cut && <Text style={{ fontFamily: F.head, fontSize: 13 * s, color: RED, lineHeight: lh }}>Read more</Text>}
       </Pressable>
 
       {!!story.why_it_matters && (
         <View style={styles.paperWhy}>
-          <Text style={{ fontFamily: F.label, fontSize: 14.5 * s, lineHeight: 21 * s, color: INK, textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
+          <Justified pieces={[{ text: story.why_it_matters }]} style={{ fontFamily: F.label, fontSize: 14.5 * s, lineHeight: 21 * s, color: INK }} lines={3} />
         </View>
       )}
       <Actions color={INK} muted="#5C564A" saved={saved} onSave={onSave} onShare={onShare} onReport={onReport} onOpen={onOpen} s={s} />
@@ -260,7 +260,7 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
   const lh = 23 * s;
   const fit = useFit(lh);
   const label = labelOf(story);
-  const body = { color: '#E9FFF0', fontFamily: FS.mono, fontSize: 14.5 * s, lineHeight: lh, textAlign: 'justify' as const };
+  const body = { color: '#E9FFF0', fontFamily: FS.mono, fontSize: 14.5 * s, lineHeight: lh };
   const marks = {
     cve: { color: '#7DD3FC', fontFamily: FS.monoBold },
     product: { color: '#FFFFFF', fontFamily: FS.monoBold },
@@ -319,7 +319,7 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
 
         <Text style={[mono(13), { marginTop: 16 }]}>&gt; cat summary.txt</Text>
         <Pressable style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => fit.onBox(e.nativeEvent.layout.height)} onPress={fit.cut ? onReadMore : undefined} disabled={!fit.cut}>
-          <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false} android_hyphenationFrequency="normal">
+          <Text style={[body, { position: 'absolute', left: 0, right: 0, opacity: 0 }]} onLayout={(e) => fit.onFull(e.nativeEvent.layout.height)} accessible={false}>
             {story.technical}
           </Text>
           <Rich text={story.technical} story={story} base={body} marks={marks} lines={fit.cut ? Math.max(1, fit.lines - 1) : fit.lines} />
@@ -329,9 +329,7 @@ function Terminal({ story, width, saved, showImage, onImageError, onOpen, onSave
         {!!story.why_it_matters && (
           <>
             <Text style={[mono(13), { marginTop: 10 }]}>&gt; ./takeaway</Text>
-            <Text style={{ color: GREEN, fontFamily: FS.monoBold, fontSize: 14.5 * s, lineHeight: lh, textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal">
-              [!] {story.why_it_matters}
-            </Text>
+            <Justified pieces={[{ text: `[!] ${story.why_it_matters}` }]} style={{ color: GREEN, fontFamily: FS.monoBold, fontSize: 14.5 * s, lineHeight: lh }} lines={3} />
           </>
         )}
       </View>

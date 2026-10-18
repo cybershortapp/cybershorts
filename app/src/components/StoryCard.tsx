@@ -15,6 +15,7 @@ import { F, type Palette, severityOf, storyTint, tabColour, useCardStyle, useThe
 import { AttackChain } from './AttackChain';
 import { STYLE_BG, StyledCard } from './CardStyles';
 import { Cover } from './Cover';
+import { Justified } from './Justified';
 import { Sheet, SheetRow } from './Sheet';
 
 // shared across all cards: the slide hint plays once per app session
@@ -231,17 +232,18 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         >
           {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
           <Text
-            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }}
-            android_hyphenationFrequency="normal"
+            style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
             onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / L.bodyLine))}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
             {story.technical}
           </Text>
-          <Text style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body, textAlign: 'justify' }} numberOfLines={truncated ? Math.max(1, bodyLines - 1) : bodyLines} ellipsizeMode="clip" android_hyphenationFrequency="normal">
-            {story.technical}
-          </Text>
+          <Justified
+            pieces={[{ text: story.technical }]}
+            style={{ color: C.body, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
+            lines={truncated ? Math.max(1, bodyLines - 1) : bodyLines}
+          />
           {truncated && (
             <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: L.metaSize, lineHeight: L.bodyLine }}>Read more</Text>
           )}
@@ -250,9 +252,12 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
 
         {!!story.why_it_matters && (
           <View style={[styles.why, { padding: L.pad * 0.75, marginTop: L.pad * 0.6, marginBottom: action ? 0 : L.pad * 0.8 }]}>
-            <Text numberOfLines={3} ellipsizeMode="clip" android_hyphenationFrequency="normal" style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label, flex: 1, textAlign: 'justify' }}>
-              {story.why_it_matters}
-            </Text>
+            <Justified
+              pieces={[{ text: story.why_it_matters }]}
+              style={{ color: C.text, fontSize: L.bodySize - 1, lineHeight: L.bodyLine - 2, fontFamily: F.label }}
+              lines={3}
+              containerStyle={{ flex: 1 }}
+            />
           </View>
         )}
 
@@ -382,9 +387,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
       {sheet === 'summary' && (
       <Sheet visible title={story.headline} onClose={() => setSheet(null)}>
         <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ paddingHorizontal: 6, paddingBottom: 12 }}>
-          <Text style={{ color: C.body, fontSize: 16, lineHeight: 24, textAlign: 'justify' }} selectable android_hyphenationFrequency="normal">{story.technical}</Text>
+          <Justified pieces={[{ text: story.technical }]} style={{ color: C.body, fontSize: 16, lineHeight: 24 }} />
           {!!story.why_it_matters && (
-            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 14, textAlign: 'justify' }} android_hyphenationFrequency="normal">{story.why_it_matters}</Text>
+            <Justified pieces={[{ text: story.why_it_matters }]} style={{ color: C.text, fontSize: 15, lineHeight: 22, fontWeight: '600' }} containerStyle={{ marginTop: 14 }} />
           )}
           <Pressable onPress={() => { setSheet(null); openArticle(); }} style={{ marginTop: 16 }} accessibilityRole="link">
             <Text style={{ color: C.brandDark, fontFamily: F.label, fontSize: 15 }}>Read full story on {story.source}</Text>
