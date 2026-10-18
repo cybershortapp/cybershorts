@@ -407,7 +407,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
   );
 }
 
-const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
+export const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
   vivid: { name: 'Vivid', about: 'Each story takes the colours of its picture' },
   aurora: { name: 'Aurora', about: 'CyberSid blue and purple glow behind glass' },
   light: { name: 'Light', about: 'Clean white cards' },
@@ -415,7 +415,7 @@ const THEME_INFO: Record<ThemeChoice, { name: string; about: string }> = {
 };
 
 /** A small drawing of each theme, so readers can see it before they pick it. */
-function ThemePreview({ theme }: { theme: ThemeChoice }) {
+export function ThemePreview({ theme }: { theme: ThemeChoice }) {
   const bar = (top: number, width: string, colour: string, height = 6) => (
     <View style={{ position: 'absolute', left: 10, top, width: width as `${number}%`, height, borderRadius: 3, backgroundColor: colour }} />
   );
@@ -454,7 +454,7 @@ function ThemePreview({ theme }: { theme: ThemeChoice }) {
   );
 }
 
-const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
+export const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
   standard: { name: 'Standard', about: 'Picture on top, story below' },
   magazine: { name: 'Magazine', about: 'A full cover; scroll to read the article' },
   newspaper: { name: 'Newspaper', about: 'A front page with a classic serif look' },
@@ -462,7 +462,7 @@ const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
 };
 
 /** A small drawing of each card style. */
-function StylePreview({ kind }: { kind: CardStyle }) {
+export function StylePreview({ kind }: { kind: CardStyle }) {
   if (kind === 'magazine') {
     return (
       <View style={[prev.box, { backgroundColor: '#000' }]}>
