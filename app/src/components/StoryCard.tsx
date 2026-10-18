@@ -306,6 +306,11 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     </View>
   );
 
+  // the chain page matches the card: a styled card's own paper (cream Newspaper, black Magazine and Terminal), else the theme
+  const chainLook: { bg?: string; look?: 'light' | 'dark' } = styled
+    ? { bg: STYLE_BG[cardStyle as keyof typeof STYLE_BG], look: cardStyle === 'newspaper' ? 'light' : 'dark' }
+    : { bg: vivid ? tint : undefined };
+
   // the reader's card style (Standard, Magazine, Newspaper or Terminal); all of them can open the attack chain
   const cardFace = styled ? (
     <View style={{ width: cardWidth, flex: 1 }}>
@@ -361,9 +366,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               {cardFace}
               <View style={{ width: cardWidth, flex: 1 }}>
                 {chainReady ? (
-                  <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} bg={vivid ? tint : undefined} />
+                  <AttackChain story={story} scale={scale} width={cardWidth} onBack={hideChain} {...chainLook} />
                 ) : (
-                  <View style={{ flex: 1, backgroundColor: vivid ? tint : C.card }} />
+                  <View style={{ flex: 1, backgroundColor: chainLook.bg ?? C.card }} />
                 )}
               </View>
             </ScrollView>

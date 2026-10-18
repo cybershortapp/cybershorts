@@ -75,6 +75,9 @@ const DARK: typeof LIGHT = {
 };
 
 export type Palette = typeof LIGHT;
+/** Fixed light and dark palettes, for screens that must ignore the chosen theme (the attack chain inside a card style). */
+export const LIGHT_PALETTE = LIGHT;
+export const DARK_PALETTE = DARK;
 
 /** One calm accent per tab, so each section has its own identity. [light, dark] */
 export const TAB_COLOURS: Record<string, [string, string]> = {
