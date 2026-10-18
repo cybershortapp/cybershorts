@@ -182,8 +182,8 @@ LIST_KEY = {"scam_or_legit": "items", "patch_or_panic": "questions", "red_flags"
 def _as_dict(raw, key):
     """Some AI models reply with just the list; put it where we expect it."""
     if isinstance(raw, list):
-        if len(raw) == 1 and isinstance(raw[0], dict) and key not in raw[0]:
-            return raw[0] if any(isinstance(v, list) for v in raw[0].values()) else {key: raw}
+        if len(raw) == 1 and isinstance(raw[0], dict) and key in raw[0]:
+            return raw[0]
         return {key: raw}
     return raw if isinstance(raw, dict) else {}
 
@@ -279,11 +279,13 @@ def make_trending(db, ai, budget, deadline):
     rows = (db.table("stories").select("id,headline,technical,actor_group,products,image_url,country,source,category")
             .gte("created_at", (now - timedelta(hours=48)).isoformat()).order("created_at", desc=True).limit(150).execute().data)
     rows = [r for r in rows if not (r.get("source") or "").startswith("CyberSid")]
+    from tags import PRODUCTS
+    known = {p["name"] for p in PRODUCTS}   # only real products from our list, never vendors or loose AI words
     by_group, by_product = {}, {}
     for r in rows:
         if r.get("actor_group"):
             by_group.setdefault(r["actor_group"], []).append(r)
-        for p in set(r.get("products") or []):
+        for p in set(r.get("products") or []) & known:
             by_product.setdefault(p, []).append(r)
     topic, kind, picked = None, None, []
     for gid, items in sorted(by_group.items(), key=lambda x: -len(x[1])):
@@ -327,7 +329,7 @@ def make_trending(db, ai, budget, deadline):
     countries = {r.get("country") or "INTL" for r in picked}
     deck = {
         "id": hashlib.sha1(f"{topic}|{now.date()}".encode()).hexdigest()[:20],
-        "topic": topic, "title": _short(name, 60), "slides": slides,
+        "topic": topic, "title": _short(slides[0]["title"] or name, 60), "slides": slides,
         "story_ids": [r["id"] for r in picked],
         "country": countries.pop() if len(countries) == 1 else "INTL",
         "expires_at": (now + timedelta(days=3)).isoformat(),
