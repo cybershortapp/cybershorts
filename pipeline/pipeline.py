@@ -713,6 +713,46 @@ def make_roundup(ai, src, items):
     return story, calls
 
 
+# ---- local stories from "for everyone" feeds: a Hyderabad police event or an NHS scam warning ----
+IN_LOCAL = re.compile(r"\b(India|Indian|Cyberabad|Hyderabad|Bengaluru|Bangalore|Mumbai|Delhi|Chennai|Kolkata|Pune|Noida|"
+                      r"Gurugram|Telangana|Andhra|Kerala|Karnataka|Tamil Nadu|Maharashtra|Gujarat|Rajasthan|Uttar Pradesh|"
+                      r"Punjab|Haryana|Odisha|Bihar|UPI|Aadhaar|crore|lakh|CERT-In|I4C|digital arrest|Navratri|Diwali)\b|₹|\bRs\.? ?\d", re.I)
+GB_LOCAL = re.compile(r"\b(UK|U\.K\.|Britain|British|England|English|Scotland|Scottish|Wales|Welsh|Northern Ireland|London|"
+                      r"Manchester|Birmingham|NHS|HMRC|DVLA|Action Fraud|Met Police|Ofcom|Citizens Advice|Which\?)\b|£", re.I)
+ELSEWHERE = re.compile(r"\b(US|U\.S\.|United States|American|Americans|Europe|European|EU|global|globally|worldwide|"
+                       r"Australia|Canada|Germany|France|Japan|Singapore|Pakistan|Bangladesh)\b")
+
+
+def local_country(headline, text, default="INTL"):
+    """A story from a "for everyone" feed that is really about one country (its headline names a place there
+    and the story leans that way) is shown only to readers in that country. Anything else stays for everyone."""
+    if default != "INTL":
+        return default
+    body = f"{headline} {text}"
+    if ELSEWHERE.search(headline):
+        return default
+    for code, rx, other in (("IN", IN_LOCAL, GB_LOCAL), ("GB", GB_LOCAL, IN_LOCAL)):
+        if rx.search(headline) and len(rx.findall(body)) >= 2 and not other.search(body):
+            return code
+    return default
+
+
+def retag_local(db, since):
+    """Recent "for everyone" stories that are really local get their country (cheap, no AI)."""
+    rows = (db.table("stories").select("id,headline,technical,source").eq("country", "INTL")
+            .gte("created_at", since).limit(1000).execute().data)
+    moved = {}
+    for r in rows:
+        if (r.get("source") or "").startswith("CyberSid"):
+            continue
+        c = local_country(r["headline"], r.get("technical") or "")
+        if c != "INTL":
+            db.table("stories").update({"country": c}).eq("id", r["id"]).execute()
+            moved[c] = moved.get(c, 0) + 1
+    return moved
+
+
+
 def recheck_pictures(db, since, limit=15):
     """Recent stories whose news-site picture no longer loads in the app (some sites start blocking apps
     after a while): the picture is removed, so the AI picture step gives the card a new one."""
@@ -942,7 +982,7 @@ def main():
                 "action": s["action"], "cves": cves,
                 "attack_chain": chain, "chain_checked": True, "also_reported": [],
                 "incident": incident, "actor_group": group,
-                "category": s["category"], "country": src["country"], "language": "en",
+                "category": s["category"], "country": local_country(s["headline"], s["technical"], src["country"]), "language": "en",
                 "image_url": image, "published_at": published_of(e).isoformat(),
                 "products": tag_products(title, s["headline"], s["technical"], body[:3000], ai_products=s.get("products")),
                 "zero_day": is_zero_day(title, s["technical"], excerpt, ai_flag=s.get("zero_day")),
@@ -1080,6 +1120,15 @@ def main():
                 print(f"Removed {removed} old AI pictures to save storage.")
         except Exception as ex:
             print(f"[warn] old picture clean-up failed: {ex}")
+
+    # ---- 3a. local stories that came in through "for everyone" feeds (last 7 days, no AI) ----
+    if db and not TEST_MODE:
+        try:
+            moved = retag_local(db, (started - timedelta(days=7)).isoformat())
+            if moved:
+                print(f"[country] local stories now shown only there: {moved}")
+        except Exception as ex:
+            print(f"[warn] local country check: {str(ex)[:80]}")
 
     # ---- 3b. the colour of each picture, for the app's Vivid theme (no AI, a few seconds) ----
     tint_note = "off"
