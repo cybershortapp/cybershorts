@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Text, type TextStyle, View, type ViewStyle } from 'react-native';
 
-/** A line is stretched to both edges only if its words already fill this much of the width. */
-const FULL_ENOUGH = 0.86;
+/** Straight edges only when every line's words already fill this much of the width. */
+const FULL_ENOUGH = 0.85;
 
 /** A run of text with its own look (bold, colour). */
 export type Piece = { text: string; style?: TextStyle };
@@ -55,14 +55,17 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
       const lineWords = words.slice(w, w + n);
       w += n;
       const endsParagraph = i === lineTexts.length - 1 || /\n\s*$/.test(t);
-      // only stretch a line that's already nearly full; a short line (a few long CVE numbers, say)
-      // would get big ugly gaps, so it stays normal, the way books and newspapers do it
-      const full = boxWidth > 0 && (lineWidths[i] ?? 0) >= boxWidth * FULL_ENOUGH;
-      out.push({ words: lineWords, spread: !endsParagraph && lineWords.length > 1 && full });
+      out.push({ words: lineWords, spread: !endsParagraph && lineWords.length > 1 });
     }
     // a word split across two lines (a very long link) would throw the count off: fall back to plain text
-    return w === words.length ? out : null;
-  }, [lineTexts, lineWidths, boxWidth, words]);
+    if (w !== words.length) return null;
+    // One look per paragraph: straight edges only if every line on screen is already nearly full.
+    // If even one line would get big gaps (a few long CVE numbers, say), the whole summary is shown as
+    // normal text, so lines never mix the two looks.
+    const visible = maxLines ? out.slice(0, maxLines) : out;
+    const tidy = boxWidth > 0 && visible.every((r, i) => !r.spread || (lineWidths[i] ?? 0) >= boxWidth * FULL_ENOUGH);
+    return tidy ? out : out.map((r) => ({ ...r, spread: false }));
+  }, [lineTexts, lineWidths, boxWidth, words, maxLines]);
 
   const shown = rows && maxLines ? rows.slice(0, maxLines) : rows;
   const render = (word: Word, k: number) => (
