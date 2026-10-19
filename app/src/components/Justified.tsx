@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Text, type TextStyle, View, type ViewStyle } from 'react-native';
 
+/** A line is stretched to both edges only if its words already fill this much of the width. */
+const FULL_ENOUGH = 0.86;
+
 /** A run of text with its own look (bold, colour). */
 export type Piece = { text: string; style?: TextStyle };
 type Word = Piece[];
@@ -37,6 +40,8 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
   containerStyle?: ViewStyle;
 }) {
   const [lineTexts, setLineTexts] = useState<string[] | null>(null);
+  const [lineWidths, setLineWidths] = useState<number[]>([]);
+  const [boxWidth, setBoxWidth] = useState(0);
   const full = pieces.map((p) => p.text).join('');
   const words = useMemo(() => toWords(pieces), [pieces]);
 
@@ -50,11 +55,14 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
       const lineWords = words.slice(w, w + n);
       w += n;
       const endsParagraph = i === lineTexts.length - 1 || /\n\s*$/.test(t);
-      out.push({ words: lineWords, spread: !endsParagraph && lineWords.length > 1 });
+      // only stretch a line that's already nearly full; a short line (a few long CVE numbers, say)
+      // would get big ugly gaps, so it stays normal, the way books and newspapers do it
+      const full = boxWidth > 0 && (lineWidths[i] ?? 0) >= boxWidth * FULL_ENOUGH;
+      out.push({ words: lineWords, spread: !endsParagraph && lineWords.length > 1 && full });
     }
     // a word split across two lines (a very long link) would throw the count off: fall back to plain text
     return w === words.length ? out : null;
-  }, [lineTexts, words]);
+  }, [lineTexts, lineWidths, boxWidth, words]);
 
   const shown = rows && maxLines ? rows.slice(0, maxLines) : rows;
   const render = (word: Word, k: number) => (
@@ -64,13 +72,15 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
   );
 
   return (
-    <View style={containerStyle} accessible accessibilityLabel={full}>
+    <View style={containerStyle} accessible accessibilityLabel={full} onLayout={(e) => setBoxWidth(Math.round(e.nativeEvent.layout.width))}>
       {/* invisible copy, only to learn where the lines break */}
       <Text
         style={[style, { position: 'absolute', left: 0, right: 0, opacity: 0 }]}
         onTextLayout={(e) => {
           const next = e.nativeEvent.lines.map((l) => l.text);
+          const widths = e.nativeEvent.lines.map((l) => Math.round(l.width));
           setLineTexts((prev) => (prev && prev.length === next.length && prev.every((x, i) => x === next[i]) ? prev : next));
+          setLineWidths((prev) => (prev.length === widths.length && prev.every((x, i) => x === widths[i]) ? prev : widths));
         }}
         accessible={false}
         importantForAccessibility="no-hide-descendants"
