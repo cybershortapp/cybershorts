@@ -16,6 +16,12 @@ on:
         description: "What changed"
         required: false
         default: "Manual update"
+      channel:
+        description: "Who gets it: preview (test app) or production (Play Store users, same app version only)"
+        required: false
+        default: "preview"
+        type: choice
+        options: [preview, production]
 
 permissions:
   contents: read
@@ -51,8 +57,10 @@ jobs:
       # the app's public settings (Supabase address and publishable key) come from eas.json, same as the builds.
       # They are put straight into the environment, so they are baked into the update whatever EAS does with .env files.
       - name: Write app settings
+        env:
+          CHANNEL: ${{ github.event.inputs.channel || 'preview' }}
         run: |
-          jq -r '.build.preview.env | to_entries[] | "\(.key)=\(.value)"' eas.json > .env
+          jq -r --arg p "$CHANNEL" '.build[$p].env | to_entries[] | "\(.key)=\(.value)"' eas.json > .env
           cat .env >> "$GITHUB_ENV"
           echo "Settings found: $(cut -d= -f1 .env | tr '\n' ' ')"
           grep -q '^EXPO_PUBLIC_SUPABASE_URL=https://' .env && grep -q '^EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_' .env \
@@ -70,9 +78,16 @@ jobs:
             grep -aq "$EXPO_PUBLIC_SUPABASE_URL" "$f" || { echo "::error::Supabase address is missing from the $p update. Not publishing."; exit 1; }
             echo "$p update contains the app settings: OK"
           done
-      - name: Publish update to the preview channel
+      # preview: the test app. production: Play Store users, only by hand and only on the main code.
+      # An update only reaches phones with the same app version (runtimeVersion follows the version number).
+      - name: Publish the update
         if: github.event_name != 'pull_request'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MESSAGE: ${{ github.event.inputs.message || github.event.head_commit.message }}
-        run: npx eas-cli update --channel preview --environment preview --skip-bundler --input-dir dist --message "$(echo "$MESSAGE" | head -n1 | cut -c1-80)" --non-interactive
+          CHANNEL: ${{ github.event.inputs.channel || 'preview' }}
+        run: |
+          if [ "$CHANNEL" = "production" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Updates for Play Store users are only sent from main."; exit 1
+          fi
+          npx eas-cli update --channel "$CHANNEL" --environment "$CHANNEL" --skip-bundler --input-dir dist --message "$(echo "$MESSAGE" | head -n1 | cut -c1-80)" --non-interactive

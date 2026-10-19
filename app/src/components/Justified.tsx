@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Text, type TextStyle, View, type ViewStyle } from 'react-native';
 
+/** Straight edges only when every line's words already fill this much of the width. */
+const FULL_ENOUGH = 0.85;
+
 /** A run of text with its own look (bold, colour). */
 export type Piece = { text: string; style?: TextStyle };
 type Word = Piece[];
@@ -37,6 +40,8 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
   containerStyle?: ViewStyle;
 }) {
   const [lineTexts, setLineTexts] = useState<string[] | null>(null);
+  const [lineWidths, setLineWidths] = useState<number[]>([]);
+  const [boxWidth, setBoxWidth] = useState(0);
   const full = pieces.map((p) => p.text).join('');
   const words = useMemo(() => toWords(pieces), [pieces]);
 
@@ -53,8 +58,14 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
       out.push({ words: lineWords, spread: !endsParagraph && lineWords.length > 1 });
     }
     // a word split across two lines (a very long link) would throw the count off: fall back to plain text
-    return w === words.length ? out : null;
-  }, [lineTexts, words]);
+    if (w !== words.length) return null;
+    // One look per paragraph: straight edges only if every line on screen is already nearly full.
+    // If even one line would get big gaps (a few long CVE numbers, say), the whole summary is shown as
+    // normal text, so lines never mix the two looks.
+    const visible = maxLines ? out.slice(0, maxLines) : out;
+    const tidy = boxWidth > 0 && visible.every((r, i) => !r.spread || (lineWidths[i] ?? 0) >= boxWidth * FULL_ENOUGH);
+    return tidy ? out : out.map((r) => ({ ...r, spread: false }));
+  }, [lineTexts, lineWidths, boxWidth, words, maxLines]);
 
   const shown = rows && maxLines ? rows.slice(0, maxLines) : rows;
   const render = (word: Word, k: number) => (
@@ -64,13 +75,15 @@ export function Justified({ pieces, style, lines: maxLines, containerStyle }: {
   );
 
   return (
-    <View style={containerStyle} accessible accessibilityLabel={full}>
+    <View style={containerStyle} accessible accessibilityLabel={full} onLayout={(e) => setBoxWidth(Math.round(e.nativeEvent.layout.width))}>
       {/* invisible copy, only to learn where the lines break */}
       <Text
         style={[style, { position: 'absolute', left: 0, right: 0, opacity: 0 }]}
         onTextLayout={(e) => {
           const next = e.nativeEvent.lines.map((l) => l.text);
+          const widths = e.nativeEvent.lines.map((l) => Math.round(l.width));
           setLineTexts((prev) => (prev && prev.length === next.length && prev.every((x, i) => x === next[i]) ? prev : next));
+          setLineWidths((prev) => (prev.length === widths.length && prev.every((x, i) => x === widths[i]) ? prev : widths));
         }}
         accessible={false}
         importantForAccessibility="no-hide-descendants"
