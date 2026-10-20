@@ -195,7 +195,8 @@ def make_games(db, ai, budget, deadline):
     made_today = len(db.table("games").select("id").gte("created_at", day_start).execute().data)
     room = min(GAMES_PER_RUN, GAMES_PER_DAY - made_today, budget)
     if room <= 0:
-        return "none due (daily limit or no AI left)", 0
+        why = f"{made_today} made today" if made_today >= GAMES_PER_DAY else f"no AI left this run (budget {budget})"
+        return f"none due ({why})", 0
     recent = (db.table("games").select("story_id,style,data,fingerprint").gte("created_at", (now - timedelta(days=REPEAT_DAYS)).isoformat())
               .order("created_at", desc=True).limit(400).execute().data)
     have = {g["story_id"] for g in recent}

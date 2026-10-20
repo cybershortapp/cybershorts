@@ -1145,7 +1145,9 @@ def main():
         from extras import make_games, make_trending
         deadline = started + timedelta(seconds=RUN_SECONDS)
         try:
+            print(f"games: AI budget {ai_budget}, used {ai_calls}")
             games_note, used = make_games(db, ai, max(0, ai_budget - ai_calls), deadline)
+            games_note += f" [budget {ai_budget}, used {ai_calls - used}]"
             ai_calls += used
         except Exception as ex:
             games_note = f"problem: {str(ex)[:100]}"
