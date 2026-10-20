@@ -23,4 +23,9 @@ jobs:
           G=$(ask "games?select=style,story_id&story_id=in.($S)")
           D=$(ask "decks?select=title,country,expires_at&order=created_at.desc&limit=3")
           echo "::notice title=Games for the newest 40 stories::$(echo "$G" | jq -c 'if type=="array" then (length|tostring)+" games: "+(map(.style)|group_by(.)|map(.[0]+" x"+(length|tostring))|join(", ")) else . end')"
+          L=$(ask "games?select=style,story_id,created_at&order=created_at.desc&limit=12")
+          echo "::notice title=Newest games::$(echo "$L" | jq -c 'if type=="array" then map(.style+" "+.story_id[0:10]+" "+.created_at[5:16]) else . end')"
+          IDS=$(echo "$L" | jq -r 'map(.story_id)|join(",")')
+          echo "::notice title=Their stories::$(ask "stories?select=id,category,created_at,country&id=in.($IDS)" | jq -c 'if type=="array" then map(.id[0:10]+" "+.category+" "+.country+" "+.created_at[5:16]) else . end')"
+          echo "::notice title=Newest story ids::$(echo "$S" | cut -c1-120)"
           echo "::notice title=Trending decks::$(echo "$D" | jq -c '.')"
