@@ -1,0 +1,26 @@
+name: app-data-check
+
+# Reads the news, games and trending deck exactly the way the app does (with the app's public key),
+# to check the app can see them. Run it by hand from the Actions tab. Changes nothing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Ask like the app does
+        run: |
+          URL=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_URL' app/eas.json)
+          KEY=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY' app/eas.json)
+          case "$KEY" in sb_publishable_*) ;; *) echo "::error::not the public key"; exit 1;; esac
+          ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
+          S=$(ask "stories?select=id&order=created_at.desc&limit=40" | jq -r 'if type=="array" then (map(.id)|join(",")) else tostring end')
+          G=$(ask "games?select=style,story_id&story_id=in.($S)")
+          D=$(ask "decks?select=title,country,expires_at&order=created_at.desc&limit=3")
+          echo "::notice title=Games for the newest 40 stories::$(echo "$G" | jq -c 'if type=="array" then (length|tostring)+" games: "+(map(.style)|group_by(.)|map(.[0]+" x"+(length|tostring))|join(", ")) else . end')"
+          echo "::notice title=Trending decks::$(echo "$D" | jq -c '.')"
