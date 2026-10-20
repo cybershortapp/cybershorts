@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
 GAMES_PER_RUN = 4
-GAMES_PER_DAY = 30
+GAMES_PER_DAY = 12      # a pool to pick from; each phone shows at most 3 a day
 SIMILAR = 0.72          # a new game this close to a recent one is a repeat
 REPEAT_DAYS = 60
 
