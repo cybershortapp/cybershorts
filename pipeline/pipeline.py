@@ -737,6 +737,32 @@ def local_country(headline, text, default="INTL"):
     return default
 
 
+CRITICAL_WORDS = re.compile(r"\bcritical\b(?! (?:infrastructure|national|services|sectors?|systems|supply))", re.I)
+CVSS_9 = re.compile(r"\bCVSS(?:v?3(?:\.\d)?)?(?: base)?(?: score)?(?: of)?:? ?(9\.\d|10(?:\.0)?)\b", re.I)
+
+
+def raise_to_critical(headline, text, severity, category):
+    """A flaw the headline itself calls critical, or one scored CVSS 9.0 or more, is Critical,
+    so it shows in the Critical tab with its label (readers expect that from the headline)."""
+    if severity == "Critical" or category not in ("Vulnerabilities", "Ransomware", "Breaches", "Malware"):
+        return severity
+    if CRITICAL_WORDS.search(headline or "") or CVSS_9.search(f"{headline} {text}"):
+        return "Critical"
+    return severity
+
+
+def retag_critical(db, since):
+    """Recent stories that should have been Critical (cheap, no AI)."""
+    rows = (db.table("stories").select("id,headline,technical,severity,category").neq("severity", "Critical")
+            .gte("created_at", since).limit(1000).execute().data)
+    n = 0
+    for r in rows:
+        if raise_to_critical(r["headline"], r.get("technical") or "", r["severity"], r.get("category")) == "Critical":
+            db.table("stories").update({"severity": "Critical"}).eq("id", r["id"]).execute()
+            n += 1
+    return n
+
+
 def retag_local(db, since):
     """Recent "for everyone" stories that are really local get their country (cheap, no AI)."""
     rows = (db.table("stories").select("id,headline,technical,source").eq("country", "INTL")
@@ -978,7 +1004,8 @@ def main():
             story = {
                 "id": sid, "source": pub, "url": link, "orig_title": title,
                 "headline": s["headline"], "technical": s["technical"],
-                "why_it_matters": s["why"].strip() or None, "severity": s["severity"],
+                "why_it_matters": s["why"].strip() or None,
+                "severity": raise_to_critical(s["headline"], s["technical"], s["severity"], s["category"]),
                 "action": s["action"], "cves": cves,
                 "attack_chain": chain, "chain_checked": True, "also_reported": [],
                 "incident": incident, "actor_group": group,
@@ -1125,6 +1152,9 @@ def main():
     if db and not TEST_MODE:
         try:
             moved = retag_local(db, (started - timedelta(days=7)).isoformat())
+            raised = retag_critical(db, (started - timedelta(days=7)).isoformat())
+            if raised:
+                print(f"[critical] {raised} recent stories raised to Critical")
             if moved:
                 print(f"[country] local stories now shown only there: {moved}")
         except Exception as ex:
@@ -1259,7 +1289,8 @@ def enrich_existing():
         try:
             s = summarise_ai(ai, r["orig_title"], r["technical"])
             db.table("stories").update({
-                "why_it_matters": s["why"].strip() or None, "severity": s["severity"],
+                "why_it_matters": s["why"].strip() or None,
+                "severity": raise_to_critical(s["headline"], s["technical"], s["severity"], s["category"]),
                 "action": s["action"], "cves": find_cves(r["orig_title"]),
             }).eq("id", r["id"]).execute()
             print(f"[ok]   [{s['severity']}] {r['source']}: {s['why']}")
