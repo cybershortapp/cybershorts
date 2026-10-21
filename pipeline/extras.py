@@ -14,8 +14,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
-GAMES_PER_RUN = 4
-GAMES_PER_DAY = 30
+GAMES_PER_RUN = 1       # one at a time, so games keep coming all day for the newest stories
+GAMES_PER_DAY = 12      # a pool to pick from; each phone shows at most 3 a day
 SIMILAR = 0.72          # a new game this close to a recent one is a repeat
 REPEAT_DAYS = 60
 
@@ -193,9 +193,14 @@ def make_games(db, ai, budget, deadline):
     now = datetime.now(timezone.utc)
     day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     made_today = len(db.table("games").select("id").gte("created_at", day_start).execute().data)
-    room = min(GAMES_PER_RUN, GAMES_PER_DAY - made_today, budget)
+    # spread over the day (UK news arrives 6am to 11pm): by each hour, only that hour's share of the daily total
+    allowed_by_now = min(GAMES_PER_DAY, 1 + (GAMES_PER_DAY * (now.hour + 1)) // 24)
+    room = min(GAMES_PER_RUN, allowed_by_now - made_today, budget)
     if room <= 0:
-        return "none due (daily limit or no AI left)", 0
+        why = (f"{made_today} made today" if made_today >= GAMES_PER_DAY else
+               f"{made_today} made so far today, next one later" if made_today >= allowed_by_now else
+               f"no AI left this run (budget {budget})")
+        return f"none due ({why})", 0
     recent = (db.table("games").select("story_id,style,data,fingerprint").gte("created_at", (now - timedelta(days=REPEAT_DAYS)).isoformat())
               .order("created_at", desc=True).limit(400).execute().data)
     have = {g["story_id"] for g in recent}
