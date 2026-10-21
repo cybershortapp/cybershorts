@@ -11,6 +11,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
       - name: Ask like the app does
@@ -18,7 +19,7 @@ jobs:
           URL=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_URL' app/eas.json)
           KEY=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY' app/eas.json)
           case "$KEY" in sb_publishable_*) ;; *) echo "::error::not the public key"; exit 1;; esac
-          ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
+          ask() { curl -s --max-time 25 "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
           S=$(ask "stories?select=id&order=created_at.desc&limit=40" | jq -r 'if type=="array" then (map(.id)|join(",")) else tostring end')
           G=$(ask "games?select=style,story_id&story_id=in.($S)")
           D=$(ask "decks?select=title,country,expires_at&order=created_at.desc&limit=3")
