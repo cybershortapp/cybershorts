@@ -75,3 +75,77 @@ export function markDeckSeen(id: string) {
   seenDecks.add(id);
   AsyncStorage.setItem(SEEN_DECKS, JSON.stringify([...seenDecks].slice(-100))).catch(() => {});
 }
+
+// ---- release 1.0.4 (second pass): games for everyone, tip and history at the right time ----
+
+/** Recent games for this region, newest first, each with the headline of the story it's about. */
+export type PoolGame = Game & { headline: string };
+export async function fetchGamePool(countries: string[]): Promise<PoolGame[]> {
+  try {
+    const since = new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('games')
+      .select('id,story_id,style,data,created_at,stories!inner(headline,country)')
+      .gte('created_at', since)
+      .in('stories.country', countries)
+      .order('created_at', { ascending: false })
+      .limit(60);
+    if (error || !Array.isArray(data)) return [];
+    return (data as any[])
+      .filter((g) => g && g.id && g.style && g.data && g.stories)
+      .map((g) => ({ id: g.id, story_id: g.story_id, style: g.style, data: g.data, headline: g.stories.headline ?? '' }));
+  } catch {
+    return [];
+  }
+}
+
+// Games a day: at least 3 for everyone; readers who read a lot get one more for every 20 cards, up to 6.
+const CARDS_DAY = 'cards-day';
+let cardsToday = { date: '', count: 0 };
+const cardsReady = AsyncStorage.getItem(CARDS_DAY).then((v) => { if (v) cardsToday = JSON.parse(v); }).catch(() => {});
+export const extrasAllReady = Promise.all([extrasReady, cardsReady]);
+export function markCardRead() {
+  const d = dayKey();
+  cardsToday = cardsToday.date === d ? { date: d, count: cardsToday.count + 1 } : { date: d, count: 1 };
+  if (cardsToday.count % 5 === 0) AsyncStorage.setItem(CARDS_DAY, JSON.stringify(cardsToday)).catch(() => {});
+}
+export function gamesQuotaToday() {
+  const read = cardsToday.date === dayKey() ? cardsToday.count : 0;
+  return Math.min(6, 3 + Math.floor(read / 20));
+}
+export function gamesPlayedToday() {
+  return today.date === dayKey() ? today.count : 0;
+}
+
+/** Today's tip and today's history card for this region (made at 9am), if they exist yet. */
+export async function fetchDailyCards(countries: string[], fields: string) {
+  try {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    const { data, error } = await supabase
+      .from('stories')
+      .select(fields)
+      .in('source', ['CyberSid Tips', 'CyberSid History'])
+      .in('country', countries)
+      .gte('created_at', midnight.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (error || !Array.isArray(data)) return { tip: null, history: null };
+    const rows = data as any[];
+    return { tip: rows.find((r) => r.source === 'CyberSid Tips') ?? null, history: rows.find((r) => r.source === 'CyberSid History') ?? null };
+  } catch {
+    return { tip: null, history: null };
+  }
+}
+
+// a tip or history card is put near the top until it has been read once today
+const PINNED = 'pinned-read';
+let pinnedRead = { date: '', ids: [] as string[] };
+AsyncStorage.getItem(PINNED).then((v) => { if (v) pinnedRead = JSON.parse(v); }).catch(() => {});
+export const pinnedSeen = (id: string) => pinnedRead.date === dayKey() && pinnedRead.ids.includes(id);
+export function markPinnedSeen(id: string) {
+  const d = dayKey();
+  if (pinnedSeen(id)) return;
+  pinnedRead = pinnedRead.date === d ? { date: d, ids: [...pinnedRead.ids, id] } : { date: d, ids: [id] };
+  AsyncStorage.setItem(PINNED, JSON.stringify(pinnedRead)).catch(() => {});
+}

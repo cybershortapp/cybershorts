@@ -4,10 +4,9 @@ import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } fro
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
 import type { Game } from '../lib/extras';
-import type { Story } from '../lib/types';
 import { F } from '../theme';
 
-type GameProps = { game: Game; story: Story; active: boolean };
+type GameProps = { game: Game; active: boolean };
 
 const TITLES: Record<Game['style'], string> = {
   scam_or_legit: 'Scam or legit? Drag it.',
@@ -19,7 +18,7 @@ const TITLES: Record<Game['style'], string> = {
 };
 
 /** A game card in the feed, shown after the story it's about. */
-export function GameCard({ game, story, width, height, active }: GameProps & { width: number; height: number }) {
+export function GameCard({ game, headline, width, height, active }: { game: Game; headline: string; width: number; height: number; active: boolean }) {
   const Body = { scam_or_legit: ScamOrLegit, patch_or_panic: PatchOrPanic, red_flags: RedFlags, real_link: RealLink, order_steps: OrderSteps, crack_meter: CrackMeter }[game.style];
   const theme = THEME[game.style];
   if (!Body) return null;
@@ -27,11 +26,11 @@ export function GameCard({ game, story, width, height, active }: GameProps & { w
     <View style={{ width, height, borderRadius: 24, overflow: 'hidden', backgroundColor: theme.bg }}>
       <View style={styles.head}>
         <Text style={[styles.kicker, { color: theme.accent }]}>30 SECOND GAME</Text>
-        <Text style={[styles.about, { color: theme.muted }]} numberOfLines={1}>About: {story.headline}</Text>
+        <Text style={[styles.about, { color: theme.muted }]} numberOfLines={1}>About: {headline}</Text>
         <Text style={[styles.title, { color: theme.ink }]}>{TITLES[game.style]}</Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Body game={game} story={story} active={active} />
+        <Body game={game} active={active} />
       </View>
       <Text style={[styles.foot, { color: theme.muted }]}>Swipe up to skip · Turn games off in Settings</Text>
     </View>

@@ -46,7 +46,7 @@ import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
-import { type Deck, deckSeen, extrasReady, fetchDeck, fetchGames, type Game, GAME_GAP, gameSeen, gamesLeftToday, markDeckSeen, markGameSeen } from './src/lib/extras';
+import { type Deck, deckSeen, extrasAllReady, fetchDailyCards, fetchDeck, fetchGamePool, GAME_GAP, gameSeen, gamesPlayedToday, gamesQuotaToday, markCardRead, markDeckSeen, markGameSeen, markPinnedSeen, pinnedSeen, type PoolGame } from './src/lib/extras';
 import { useCardLayout } from './src/lib/layout';
 import { installCrashHandler } from './src/lib/crash';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
@@ -67,7 +67,7 @@ const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the
 type FeedItem =
   | { kind: 'story'; key: string; story: Story }
   | { kind: 'deck'; key: string; deck: Deck }
-  | { kind: 'game'; key: string; game: Game; story: Story };
+  | { kind: 'game'; key: string; game: PoolGame };
 
 const EMPTY_TEXT: Partial<Record<Filter, string>> = {
   'Zero-day': "No zero-days right now. Stay tuned: we'll flag the next one the moment it's reported.",
@@ -131,11 +131,12 @@ function Main() {
   const loadingMore = useRef(false);
   const noMore = useRef(new Set<Filter>()); // tabs where every story is already loaded
   // games and the trending deck (release 1.0.4)
-  const [games, setGames] = useState<Map<string, Game>>(new Map());
+  const [pool, setPool] = useState<PoolGame[]>([]);
+  const [daily, setDaily] = useState<{ tip: Story | null; history: Story | null }>({ tip: null, history: null });
+  const placedSlots = useRef<string[]>([]); // the game given to each game spot, so games never jump around
+  const pinnedNow = useRef(new Set<string>()); // tip/history pinned near the top in this visit
   const [deck, setDeck] = useState<Deck | null>(null);
   const [extrasLoaded, setExtrasLoaded] = useState(false);
-  const askedGames = useRef(new Set<string>());
-  const placedGames = useRef(new Set<string>()); // games already given a place, so they don't jump around
   const placedDeck = useRef<string | null>(null);
   const feedRef = useRef<FeedItem[]>([]);
 
@@ -379,66 +380,84 @@ function Main() {
 
   // what this phone has already played and seen
   useEffect(() => {
-    extrasReady.then(() => setExtrasLoaded(true));
+    extrasAllReady.then(() => setExtrasLoaded(true));
   }, []);
-  // games for newly loaded stories (asked once per story)
+  // on each fresh load: the trending deck, the games pool and today's tip and history for this region
   useEffect(() => {
-    const ids = stories.map((s) => s.id).filter((id) => !askedGames.current.has(id));
-    if (!ids.length) return;
-    ids.forEach((id) => askedGames.current.add(id));
-    fetchGames(ids).then((found) => {
-      if (!found.length) return;
-      setGames((cur) => {
-        const next = new Map(cur);
-        found.forEach((g) => next.set(g.story_id, g));
-        return next;
-      });
+    if (loading || (filter !== 'All' && filter !== 'For you')) return;
+    const countries = regionCountries(region);
+    fetchDeck(countries).then(setDeck);
+    fetchGamePool(countries).then(setPool);
+    fetchDailyCards(countries, storyFields()).then((d) => {
+      const [tip, history] = cleanStories([d.tip, d.history].filter(Boolean) as Story[]).reduce<(Story | null)[]>(
+        (acc, s) => (s.source === 'CyberSid Tips' ? [s, acc[1]] : [acc[0], s]), [null, null]);
+      setDaily({ tip, history });
     });
-  }, [stories]);
-  // the trending deck for this region, checked again on each fresh load
-  useEffect(() => {
-    if (filter === 'All' && !loading) fetchDeck(regionCountries(region)).then(setDeck);
   }, [filter, loading, region]);
 
-  // the feed: stories, with the trending deck as the third card and now and then a game after its story.
-  // Games: only if switched on, never one already played, at most one every 8 cards and 3 a day,
-  // never the same kind twice in a row. Once a game has its place it keeps it.
+  // The feed, built from the stories:
+  // - after 9am, today's cyber tip comes after the 2nd card and today's history card after the 4th,
+  //   until they've been read once today (before 9am they aren't out yet)
+  // - the trending deck after the 6th card (All tab), until it's been seen
+  // - games, whatever the news: the first after card 4, then one every 8 cards. Everyone gets at least
+  //   3 a day; readers who read a lot get one more per 20 cards, up to 6. Never a game already played,
+  //   never the same kind twice in a row. A game keeps its spot once given.
   const feed = useMemo<FeedItem[]>(() => {
     const out: FeedItem[] = [];
     const extrasOn = (filter === 'All' || filter === 'For you') && extrasLoaded;
-    let sinceGame = GAME_GAP - 3;
+    const afterNine = new Date().getHours() >= 9;
+    const pin = (s: Story | null) => !!s && extrasOn && filter === 'All' && afterNine && (pinnedNow.current.has(s.id) || !pinnedSeen(s.id));
+    const pinTip = pin(daily.tip) ? daily.tip : null;
+    const pinHistory = pin(daily.history) ? daily.history : null;
+    if (pinTip) pinnedNow.current.add(pinTip.id);
+    if (pinHistory) pinnedNow.current.add(pinHistory.id);
+    const skip = new Set([pinTip?.id, pinHistory?.id].filter(Boolean) as string[]);
+    const unplayed = pool.filter((g) => !gameSeen(g.id) || placedSlots.current.includes(g.id));
+    let left = gamesQuotaToday() - gamesPlayedToday() - placedSlots.current.filter((id) => !gameSeen(id)).length;
+    let slot = 0;
     let lastStyle = '';
-    let newAllowed = gamesLeftToday() - [...placedGames.current].filter((id) => !gameSeen(id)).length;
+    let n = 0; // stories so far
     for (const s of stories) {
+      if (skip.has(s.id)) continue;
       out.push({ kind: 'story', key: s.id, story: s });
-      sinceGame++;
-      if (extrasOn && filter === 'All' && deck && out.length === 2 && (placedDeck.current === deck.id || !deckSeen(deck.id))) {
+      n++;
+      if (n === 2 && pinTip) out.push({ kind: 'story', key: pinTip.id, story: pinTip });
+      if (n === 4 && pinHistory) out.push({ kind: 'story', key: pinHistory.id, story: pinHistory });
+      if (n === 6 && extrasOn && filter === 'All' && deck && (placedDeck.current === deck.id || !deckSeen(deck.id))) {
         placedDeck.current = deck.id;
         out.push({ kind: 'deck', key: `deck-${deck.id}`, deck });
       }
-      const g = games.get(s.id);
-      if (!extrasOn || !prefs.games || !g) continue;
-      const kept = placedGames.current.has(g.id);
-      if (kept || (!gameSeen(g.id) && sinceGame >= GAME_GAP && g.style !== lastStyle && newAllowed > 0)) {
-        if (!kept) {
-          placedGames.current.add(g.id);
-          newAllowed--;
+      if (!extrasOn || !prefs.games || n < 4 || (n - 4) % GAME_GAP !== 0) continue;
+      // a game spot: the game it already had, or a new one if today's allowance isn't used up
+      let g = pool.find((x) => x.id === placedSlots.current[slot]);
+      if (!g && left > 0) {
+        const used = new Set(placedSlots.current);
+        g = unplayed.find((x) => !used.has(x.id) && x.style !== lastStyle) ?? unplayed.find((x) => !used.has(x.id));
+        if (g) {
+          placedSlots.current[slot] = g.id;
+          left--;
         }
-        out.push({ kind: 'game', key: `game-${g.id}`, game: g, story: s });
-        sinceGame = 0;
+      }
+      if (g) {
+        out.push({ kind: 'game', key: `game-${g.id}`, game: g });
         lastStyle = g.style;
       }
+      slot++;
     }
     return out;
-  }, [stories, games, deck, filter, prefs.games, extrasLoaded]);
+  }, [stories, pool, deck, daily, filter, prefs.games, extrasLoaded]);
   useEffect(() => {
     feedRef.current = feed;
   }, [feed]);
-  // a game or deck counts as seen once it's been on screen
+  // what's been on screen: games and the deck count as seen, tips and history as read today,
+  // and every card read counts towards a busy reader's extra games
   useEffect(() => {
     const it = feed[index];
-    if (it?.kind === 'game') markGameSeen(it.game.id);
-    if (it?.kind === 'deck') markDeckSeen(it.deck.id);
+    if (!it) return;
+    markCardRead();
+    if (it.kind === 'game') markGameSeen(it.game.id);
+    if (it.kind === 'deck') markDeckSeen(it.deck.id);
+    if (it.kind === 'story' && (it.story.source === 'CyberSid Tips' || it.story.source === 'CyberSid History')) markPinnedSeen(it.story.id);
   }, [index, feed]);
 
   // jump to the story picked in the brief once the feed is on screen
@@ -502,7 +521,7 @@ function Main() {
                 item.kind === 'deck' ? (
                   <DeckCard deck={item.deck} width={w} height={h} onDone={() => goNext(i)} />
                 ) : (
-                  <GameCard game={item.game} story={item.story} width={w} height={h} active={index === i} />
+                  <GameCard game={item.game} headline={item.game.headline} width={w} height={h} active={index === i} />
                 )
               }
             </ExtraPage>
