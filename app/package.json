@@ -12,7 +12,6 @@
     "@expo-google-fonts/playfair-display": "^0.4.2",
     "@expo-google-fonts/rye": "^0.4.1",
     "@expo-google-fonts/special-elite": "^0.4.1",
-    "@expo-google-fonts/uncial-antiqua": "^0.4.1",
     "@expo-google-fonts/unifrakturmaguntia": "^0.4.1",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",

@@ -465,14 +465,14 @@ export function VikingChain({ story, steps, width, height }: Props) {
       </View>
       <Animated.View style={[styles.sagaCard, { opacity: card, transform: [{ translateY: card.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <Text style={{ fontFamily: FS.saga, fontSize: 13, color: '#8B1E14' }}>Step {i + 1} of {n}</Text>
+          <Text style={{ fontFamily: F.head, fontSize: 12.5, letterSpacing: 0.5, color: '#8B1E14' }}>Step {i + 1} of {n}</Text>
           <Text style={{ fontFamily: F.label, fontSize: 11, letterSpacing: 1, color: '#6B5A40' }} numberOfLines={1}>{st.stage.toUpperCase()}</Text>
         </View>
-        <Text style={{ fontFamily: FS.saga, fontSize: 19, lineHeight: 25, color: '#2B1D12', marginTop: 6 }}>{short(st)}</Text>
+        <Text style={{ fontFamily: FS.serifBold, fontSize: 19, lineHeight: 25, color: '#2B1D12', marginTop: 6 }}>{short(st)}</Text>
         <Text style={{ fontFamily: FS.serif, fontSize: 13.5, lineHeight: 20, color: '#2B1D12', marginTop: 4 }} numberOfLines={3}>{st.detail}</Text>
         <Links step={st} story={story} colour="#6B5A40" />
         <Pressable onPress={() => setI(i === n - 1 ? 0 : i + 1)} style={[styles.whiteBtn, { backgroundColor: '#2B1D12' }]} accessibilityRole="button">
-          <Text style={{ color: '#E8D9B5', fontFamily: FS.saga, fontSize: 15 }}>{i === n - 1 ? 'Start again' : 'Next step'}</Text>
+          <Text style={{ color: '#E8D9B5', fontFamily: F.head, fontSize: 15 }}>{i === n - 1 ? 'Start again' : 'Next step'}</Text>
         </Pressable>
       </Animated.View>
     </View>
