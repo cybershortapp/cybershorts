@@ -4,6 +4,7 @@ import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } fro
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
 import type { Game } from '../lib/extras';
+import { buzz } from '../lib/buzz';
 import { F } from '../theme';
 import { Fit } from './Fit';
 
@@ -112,6 +113,7 @@ function ScamOrLegit({ game }: GameProps) {
     const right = saidScam === item.scam;
     setResults((r) => [...r, right]);
     setMood(right ? 'good' : 'bad');
+    (right ? buzz.right : buzz.wrong)();
     setLine(right ? `Nice! ${item.why}` : `Gotcha. ${item.why}`);
     setI((k) => k + 1);
     pan.setValue({ x: 0, y: 0 });
@@ -220,6 +222,7 @@ function PatchOrPanic({ game, active }: GameProps) {
     const id = setInterval(() => setT((x) => {
       if (x <= 1) {
         setPicked(-1);
+        buzz.wrong(); // the bomb goes off
         return 0;
       }
       return x - 1;
@@ -233,6 +236,7 @@ function PatchOrPanic({ game, active }: GameProps) {
     if (result) return;
     setPicked(k);
     if (k === q.answer) setScore((s) => s + 1);
+    (k === q.answer ? buzz.right : buzz.wrong)();
   };
   const last = i === qs.length - 1;
   const boom = result && !right;
@@ -330,9 +334,15 @@ function RedFlags({ game }: GameProps) {
               key={k}
               onPress={() => {
                 if (l.flag) {
-                  if (!hit) setFound((f) => [...f, k]);
+                  if (!hit) {
+                    setFound((f) => [...f, k]);
+                    buzz.right();
+                  }
                   setTip({ text: l.why, bad: false });
-                } else setTip({ text: 'Nope, that bit is fine. Keep looking.', bad: true });
+                } else {
+                  setTip({ text: 'Nope, that bit is fine. Keep looking.', bad: true });
+                  buzz.wrong();
+                }
               }}
               style={[styles.mailLine, hit && styles.mailHit]}
               accessibilityRole="button"
@@ -395,7 +405,11 @@ function RealLink({ game }: GameProps) {
           return (
             <Animated.View key={k} style={show ? { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] } : undefined}>
               <Pressable
-                onPress={() => !answered && setPicked(k)}
+                onPress={() => {
+                  if (answered) return;
+                  setPicked(k);
+                  (k === d.answer ? buzz.right : buzz.wrong)();
+                }}
                 style={[styles.link, answered && isOk && { borderColor: '#0F7A47', backgroundColor: '#E7F7EE' }, answered && k === picked && !isOk && { borderColor: '#B42318', backgroundColor: '#FDECEA' }]}
                 accessibilityRole="button"
               >
@@ -462,10 +476,13 @@ function OrderSteps({ game }: GameProps) {
                 onPress={() => {
                   if (k === placed.length) {
                     setPlaced((p) => [...p, k]);
+                    if (placed.length + 1 === d.steps.length) buzz.right();
+                    else buzz.tap();
                     setLine({ text: ['Yes. Lock the door first.', 'Good, one step closer.', 'Nice. Nearly there.', ''][placed.length], good: true });
                     setWrong(null);
                   } else {
                     setWrong(k);
+                    buzz.wrong();
                     setTries((n) => n + 1);
                     setLine({ text: OOPS[tries % OOPS.length], good: false });
                   }
@@ -518,6 +535,7 @@ function CrackMeter({ game }: GameProps) {
   }, [L.w, meter]);
   useEffect(() => {
     if (L.w < 100) return;
+    buzz.right(); // the hacker rage quits
     const a = Animated.loop(Animated.sequence([
       Animated.timing(rage, { toValue: 1, duration: 90, useNativeDriver: true }),
       Animated.timing(rage, { toValue: -1, duration: 90, useNativeDriver: true }),
@@ -555,7 +573,7 @@ function CrackMeter({ game }: GameProps) {
         ))}
       </View>
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-        <Pressable onPress={() => { setWeak(true); setWords([]); }} style={[styles.ghost, { borderColor: '#FF8A80' }]}><Text style={{ color: '#FF8A80', fontFamily: F.head, fontSize: 13.5 }}>Try Password1!</Text></Pressable>
+        <Pressable onPress={() => { setWeak(true); setWords([]); buzz.wrong(); }} style={[styles.ghost, { borderColor: '#FF8A80' }]}><Text style={{ color: '#FF8A80', fontFamily: F.head, fontSize: 13.5 }}>Try Password1!</Text></Pressable>
         <Pressable onPress={() => { setWeak(false); setWords([]); }} style={[styles.ghost, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }]}><Text style={{ color: '#0F1420', fontFamily: F.head, fontSize: 13.5 }}>Start again</Text></Pressable>
       </View>
       <Text style={[styles.foot, { color: 'rgba(255,255,255,0.55)', position: 'relative', marginTop: 10 }]}>Three or four random words beat a short password with symbols.</Text>

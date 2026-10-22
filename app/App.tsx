@@ -40,7 +40,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { AshIntro } from './src/components/AshIntro';
+import { ParticleIntro } from './src/components/ParticleIntro';
 import { DeckCard } from './src/components/DeckCard';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { GameCard } from './src/components/Games';
@@ -778,7 +778,7 @@ export default function App() {
           <Main />
         </ErrorBoundary>
       )}
-      {intro && <AshIntro onDone={() => setIntro(false)} />}
+      {intro && <ParticleIntro onDone={() => setIntro(false)} />}
     </SafeAreaProvider>
   );
 }
