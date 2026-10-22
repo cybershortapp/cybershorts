@@ -10,11 +10,10 @@ export type Prefs = {
   email: string; // email they subscribed with ('' if none)
   region: '' | 'GB' | 'IN' | 'INTL'; // where they are ('' = work it out from the phone)
   games: boolean; // short awareness games after some stories
-  chainView: 'auto' | 'list' | 'metro' | 'story' | 'breakin' | 'defend' | 'viking'; // how the attack chain is drawn ('auto' = what suits each story)
 };
 
 const KEY = 'prefs-v1';
-const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '', region: '', games: true, chainView: 'auto' };
+const EMPTY: Prefs = { products: [], terms: [], alerts: true, alertsAsked: false, email: '', region: '', games: true };
 
 let state: Prefs = EMPTY;
 let loaded = false;

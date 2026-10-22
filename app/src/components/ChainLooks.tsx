@@ -21,8 +21,8 @@ export const CHAIN_VIEWS: { id: ChainView; label: string; icon: IconName }[] = [
 ];
 
 /**
- * "Mix": each story gets the view that suits it, and stories of the same kind take turns between a few
- * suitable views, so readers see them all. The same story always opens the same way.
+ * Each story's chain gets one design that suits it; stories of the same kind take turns between a few
+ * suitable designs, so readers see them all. The same story always opens the same way.
  */
 export function viewFor(story: Story): Exclude<ChainView, 'auto'> {
   const steps = story.attack_chain ?? [];
@@ -33,7 +33,7 @@ export function viewFor(story: Story): Exclude<ChainView, 'auto'> {
   else if (story.category === 'Scams' || /phish|scam|social engineer|help desk|vishing|smish/.test(text)) pool = ['story', 'defend', 'metro'];
   else if (story.category === 'Breaches' || has('Exfiltration') || /breach|leak|stole|stolen/.test(text)) pool = ['breakin', 'defend', 'viking'];
   else if (story.actor_group || /state|apt|espionage|spy/.test(text)) pool = ['viking', 'story', 'metro'];
-  else pool = ['metro', 'story', 'defend', 'breakin', 'viking'];
+  else pool = ['list', 'metro', 'story', 'defend', 'breakin', 'viking'];
   if (steps.length <= 3) pool = pool.filter((v) => v !== 'breakin').concat(pool.includes('story') ? [] : ['story']);
   let h = 0;
   for (const ch of story.id) h = (h * 31 + ch.charCodeAt(0)) | 0;
