@@ -16,6 +16,7 @@ import { Bangers_400Regular } from '@expo-google-fonts/bangers/400Regular';
 import { ComicNeue_700Bold } from '@expo-google-fonts/comic-neue/700Bold';
 import { Rye_400Regular } from '@expo-google-fonts/rye/400Regular';
 import { SpecialElite_400Regular } from '@expo-google-fonts/special-elite/400Regular';
+import { UncialAntiqua_400Regular } from '@expo-google-fonts/uncial-antiqua/400Regular';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -748,6 +749,7 @@ export default function App() {
     UnifrakturMaguntia_400Regular, JetBrainsMono_400Regular, JetBrainsMono_700Bold,
     CormorantGaramond_700Bold, // Ronin
     Rye_400Regular, SpecialElite_400Regular, Bangers_400Regular, ComicNeue_700Bold, // trending deck looks
+    UncialAntiqua_400Regular, // Viking raid chain
   });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();

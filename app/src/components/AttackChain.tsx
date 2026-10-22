@@ -8,7 +8,7 @@ import { setPrefs, usePrefs } from '../lib/prefs';
 import { supabase } from '../lib/supabase';
 import type { ChainStep, Story, ThreatGroup } from '../lib/types';
 import { DARK_PALETTE, F, LIGHT_PALETTE, type Palette, useTheme } from '../theme';
-import { BreakInChain, CHAIN_VIEWS, DefendChain, MetroChain, StoryChain } from './ChainLooks';
+import { BreakInChain, CHAIN_VIEWS, DefendChain, MetroChain, StoryChain, VikingChain } from './ChainLooks';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 type Props = { story: Story; scale: number; width: number; onBack: () => void; bg?: string; look?: 'light' | 'dark' };
@@ -196,7 +196,7 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
   const target = [inc.victim, inc.victim_country].filter(Boolean).join(', ');
   const view = usePrefs().chainView ?? 'list';
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const Drawn = { metro: MetroChain, story: StoryChain, breakin: BreakInChain, defend: DefendChain, list: null }[view];
+  const Drawn = { metro: MetroChain, story: StoryChain, breakin: BreakInChain, defend: DefendChain, viking: VikingChain, list: null }[view];
 
   return (
     <View style={{ flex: 1, backgroundColor: K.bg }}>

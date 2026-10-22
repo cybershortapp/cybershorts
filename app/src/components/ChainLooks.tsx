@@ -2,20 +2,21 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path, Polyline, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Path, Polyline, Rect } from 'react-native-svg';
 
 import { chainLink } from '../lib/actions';
 import type { ChainStep, Story } from '../lib/types';
-import { F } from '../theme';
+import { F, FS } from '../theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-export type ChainView = 'list' | 'metro' | 'story' | 'breakin' | 'defend';
+export type ChainView = 'list' | 'metro' | 'story' | 'breakin' | 'defend' | 'viking';
 export const CHAIN_VIEWS: { id: ChainView; label: string; icon: IconName }[] = [
   { id: 'list', label: 'List', icon: 'format-list-bulleted' },
   { id: 'metro', label: 'Metro', icon: 'subway-variant' },
   { id: 'story', label: 'Story', icon: 'play-box-multiple-outline' },
   { id: 'breakin', label: 'Break-in', icon: 'office-building-outline' },
   { id: 'defend', label: 'Defend', icon: 'shield-check-outline' },
+  { id: 'viking', label: 'Viking raid', icon: 'sail-boat' },
 ];
 
 type Props = { story: Story; steps: ChainStep[]; width: number; height: number; onBack: () => void };
@@ -370,7 +371,112 @@ export function DefendChain({ steps }: Props) {
   );
 }
 
+// ------------------------------------------------------------------------------------------------
+// Viking raid: the attack told as a saga. A longship sails a winding sea route from shield to shield,
+// each landing is a chapter, and the last one is the stronghold.
+// ------------------------------------------------------------------------------------------------
+const SAGA: Record<string, [string, string]> = {
+  // [short name on the map, chapter title]
+  Reconnaissance: ['Scouted the coast', 'The scouts watch from the sea'],
+  'Resource Development': ['Forged their weapons', 'Axes sharpened, ships made ready'],
+  'Initial Access': ['Through the gate', 'A trick at the gate'],
+  Execution: ['Lit the torches', 'Torches lit inside the walls'],
+  Persistence: ['Hid a way back', 'A secret path for the return'],
+  'Privilege Escalation': ['Took the throne', 'The raider sits on the throne'],
+  Stealth: ['Moved unseen', 'Shadows in the great hall'],
+  'Defense Impairment': ['Silenced the guards', 'The watchmen fall silent'],
+  'Credential Access': ['Seized the keys', 'The keys to every door'],
+  Discovery: ['Mapped the halls', 'Every room counted'],
+  'Lateral Movement': ['Raided the halls', 'From hall to hall'],
+  Collection: ['Gathered the gold', 'Treasure piled high'],
+  'Command and Control': ['Signal fires', 'Signals to the ships'],
+  Exfiltration: ['Carried off the loot', 'The loot sails away'],
+  Impact: ['Burned the stronghold', 'Fire in the stronghold'],
+};
+const SHIELDS: [string, string][] = [['#1E4F8A', '#E8C547'], ['#8B1E14', '#F3E7C9'], ['#2F5D3A', '#E8C547'], ['#6B3FA0', '#F3E7C9']];
+const saga = (st: ChainStep) => SAGA[st.stage] ?? [short(st), short(st)];
+
+export function VikingChain({ story, steps, width, height }: Props) {
+  const [i, setI] = useState(0);
+  const n = steps.length;
+  const sheetH = 236;
+  const mapH = Math.max(180, height - sheetH - 8);
+  // fits any number of landings: neighbours sit on opposite sides, so they can be closer than a shield's height
+  const rowH = Math.max(32, Math.min(110, (mapH - 64) / Math.max(1, n - 1)));
+  const pts = steps.map((_, k) => ({ x: k === n - 1 && n % 2 === 1 ? width / 2 : k % 2 ? width * 0.74 : width * 0.26, y: 30 + k * rowH }));
+  const route = pts.map((p, k) => (k === 0 ? `M${p.x} ${p.y}` : `C${(pts[k - 1].x + p.x) / 2} ${pts[k - 1].y} ${(pts[k - 1].x + p.x) / 2} ${p.y} ${p.x} ${p.y}`)).join(' ');
+  const ship = useRef(new Animated.ValueXY(pts[0])).current;
+  useEffect(() => {
+    Animated.timing(ship, { toValue: pts[i], duration: 800, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, pts[i].x, pts[i].y, ship]);
+  const bob = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(bob, { toValue: 1, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(bob, { toValue: 0, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    a.start();
+    return () => a.stop();
+  }, [bob]);
+  const facing = i > 0 && pts[i].x < pts[i - 1].x ? -1 : 1;
+  const card = useEntrance(i);
+  const st = steps[i];
+  return (
+    <View style={{ flex: 1 }}>
+      <LinearGradient colors={['#123247', '#0A1C2B', '#07121C']} style={StyleSheet.absoluteFill} />
+      <View style={{ height: mapH }}>
+        <Svg width={width} height={mapH} style={StyleSheet.absoluteFill}>
+          <Path d={`M16 ${mapH * 0.2} q10 -6 20 0 t20 0 M${width - 70} ${mapH * 0.08} q10 -6 20 0 t20 0 M${width * 0.42} ${mapH * 0.55} q10 -6 20 0 t20 0 M24 ${mapH * 0.8} q10 -6 20 0 t20 0`} fill="none" stroke="rgba(243,231,201,0.18)" strokeWidth={2} />
+          <Path d={route} fill="none" stroke="rgba(243,231,201,0.35)" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" />
+          {pts.map((p, k) => {
+            const [c1, c2] = SHIELDS[k % SHIELDS.length];
+            return (
+              <G key={k} opacity={k <= i ? 1 : 0.4}>
+                <Circle cx={p.x} cy={p.y} r={18} fill={c1} stroke="#3B2A1A" strokeWidth={3} />
+                <Path d={`M${p.x} ${p.y - 18} V${p.y + 18} M${p.x - 18} ${p.y} H${p.x + 18}`} stroke={c2} strokeWidth={6} />
+                <Circle cx={p.x} cy={p.y} r={18} fill="none" stroke="#C9A45C" strokeWidth={3} />
+                <Circle cx={p.x} cy={p.y} r={4.5} fill="#C9A45C" stroke="#3B2A1A" strokeWidth={2} />
+              </G>
+            );
+          })}
+        </Svg>
+        {pts.map((p, k) => (
+          <Pressable key={k} onPress={() => setI(k)} hitSlop={6} style={{ position: 'absolute', left: Math.max(4, Math.min(width - 164, p.x - 80)), top: p.y + 22, width: 160, alignItems: 'center' }} accessibilityRole="button">
+            <Text numberOfLines={1} style={[styles.vikingLabel, { color: k <= i ? '#F3E7C9' : 'rgba(243,231,201,0.5)', fontFamily: k === i ? F.head : F.label }]}>{saga(steps[k])[0]}</Text>
+          </Pressable>
+        ))}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -30, top: -54, transform: [...ship.getTranslateTransform(), { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }, { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) }, { scaleX: facing }] }}>
+          <Svg width={60} height={52} viewBox="0 0 64 56">
+            <Path d="M30 6 V40" stroke="#3B2A1A" strokeWidth={3} />
+            <Path d="M14 8 H46 V34 H14 Z" fill="#F3E7C9" stroke="#3B2A1A" strokeWidth={2} />
+            <Path d="M19 8 V34 M27 8 V34 M35 8 V34 M43 8 V34" stroke="#B42318" strokeWidth={4} />
+            <Path d="M2 38 Q30 54 58 38 L62 30 Q60 26 56 30 L54 36 Q30 46 8 36 L6 30 Q2 28 2 34 Z" fill="#6B4423" stroke="#3B2A1A" strokeWidth={2} />
+            <Circle cx={18} cy={42} r={3} fill="#C9A45C" />
+            <Circle cx={30} cy={44} r={3} fill="#C9A45C" />
+            <Circle cx={42} cy={42} r={3} fill="#C9A45C" />
+          </Svg>
+        </Animated.View>
+      </View>
+      <Animated.View style={[styles.sagaCard, { opacity: card, transform: [{ translateY: card.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontFamily: FS.saga, fontSize: 13, color: '#8B1E14' }}>Chapter {i + 1} of {n}</Text>
+          <Text style={{ fontFamily: F.label, fontSize: 11, letterSpacing: 1, color: '#6B5A40' }} numberOfLines={1}>{st.stage.toUpperCase()}</Text>
+        </View>
+        <Text style={{ fontFamily: FS.saga, fontSize: 19, lineHeight: 25, color: '#2B1D12', marginTop: 6 }}>{saga(st)[1]}</Text>
+        <Text style={{ fontFamily: FS.serif, fontSize: 13.5, lineHeight: 20, color: '#2B1D12', marginTop: 4 }} numberOfLines={3}>{st.detail}</Text>
+        <Links step={st} story={story} colour="#6B5A40" />
+        <Pressable onPress={() => setI(i === n - 1 ? 0 : i + 1)} style={[styles.whiteBtn, { backgroundColor: '#2B1D12' }]} accessibilityRole="button">
+          <Text style={{ color: '#E8D9B5', fontFamily: FS.saga, fontSize: 15 }}>{i === n - 1 ? 'The saga ends · Sail again' : 'Sail on'}</Text>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  vikingLabel: { fontSize: 12, backgroundColor: 'rgba(7,18,28,0.8)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
+  sagaCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: '#E8D9B5', borderRadius: 10, borderWidth: 3, borderColor: '#C9A45C', padding: 16 },
   train: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#E5372A' },
   metroCard: { position: 'absolute', left: 10, right: 10, bottom: 10, backgroundColor: '#141A2E', borderRadius: 22, padding: 16 },
   whiteBtn: { marginTop: 12, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },

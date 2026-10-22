@@ -253,4 +253,5 @@ export const FS = {
   typewriter: 'SpecialElite_400Regular',
   comic: 'Bangers_400Regular',
   comicBody: 'ComicNeue_700Bold',
+  saga: 'UncialAntiqua_400Regular', // Viking raid chain
 };
