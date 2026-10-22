@@ -4,9 +4,11 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 
 import { chainLink } from '../lib/actions';
 import { cleanGroup } from '../lib/clean';
+import { setPrefs, usePrefs } from '../lib/prefs';
 import { supabase } from '../lib/supabase';
 import type { ChainStep, Story, ThreatGroup } from '../lib/types';
 import { DARK_PALETTE, F, LIGHT_PALETTE, type Palette, useTheme } from '../theme';
+import { BreakInChain, CHAIN_VIEWS, DefendChain, MetroChain, StoryChain } from './ChainLooks';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 type Props = { story: Story; scale: number; width: number; onBack: () => void; bg?: string; look?: 'light' | 'dark' };
@@ -192,6 +194,9 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
   const steps = story.attack_chain ?? [];
   const inc = story.incident ?? {};
   const target = [inc.victim, inc.victim_country].filter(Boolean).join(', ');
+  const view = usePrefs().chainView ?? 'list';
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const Drawn = { metro: MetroChain, story: StoryChain, breakin: BreakInChain, defend: DefendChain, list: null }[view];
 
   return (
     <View style={{ flex: 1, backgroundColor: K.bg }}>
@@ -205,6 +210,30 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
         </View>
       </Pressable>
 
+      {/* five ways to see the same attack; the last one picked is remembered */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 14, paddingBottom: 10 }}>
+        {CHAIN_VIEWS.map((v) => {
+          const on = v.id === view;
+          return (
+            <Pressable
+              key={v.id}
+              onPress={() => setPrefs({ chainView: v.id })}
+              style={[styles.viewPill, { backgroundColor: on ? K.red : K.panel, borderColor: on ? K.red : K.panelBorder }]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <MaterialCommunityIcons name={v.icon} size={14 * s} color={on ? '#FFFFFF' : K.muted} />
+              <Text style={{ fontSize: 12.5 * s, color: on ? '#FFFFFF' : K.body, fontFamily: F.label }}>{v.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {Drawn ? (
+        <View style={{ flex: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' }} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+          {box.h > 0 && steps.length > 0 && <Drawn key={view} story={story} steps={steps} width={box.w} height={box.h} onBack={onBack} />}
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18 * s, paddingBottom: 28 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 25 * s, lineHeight: 30 * s, color: K.text, fontFamily: F.head, letterSpacing: -0.5 }}>How the attack worked</Text>
         <Text style={{ fontSize: 13.5 * s, lineHeight: 19 * s, color: K.muted, fontFamily: F.body, marginTop: 6 * s }}>{story.headline}</Text>
@@ -242,6 +271,7 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
           Stages follow MITRE ATT&CK. Countries are only shown when officially stated.
         </Text>
       </ScrollView>
+      )}
     </View>
   );
 });
@@ -258,6 +288,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   pathDot: { borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   divider: { height: 1 },
+  viewPill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { borderRadius: 999, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 4 },
 });

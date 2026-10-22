@@ -12,6 +12,10 @@ import { LibreBaskerville_700Bold } from '@expo-google-fonts/libre-baskerville/7
 import { PlayfairDisplay_900Black } from '@expo-google-fonts/playfair-display/900Black';
 import { UnifrakturMaguntia_400Regular } from '@expo-google-fonts/unifrakturmaguntia/400Regular';
 import { CormorantGaramond_700Bold } from '@expo-google-fonts/cormorant-garamond/700Bold';
+import { Bangers_400Regular } from '@expo-google-fonts/bangers/400Regular';
+import { ComicNeue_700Bold } from '@expo-google-fonts/comic-neue/700Bold';
+import { Rye_400Regular } from '@expo-google-fonts/rye/400Regular';
+import { SpecialElite_400Regular } from '@expo-google-fonts/special-elite/400Regular';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -743,6 +747,7 @@ export default function App() {
     LibreBaskerville_400Regular, LibreBaskerville_400Regular_Italic, LibreBaskerville_700Bold, PlayfairDisplay_900Black,
     UnifrakturMaguntia_400Regular, JetBrainsMono_400Regular, JetBrainsMono_700Bold,
     CormorantGaramond_700Bold, // Ronin
+    Rye_400Regular, SpecialElite_400Regular, Bangers_400Regular, ComicNeue_700Bold, // trending deck looks
   });
   const [timedOut, setTimedOut] = useState(false);
   const C = useTheme();

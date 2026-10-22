@@ -249,4 +249,8 @@ export const FS = {
   mono: 'JetBrainsMono_400Regular',
   monoBold: 'JetBrainsMono_700Bold',
   ink: 'CormorantGaramond_700Bold', // Ronin headlines
+  wanted: 'Rye_400Regular', // deck looks: Wanted poster, Case file, Comic
+  typewriter: 'SpecialElite_400Regular',
+  comic: 'Bangers_400Regular',
+  comicBody: 'ComicNeue_700Bold',
 };

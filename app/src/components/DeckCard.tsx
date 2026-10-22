@@ -6,6 +6,7 @@ import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 
 import type { Deck } from '../lib/extras';
 import { F } from '../theme';
+import { LookDeck, lookOf } from './DeckLooks';
 
 const ACCENTS = ['#FFB86B', '#7DD3FC', '#FF8A80', '#FDE68A', '#4ADE80', '#C9A8FF'];
 
@@ -31,7 +32,13 @@ function SlidePicture({ uri, active }: { uri: string | null; active: boolean }) 
  * A trending deck: a few full-card slides about a group or topic in the news right now.
  * Swipe sideways (or tap Next) through the slides; swipe up to go back to the news.
  */
-export function DeckCard({ deck, width, height, onDone }: { deck: Deck; width: number; height: number; onDone?: () => void }) {
+export function DeckCard(props: { deck: Deck; width: number; height: number; onDone?: () => void }) {
+  const look = lookOf(props.deck);
+  if (look) return <LookDeck {...props} look={look} />;
+  return <ClassicDeck {...props} />;
+}
+
+function ClassicDeck({ deck, width, height, onDone }: { deck: Deck; width: number; height: number; onDone?: () => void }) {
   const [i, setI] = useState(0);
   const pager = useRef<ScrollView>(null);
   const n = deck.slides.length;

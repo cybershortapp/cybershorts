@@ -1,10 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
 import type { Game } from '../lib/extras';
 import { F } from '../theme';
+import { Fit } from './Fit';
 
 type GameProps = { game: Game; active: boolean };
 
@@ -45,24 +46,6 @@ const THEME: Record<Game['style'], { bg: string; ink: string; muted: string; acc
   order_steps: { bg: '#F1EEFF', ink: '#1C1440', muted: '#5D5585', accent: '#6A3FE0' },
   crack_meter: { bg: '#0F1420', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#4ADE80' },
 };
-
-/** Keeps a game inside its card: on a short screen, or with big phone text, the game shrinks to fit
- *  instead of running under the footer and off the bottom. */
-function Fit({ children }: { children: ReactNode }) {
-  const [room, setRoom] = useState(0);
-  const [need, setNeed] = useState(0);
-  const scale = room > 0 && need > room + 1 ? Math.max(0.7, room / need) : 1;
-  return (
-    <View style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => setRoom(e.nativeEvent.layout.height)}>
-      <View
-        style={{ minHeight: room || undefined, transformOrigin: 'top', transform: [{ scale }] }}
-        onLayout={(e) => setNeed(e.nativeEvent.layout.height)}
-      >
-        {children}
-      </View>
-    </View>
-  );
-}
 
 // ---- little pieces shared by the games ----
 function Line({ text, good }: { text: string; good: boolean }) {

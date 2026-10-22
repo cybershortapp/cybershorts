@@ -4,7 +4,11 @@ import { supabase } from './supabase';
 
 export type GameStyle = 'scam_or_legit' | 'patch_or_panic' | 'red_flags' | 'real_link' | 'order_steps' | 'crack_meter';
 export type Game = { id: string; story_id: string; style: GameStyle; data: any };
-export type DeckSlide = { kicker: string; title: string; text: string; points: string[]; image: string | null };
+export type DeckSlide = {
+  kicker: string; title: string; text: string; points: string[]; image: string | null;
+  /** extras for the deck looks: the look itself (on the first slide), a time label (Timeline), two speech bubbles (Comic) */
+  style?: string; when?: string; say?: string[];
+};
 export type Deck = { id: string; topic: string; title: string; slides: DeckSlide[]; story_ids: string[]; country: string };
 
 const SEEN_GAMES = 'games-seen';
