@@ -14,6 +14,8 @@ const safe = (p: () => Promise<void>) => {
 export const buzz = {
   tick: () => safe(() => Haptics.selectionAsync()),
   tap: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
+  medium: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)),
+  soft: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)),
   thump: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)),
   right: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
   wrong: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)),

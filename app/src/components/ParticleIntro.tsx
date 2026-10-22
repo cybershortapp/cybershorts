@@ -7,7 +7,8 @@ import { F } from '../theme';
 
 const BG = '#05070F'; // same as the phone's own splash screen, so the hand-over is seamless
 const LOGO = 200;
-const DURATION = 2300;
+const DURATION = 2300; // the effect itself
+const HOLD = 1000; // the finished logo stays on screen this long before the news shows
 const LOCK = 0.68; // when the dots lock into the logo
 
 // points inside the logo (x, y in a 200 x 200 box) and the logo's own colour at each point
@@ -196,11 +197,12 @@ const POINTS: [number, number, string][] = [
 
 /**
  * The opening: tiny dots in the logo's colours fly in from all over the screen and come together
- * into the CyberSid logo, which then goes solid with a ring of light. The phone ticks as they fly in
- * and gives one strong tap when they lock. About two seconds; skipped with reduced motion.
+ * into the CyberSid logo, which then goes solid with a ring of light, and stays a second before the news.
+ * The phone patters faster and stronger as the dots rush in and thumps when they lock. Skipped with reduced motion.
  */
 export function ParticleIntro({ onDone }: { onDone: () => void }) {
   const t = useRef(new Animated.Value(0)).current;
+  const out = useRef(new Animated.Value(0)).current; // the fade to the news, after the hold
   const { width, height } = Dimensions.get('window');
 
   const dots = useMemo(() => {
@@ -228,10 +230,25 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
           onDone();
           return;
         }
-        // vibration that follows the picture: light ticks as the dots arrive, one strong tap on the lock
-        [0.16, 0.3, 0.44, 0.56].forEach((f) => timers.push(setTimeout(buzz.tick, DURATION * f)));
-        timers.push(setTimeout(buzz.thump, DURATION * LOCK));
-        Animated.timing(t, { toValue: 1, duration: DURATION, easing: Easing.linear, useNativeDriver: true }).start(() => onDone());
+        // vibration that follows the picture: a patter that speeds up and gets stronger as the dots
+        // rush together, a double thump when they lock into the logo, then a soft pulse with the ring
+        const lock = DURATION * LOCK;
+        let at = 120;
+        let gap = 150;
+        while (at < lock - 60) {
+          const near = at / lock; // 0 at the start, 1 at the lock
+          timers.push(setTimeout(near < 0.45 ? buzz.tick : near < 0.8 ? buzz.tap : buzz.medium, at));
+          at += gap;
+          gap = Math.max(38, gap * 0.86);
+        }
+        timers.push(setTimeout(buzz.thump, lock));
+        timers.push(setTimeout(buzz.thump, lock + 90));
+        timers.push(setTimeout(buzz.soft, lock + 330));
+        Animated.sequence([
+          Animated.timing(t, { toValue: 1, duration: DURATION, easing: Easing.linear, useNativeDriver: true }),
+          Animated.delay(HOLD),
+          Animated.timing(out, { toValue: 1, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start(() => onDone());
       })
       .catch(() => onDone());
     return () => {
@@ -245,7 +262,7 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
   const ring = t.interpolate({ inputRange: [LOCK, LOCK + 0.22], outputRange: [0.6, 2.2], extrapolate: 'clamp' });
   const ringOpacity = t.interpolate({ inputRange: [LOCK, LOCK + 0.04, LOCK + 0.22], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   const word = t.interpolate({ inputRange: [LOCK + 0.06, LOCK + 0.18], outputRange: [0, 1], extrapolate: 'clamp' });
-  const fade = t.interpolate({ inputRange: [0.9, 1], outputRange: [1, 0], extrapolate: 'clamp' });
+  const fade = out.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, { opacity: fade }]} pointerEvents="none">
