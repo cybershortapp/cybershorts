@@ -396,26 +396,7 @@ export function DefendChain({ steps }: Props) {
 // Viking raid: the attack told as a saga. A longship sails a winding sea route from shield to shield,
 // each landing is a chapter, and the last one is the stronghold.
 // ------------------------------------------------------------------------------------------------
-const SAGA: Record<string, [string, string]> = {
-  // [short name on the map, chapter title]
-  Reconnaissance: ['Scouted the coast', 'The scouts watch from the sea'],
-  'Resource Development': ['Forged their weapons', 'Axes sharpened, ships made ready'],
-  'Initial Access': ['Through the gate', 'A trick at the gate'],
-  Execution: ['Lit the torches', 'Torches lit inside the walls'],
-  Persistence: ['Hid a way back', 'A secret path for the return'],
-  'Privilege Escalation': ['Took the throne', 'The raider sits on the throne'],
-  Stealth: ['Moved unseen', 'Shadows in the great hall'],
-  'Defense Impairment': ['Silenced the guards', 'The watchmen fall silent'],
-  'Credential Access': ['Seized the keys', 'The keys to every door'],
-  Discovery: ['Mapped the halls', 'Every room counted'],
-  'Lateral Movement': ['Raided the halls', 'From hall to hall'],
-  Collection: ['Gathered the gold', 'Treasure piled high'],
-  'Command and Control': ['Signal fires', 'Signals to the ships'],
-  Exfiltration: ['Carried off the loot', 'The loot sails away'],
-  Impact: ['Burned the stronghold', 'Fire in the stronghold'],
-};
 const SHIELDS: [string, string][] = [['#1E4F8A', '#E8C547'], ['#8B1E14', '#F3E7C9'], ['#2F5D3A', '#E8C547'], ['#6B3FA0', '#F3E7C9']];
-const saga = (st: ChainStep) => SAGA[st.stage] ?? [short(st), short(st)];
 
 export function VikingChain({ story, steps, width, height }: Props) {
   const [i, setI] = useState(0);
@@ -464,31 +445,34 @@ export function VikingChain({ story, steps, width, height }: Props) {
         </Svg>
         {pts.map((p, k) => (
           <Pressable key={k} onPress={() => setI(k)} hitSlop={6} style={{ position: 'absolute', left: Math.max(4, Math.min(width - 164, p.x - 80)), top: p.y + 22, width: 160, alignItems: 'center' }} accessibilityRole="button">
-            <Text numberOfLines={1} style={[styles.vikingLabel, { color: k <= i ? '#F3E7C9' : 'rgba(243,231,201,0.5)', fontFamily: k === i ? F.head : F.label }]}>{saga(steps[k])[0]}</Text>
+            <Text numberOfLines={1} style={[styles.vikingLabel, { color: k <= i ? '#F3E7C9' : 'rgba(243,231,201,0.5)', fontFamily: k === i ? F.head : F.label }]}>{short(steps[k])}</Text>
           </Pressable>
         ))}
-        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -30, top: -54, transform: [...ship.getTranslateTransform(), { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }, { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) }, { scaleX: facing }] }}>
-          <Svg width={60} height={52} viewBox="0 0 64 56">
-            <Path d="M30 6 V40" stroke="#3B2A1A" strokeWidth={3} />
-            <Path d="M14 8 H46 V34 H14 Z" fill="#F3E7C9" stroke="#3B2A1A" strokeWidth={2} />
-            <Path d="M19 8 V34 M27 8 V34 M35 8 V34 M43 8 V34" stroke="#B42318" strokeWidth={4} />
-            <Path d="M2 38 Q30 54 58 38 L62 30 Q60 26 56 30 L54 36 Q30 46 8 36 L6 30 Q2 28 2 34 Z" fill="#6B4423" stroke="#3B2A1A" strokeWidth={2} />
-            <Circle cx={18} cy={42} r={3} fill="#C9A45C" />
-            <Circle cx={30} cy={44} r={3} fill="#C9A45C" />
-            <Circle cx={42} cy={42} r={3} fill="#C9A45C" />
-          </Svg>
+        {/* two layers: sailing (JS animation) and rocking (native animation) must never share one view, or phones crash */}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -30, top: -54, transform: ship.getTranslateTransform() }}>
+          <Animated.View style={{ transform: [{ translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }, { rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) }, { scaleX: facing }] }}>
+            <Svg width={60} height={52} viewBox="0 0 64 56">
+              <Path d="M30 6 V40" stroke="#3B2A1A" strokeWidth={3} />
+              <Path d="M14 8 H46 V34 H14 Z" fill="#F3E7C9" stroke="#3B2A1A" strokeWidth={2} />
+              <Path d="M19 8 V34 M27 8 V34 M35 8 V34 M43 8 V34" stroke="#B42318" strokeWidth={4} />
+              <Path d="M2 38 Q30 54 58 38 L62 30 Q60 26 56 30 L54 36 Q30 46 8 36 L6 30 Q2 28 2 34 Z" fill="#6B4423" stroke="#3B2A1A" strokeWidth={2} />
+              <Circle cx={18} cy={42} r={3} fill="#C9A45C" />
+              <Circle cx={30} cy={44} r={3} fill="#C9A45C" />
+              <Circle cx={42} cy={42} r={3} fill="#C9A45C" />
+            </Svg>
+          </Animated.View>
         </Animated.View>
       </View>
       <Animated.View style={[styles.sagaCard, { opacity: card, transform: [{ translateY: card.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <Text style={{ fontFamily: FS.saga, fontSize: 13, color: '#8B1E14' }}>Chapter {i + 1} of {n}</Text>
+          <Text style={{ fontFamily: FS.saga, fontSize: 13, color: '#8B1E14' }}>Step {i + 1} of {n}</Text>
           <Text style={{ fontFamily: F.label, fontSize: 11, letterSpacing: 1, color: '#6B5A40' }} numberOfLines={1}>{st.stage.toUpperCase()}</Text>
         </View>
-        <Text style={{ fontFamily: FS.saga, fontSize: 19, lineHeight: 25, color: '#2B1D12', marginTop: 6 }}>{saga(st)[1]}</Text>
+        <Text style={{ fontFamily: FS.saga, fontSize: 19, lineHeight: 25, color: '#2B1D12', marginTop: 6 }}>{short(st)}</Text>
         <Text style={{ fontFamily: FS.serif, fontSize: 13.5, lineHeight: 20, color: '#2B1D12', marginTop: 4 }} numberOfLines={3}>{st.detail}</Text>
         <Links step={st} story={story} colour="#6B5A40" />
         <Pressable onPress={() => setI(i === n - 1 ? 0 : i + 1)} style={[styles.whiteBtn, { backgroundColor: '#2B1D12' }]} accessibilityRole="button">
-          <Text style={{ color: '#E8D9B5', fontFamily: FS.saga, fontSize: 15 }}>{i === n - 1 ? 'The saga ends · Sail again' : 'Sail on'}</Text>
+          <Text style={{ color: '#E8D9B5', fontFamily: FS.saga, fontSize: 15 }}>{i === n - 1 ? 'Start again' : 'Next step'}</Text>
         </Pressable>
       </Animated.View>
     </View>
