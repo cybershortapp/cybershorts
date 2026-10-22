@@ -269,8 +269,17 @@ Slides in this order:
 4 what happened recently (from the stories, name the victims the stories name)
 5 how to stay safe (3 short points)
 6 your takeaway (one strong line people remember)
+Each slide also has:
+- "when": a short time label for a timeline, like a year the stories give, "This week", "Today" or "Now".
+  Empty if the stories give no time. Never guess a year.
+- "say": two comic speech bubbles telling that slide's part as a tiny scene, max 70 chars each. Bubble 1 is the
+  attacker, a victim or the situation talking; bubble 2 is an ordinary person reacting or learning. Plain and fun.
 JSON: {"slides":[{"kicker":"max 24 chars, capitals","title":"max 60 chars","text":"max 170 chars or empty",
-"points":["max 80 chars each, 0 to 4 of them"]}]}"""
+"points":["max 80 chars each, 0 to 4 of them"],"when":"max 12 chars or empty","say":["bubble 1","bubble 2"]}]}"""
+
+# the look of each new deck: hacker groups take turns between these, products between those
+GROUP_LOOKS = ["wanted", "case", "comic", "timeline"]
+PRODUCT_LOOKS = ["timeline", "case", "comic"]
 
 
 def make_trending(db, ai, budget, deadline):
@@ -315,7 +324,7 @@ def make_trending(db, ai, budget, deadline):
                        f"{(g.get('summary') or '')[:700]}\nKnown methods: {', '.join((g.get('methods') or [])[:8])}")
     listing = "\n".join(f"- {r['headline']}: {r['technical'][:500]}" for r in picked)
     try:
-        raw = ai.json(DECK_PROMPT, f"Topic: {name}{profile}\n\nStories:\n{listing}", 1400)
+        raw = ai.json(DECK_PROMPT, f"Topic: {name}{profile}\n\nStories:\n{listing}", 2200)
     except Exception as ex:
         return f"problem: {str(ex)[:80]}", 1
     raw = _as_dict(raw, "slides")
@@ -324,13 +333,21 @@ def make_trending(db, ai, budget, deadline):
         title = _short(s.get("title"), 70)
         if not title:
             continue
+        say = [_short(x, 80) for x in (s.get("say") or []) if isinstance(x, str) and x.strip()][:2]
         slides.append({"kicker": _short(s.get("kicker"), 28).upper(), "title": title, "text": _short(s.get("text"), 190),
-                       "points": [_short(p, 90) for p in (s.get("points") or [])[:4] if p]})
+                       "points": [_short(p, 90) for p in (s.get("points") or [])[:4] if p],
+                       "when": _short(s.get("when"), 14).upper(), "say": say if len(say) == 2 else []})
     if len(slides) < 5:
         return "skipped (AI reply unusable)", 1
     pics = [r["image_url"] for r in picked if r.get("image_url")]
     for i, s in enumerate(slides):
         s["image"] = pics[i % len(pics)] if pics else None
+    # the app reads the look from the first slide (no database change needed); older apps just ignore it
+    looks = GROUP_LOOKS if kind == "group" else PRODUCT_LOOKS
+    look = looks[now.date().toordinal() % len(looks)]
+    if look == "comic" and sum(1 for s in slides if s["say"]) < len(slides) - 1:
+        look = "case"   # a comic needs its speech bubbles
+    slides[0]["style"] = look
     countries = {r.get("country") or "INTL" for r in picked}
     deck = {
         "id": hashlib.sha1(f"{topic}|{now.date()}".encode()).hexdigest()[:20],
@@ -340,7 +357,7 @@ def make_trending(db, ai, budget, deadline):
         "expires_at": (now + timedelta(days=3)).isoformat(),
     }
     db.table("decks").upsert(deck).execute()
-    print(f"[deck] {name}: {len(slides)} slides from {len(picked)} stories")
+    print(f"[deck] {name}: {len(slides)} slides from {len(picked)} stories, look: {look}")
     return f"new deck: {name}", 1
 
 
