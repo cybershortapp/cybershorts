@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
@@ -26,12 +26,12 @@ export function GameCard({ game, headline, width, height, active }: { game: Game
     <View style={{ width, height, borderRadius: 24, overflow: 'hidden', backgroundColor: theme.bg }}>
       <View style={styles.head}>
         <Text style={[styles.kicker, { color: theme.accent }]}>30 SECOND GAME</Text>
-        <Text style={[styles.about, { color: theme.muted }]} numberOfLines={1}>About: {headline}</Text>
+        <Text style={[styles.about, { color: theme.muted }]} numberOfLines={2}>About: {headline}</Text>
         <Text style={[styles.title, { color: theme.ink }]}>{TITLES[game.style]}</Text>
       </View>
-      <View style={{ flex: 1 }}>
+      <Fit>
         <Body game={game} active={active} />
-      </View>
+      </Fit>
       <Text style={[styles.foot, { color: theme.muted }]}>Swipe up to skip · Turn games off in Settings</Text>
     </View>
   );
@@ -45,6 +45,24 @@ const THEME: Record<Game['style'], { bg: string; ink: string; muted: string; acc
   order_steps: { bg: '#F1EEFF', ink: '#1C1440', muted: '#5D5585', accent: '#6A3FE0' },
   crack_meter: { bg: '#0F1420', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#4ADE80' },
 };
+
+/** Keeps a game inside its card: on a short screen, or with big phone text, the game shrinks to fit
+ *  instead of running under the footer and off the bottom. */
+function Fit({ children }: { children: ReactNode }) {
+  const [room, setRoom] = useState(0);
+  const [need, setNeed] = useState(0);
+  const scale = room > 0 && need > room + 1 ? Math.max(0.7, room / need) : 1;
+  return (
+    <View style={{ flex: 1, overflow: 'hidden' }} onLayout={(e) => setRoom(e.nativeEvent.layout.height)}>
+      <View
+        style={{ minHeight: room || undefined, transformOrigin: 'top', transform: [{ scale }] }}
+        onLayout={(e) => setNeed(e.nativeEvent.layout.height)}
+      >
+        {children}
+      </View>
+    </View>
+  );
+}
 
 // ---- little pieces shared by the games ----
 function Line({ text, good }: { text: string; good: boolean }) {
@@ -237,7 +255,7 @@ function PatchOrPanic({ game, active }: GameProps) {
   const boom = result && !right;
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 18 }}>
+    <View style={{ flexGrow: 1, paddingHorizontal: 18 }}>
       <View style={styles.fuseTrack}>
         <View style={[styles.fuse, { width: `${result ? (right ? 100 : 0) : (t / FUSE) * 100}%` }]} />
       </View>
@@ -319,7 +337,7 @@ function RedFlags({ game }: GameProps) {
   }, [swim]);
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 14 }}>
+    <View style={{ flexGrow: 1, paddingHorizontal: 14 }}>
       <Text style={[styles.counter, { color: '#10233A' }]}>{found.length} / {total} found</Text>
       <View style={styles.mail}>
         {lines.map((l, k) => {
@@ -383,7 +401,7 @@ function RealLink({ game }: GameProps) {
   const right = picked === d.answer;
   const pulse = useBounce(picked);
   return (
-    <View style={{ flex: 1, paddingHorizontal: 16 }}>
+    <View style={{ flexGrow: 1, paddingHorizontal: 16 }}>
       <Text style={[styles.q, { color: '#1E1A14', marginTop: 4 }]}>{d.ask}</Text>
       <View style={{ gap: 12, marginTop: 14 }}>
         {d.options.map((o, k) => {
@@ -441,28 +459,23 @@ function OrderSteps({ game }: GameProps) {
     else stamp.setValue(0);
   }, [done, stamp]);
   return (
-    <View style={{ flex: 1, paddingHorizontal: 16 }}>
+    <View style={{ flexGrow: 1, paddingHorizontal: 16 }}>
       <Text style={[styles.q, { color: '#1C1440', fontSize: 17, lineHeight: 23 }]}>{d.ask}</Text>
-      <View style={{ gap: 8, marginTop: 12 }}>
-        {d.steps.map((s, k) => (
-          <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 }}>
-            <View style={[styles.num, { backgroundColor: k < placed.length ? '#0F7A47' : '#C4B8F5' }]}>
-              <Text style={styles.numText}>{k + 1}</Text>
-            </View>
-            {k < placed.length ? (
-              <View style={styles.slotFilled}><Text style={styles.slotText}>{s}</Text></View>
-            ) : (
-              <View style={styles.slotEmpty} />
-            )}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+        {d.steps.map((_, k) => (
+          <View key={k} style={[styles.num, { backgroundColor: k < placed.length ? '#0F7A47' : '#C4B8F5' }]}>
+            <Text style={styles.numText}>{k < placed.length ? '\u2713' : k + 1}</Text>
           </View>
         ))}
       </View>
-      <Text style={[styles.line, { color: line.good ? '#0F7A47' : '#B42318', marginTop: 12 }]}>{done ? d.why : line.text}</Text>
-      {!done && (
-        <View style={{ gap: 10, marginTop: 12 }}>
-          {SHUFFLE.filter((k) => k < d.steps.length && !placed.includes(k)).map((k) => (
+      <Text style={[styles.line, { color: line.good ? '#0F7A47' : '#B42318', marginTop: 10 }]}>{done ? d.why : line.text}</Text>
+      <View style={{ gap: 10, marginTop: 12 }}>
+        {SHUFFLE.filter((k) => k < d.steps.length).map((k) => {
+          const at = placed.indexOf(k);
+          return (
             <Animated.View key={k} style={wrong === k ? { transform: [{ translateX: shake.interpolate({ inputRange: [0, 1], outputRange: [0, 10] }) }] } : undefined}>
               <Pressable
+                disabled={at >= 0 || done}
                 onPress={() => {
                   if (k === placed.length) {
                     setPlaced((p) => [...p, k]);
@@ -474,15 +487,20 @@ function OrderSteps({ game }: GameProps) {
                     setLine({ text: OOPS[tries % OOPS.length], good: false });
                   }
                 }}
-                style={styles.tile}
+                style={[styles.tile, at >= 0 && styles.tileDone]}
                 accessibilityRole="button"
               >
-                <Text style={styles.tileText}>{d.steps[k]}</Text>
+                {at >= 0 && (
+                  <View style={[styles.num, styles.tileNum]}>
+                    <Text style={styles.numText}>{at + 1}</Text>
+                  </View>
+                )}
+                <Text style={[styles.tileText, { flex: 1 }, at >= 0 && { color: '#0F4D2E' }]}>{d.steps[k]}</Text>
               </Pressable>
             </Animated.View>
-          ))}
-        </View>
-      )}
+          );
+        })}
+      </View>
       {done && (
         <Animated.View style={[styles.stamp, { opacity: stamp, transform: [{ rotate: '-10deg' }, { scale: stamp.interpolate({ inputRange: [0, 1], outputRange: [2, 1] }) }] }]}>
           <Text style={styles.stampText}>BREACH-PROOF</Text>
@@ -525,7 +543,7 @@ function CrackMeter({ game }: GameProps) {
     return () => a.stop();
   }, [L.w, rage]);
   return (
-    <View style={{ flex: 1, paddingHorizontal: 16 }}>
+    <View style={{ flexGrow: 1, paddingHorizontal: 16 }}>
       <Animated.View style={{ alignSelf: 'center', transform: [{ rotate: rage.interpolate({ inputRange: [-1, 1], outputRange: ['-5deg', '5deg'] }) }] }}>
         <Svg width={130} height={112} viewBox="0 0 150 130">
           <Path d="M40 70 Q40 20 75 20 Q110 20 110 70 Z" fill="#2A3350" stroke="#4ADE80" strokeWidth={3} />
@@ -605,15 +623,14 @@ const styles = StyleSheet.create({
   linkWhy: { fontFamily: F.label, fontSize: 13, lineHeight: 18, marginTop: 8, color: '#1E1A14' },
   odd: { backgroundColor: '#B42318', color: '#FFFFFF' },
   verdict: { fontFamily: F.brand, fontSize: 17 },
-  linkTip: { position: 'absolute', bottom: 12, left: 16, right: 16, textAlign: 'center', color: '#8A7F6E', fontFamily: F.medium, fontSize: 12 },
+  linkTip: { marginTop: 'auto', paddingTop: 12, paddingBottom: 4, textAlign: 'center', color: '#8A7F6E', fontFamily: F.medium, fontSize: 12 },
   num: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   numText: { color: '#FFFFFF', fontFamily: F.head, fontSize: 14 },
-  slotFilled: { flex: 1, borderWidth: 2, borderColor: '#0F7A47', borderRadius: 12, backgroundColor: '#FFFFFF', padding: 9 },
-  slotText: { color: '#0F4D2E', fontFamily: F.head, fontSize: 13.5, lineHeight: 18 },
-  slotEmpty: { flex: 1, height: 40, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C4B8F5', borderRadius: 12 },
-  tile: { minHeight: 48, borderRadius: 14, borderWidth: 2, borderColor: '#1C1440', backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center', shadowColor: '#1C1440', shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  tile: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, borderRadius: 14, borderWidth: 2, borderColor: '#1C1440', backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center', shadowColor: '#1C1440', shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  tileDone: { borderColor: '#0F7A47', backgroundColor: '#E9F8EF', shadowColor: '#0F7A47' },
+  tileNum: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#0F7A47' },
   tileText: { color: '#1C1440', fontFamily: F.head, fontSize: 14.5, lineHeight: 19 },
-  stamp: { alignSelf: 'center', marginTop: 24, borderWidth: 5, borderColor: '#0F7A47', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 10, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)' },
+  stamp: { alignSelf: 'center', marginTop: 16, borderWidth: 5, borderColor: '#0F7A47', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 10, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)' },
   stampText: { color: '#0F7A47', fontFamily: F.brand, fontSize: 24, letterSpacing: 1 },
   stampAgain: { color: '#1C1440', fontFamily: F.head, fontSize: 13, marginTop: 6, textDecorationLine: 'underline' },
   pw: { marginTop: 10, minHeight: 50, borderRadius: 12, backgroundColor: '#161D2E', borderWidth: 2, borderColor: '#2A3350', padding: 12, justifyContent: 'center' },
