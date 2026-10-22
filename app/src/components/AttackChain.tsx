@@ -8,7 +8,7 @@ import { setPrefs, usePrefs } from '../lib/prefs';
 import { supabase } from '../lib/supabase';
 import type { ChainStep, Story, ThreatGroup } from '../lib/types';
 import { DARK_PALETTE, F, LIGHT_PALETTE, type Palette, useTheme } from '../theme';
-import { BreakInChain, CHAIN_VIEWS, DefendChain, MetroChain, StoryChain, VikingChain } from './ChainLooks';
+import { BreakInChain, CHAIN_VIEWS, DefendChain, MetroChain, StoryChain, VikingChain, viewFor } from './ChainLooks';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 type Props = { story: Story; scale: number; width: number; onBack: () => void; bg?: string; look?: 'light' | 'dark' };
@@ -194,7 +194,8 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
   const steps = story.attack_chain ?? [];
   const inc = story.incident ?? {};
   const target = [inc.victim, inc.victim_country].filter(Boolean).join(', ');
-  const view = usePrefs().chainView ?? 'list';
+  const picked = usePrefs().chainView ?? 'auto';
+  const view = picked === 'auto' ? viewFor(story) : picked;
   const [box, setBox] = useState({ w: 0, h: 0 });
   const Drawn = { metro: MetroChain, story: StoryChain, breakin: BreakInChain, defend: DefendChain, viking: VikingChain, list: null }[view];
 
@@ -213,17 +214,18 @@ export const AttackChain = memo(function AttackChain({ story, scale: s, onBack, 
       {/* five ways to see the same attack; the last one picked is remembered */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 14, paddingBottom: 10 }}>
         {CHAIN_VIEWS.map((v) => {
-          const on = v.id === view;
+          const on = v.id === picked;
+          const shown = !on && picked === 'auto' && v.id === view; // in Mix, outline the view it chose
           return (
             <Pressable
               key={v.id}
               onPress={() => setPrefs({ chainView: v.id })}
-              style={[styles.viewPill, { backgroundColor: on ? K.red : K.panel, borderColor: on ? K.red : K.panelBorder }]}
+              style={[styles.viewPill, { backgroundColor: on ? K.red : K.panel, borderColor: on || shown ? K.red : K.panelBorder }]}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
             >
-              <MaterialCommunityIcons name={v.icon} size={14 * s} color={on ? '#FFFFFF' : K.muted} />
-              <Text style={{ fontSize: 12.5 * s, color: on ? '#FFFFFF' : K.body, fontFamily: F.label }}>{v.label}</Text>
+              <MaterialCommunityIcons name={v.icon} size={14 * s} color={on ? '#FFFFFF' : shown ? K.red : K.muted} />
+              <Text style={{ fontSize: 12.5 * s, color: on ? '#FFFFFF' : shown ? K.red : K.body, fontFamily: F.label }}>{v.label}</Text>
             </Pressable>
           );
         })}

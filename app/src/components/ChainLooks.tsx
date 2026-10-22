@@ -9,8 +9,9 @@ import type { ChainStep, Story } from '../lib/types';
 import { F, FS } from '../theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-export type ChainView = 'list' | 'metro' | 'story' | 'breakin' | 'defend' | 'viking';
+export type ChainView = 'auto' | 'list' | 'metro' | 'story' | 'breakin' | 'defend' | 'viking';
 export const CHAIN_VIEWS: { id: ChainView; label: string; icon: IconName }[] = [
+  { id: 'auto', label: 'Mix', icon: 'shuffle-variant' },
   { id: 'list', label: 'List', icon: 'format-list-bulleted' },
   { id: 'metro', label: 'Metro', icon: 'subway-variant' },
   { id: 'story', label: 'Story', icon: 'play-box-multiple-outline' },
@@ -18,6 +19,26 @@ export const CHAIN_VIEWS: { id: ChainView; label: string; icon: IconName }[] = [
   { id: 'defend', label: 'Defend', icon: 'shield-check-outline' },
   { id: 'viking', label: 'Viking raid', icon: 'sail-boat' },
 ];
+
+/**
+ * "Mix": each story gets the view that suits it, and stories of the same kind take turns between a few
+ * suitable views, so readers see them all. The same story always opens the same way.
+ */
+export function viewFor(story: Story): Exclude<ChainView, 'auto'> {
+  const steps = story.attack_chain ?? [];
+  const has = (stage: string) => steps.some((st) => st.stage === stage);
+  const text = `${story.category} ${story.headline}`.toLowerCase();
+  let pool: Exclude<ChainView, 'auto'>[];
+  if (story.category === 'Ransomware' || /ransom/.test(text)) pool = ['viking', 'breakin', 'metro'];
+  else if (story.category === 'Scams' || /phish|scam|social engineer|help desk|vishing|smish/.test(text)) pool = ['story', 'defend', 'metro'];
+  else if (story.category === 'Breaches' || has('Exfiltration') || /breach|leak|stole|stolen/.test(text)) pool = ['breakin', 'defend', 'viking'];
+  else if (story.actor_group || /state|apt|espionage|spy/.test(text)) pool = ['viking', 'story', 'metro'];
+  else pool = ['metro', 'story', 'defend', 'breakin', 'viking'];
+  if (steps.length <= 3) pool = pool.filter((v) => v !== 'breakin').concat(pool.includes('story') ? [] : ['story']);
+  let h = 0;
+  for (const ch of story.id) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return pool[Math.abs(h) % pool.length];
+}
 
 type Props = { story: Story; steps: ChainStep[]; width: number; height: number; onBack: () => void };
 
