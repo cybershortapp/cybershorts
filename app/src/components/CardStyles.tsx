@@ -80,6 +80,7 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
   const y = useRef(new Animated.Value(0)).current;
   const scroller = useRef<any>(null);
   const start = useRef(0);
+  const box = useRef({ content: 0, view: 0 });
   const label = labelOf(story);
   const cover = Math.round(height * 0.66);
   const s = Math.min(width / 390, 1.3);
@@ -113,10 +114,22 @@ function Magazine({ story, width, height, saved, showImage, onImageError, onOpen
         onScrollBeginDrag={(e: any) => {
           start.current = e.nativeEvent.contentOffset.y;
         }}
+        onLayout={(e: any) => {
+          box.current.view = e.nativeEvent.layout.height;
+        }}
+        onContentSizeChange={(_w: number, h: number) => {
+          box.current.content = h;
+        }}
         onScrollEndDrag={(e: any) => {
-          // a quick flick up while still on the cover: go to the next story instead of reading this one
+          if (!onNext) return;
+          const now = e.nativeEvent.contentOffset.y;
           const v = Math.abs(e.nativeEvent.velocity?.y ?? 0);
-          if (onNext && start.current < 30 && e.nativeEvent.contentOffset.y > start.current && v > 1.6) {
+          const end = Math.max(0, box.current.content - box.current.view);
+          // a quick flick up while still on the cover: go to the next story instead of reading this one
+          const flick = start.current < 30 && now > start.current && v > 1.6;
+          // already at the end of the article and the finger pushes up again: go to the next story too
+          const pastEnd = end > 0 && start.current >= end - 4 && now >= start.current - 1;
+          if (flick || pastEnd) {
             onNext();
             requestAnimationFrame(() => scroller.current?.scrollTo?.({ y: 0, animated: false }));
           }
