@@ -128,7 +128,9 @@ function ScamOrLegit({ game }: GameProps) {
         onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
         onPanResponderRelease: (_, g) => {
           if (g.dx < -90 || g.dx > 90) {
-            Animated.timing(pan, { toValue: { x: g.dx < 0 ? -420 : 420, y: g.dy }, duration: 180, useNativeDriver: false }).start(() => answer(g.dx < 0));
+            // read the direction now: the phone resets the gesture numbers before the fly-off animation ends
+            const saidScam = g.dx < 0;
+            Animated.timing(pan, { toValue: { x: saidScam ? -420 : 420, y: g.dy }, duration: 180, useNativeDriver: false }).start(() => answer(saidScam));
           } else {
             Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
           }
