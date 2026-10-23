@@ -23,6 +23,8 @@ jobs:
           G=$(ask "games?select=style,story_id&story_id=in.($S)")
           D=$(ask "decks?select=title,country,expires_at&order=created_at.desc&limit=3")
           echo "::notice title=Games for the newest 40 stories::$(echo "$G" | jq -c 'if type=="array" then (length|tostring)+" games: "+(map(.style)|group_by(.)|map(.[0]+" x"+(length|tostring))|join(", ")) else . end')"
+          SC=$(ask "games?select=data,created_at&style=eq.scam_or_legit&order=created_at.desc&limit=4")
+          echo "::notice title=Scam or legit answers::$(echo "$SC" | jq -c 'if type=="array" then map(.created_at[5:16]+": "+(.data.items|map((.scam|tojson)+" "+(.scam|type)+" "+.from)|join(" ; "))) else . end')"
           L=$(ask "games?select=style,story_id,created_at&order=created_at.desc&limit=12")
           echo "::notice title=Newest games::$(echo "$L" | jq -c 'if type=="array" then map(.style+" "+.story_id[0:10]+" "+.created_at[5:16]) else . end')"
           IDS=$(echo "$L" | jq -r 'map(.story_id)|join(",")')
