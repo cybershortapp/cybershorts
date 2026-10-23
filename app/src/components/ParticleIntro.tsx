@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useEffect, useMemo, useRef } from 'react';
 import { AccessibilityInfo, Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
 
-import { buzz } from '../lib/buzz';
+import { buzz, openingSound } from '../lib/buzz';
 import { F } from '../theme';
 
 const BG = '#05070F'; // same as the phone's own splash screen, so the hand-over is seamless
@@ -223,10 +223,12 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     let stopped = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
+    const sound = openingSound(); // loaded straight away so it starts exactly with the dots
     AccessibilityInfo.isReduceMotionEnabled()
       .then((reduce) => {
         if (stopped) return;
         if (reduce) {
+          sound?.remove();
           onDone();
           return;
         }
@@ -244,6 +246,7 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
         timers.push(setTimeout(buzz.thump, lock));
         timers.push(setTimeout(buzz.thump, lock + 90));
         timers.push(setTimeout(buzz.soft, lock + 330));
+        sound?.play(); // the Heartbeat: pulses race with the dots and hit on the lock
         Animated.sequence([
           Animated.timing(t, { toValue: 1, duration: DURATION, easing: Easing.linear, useNativeDriver: true }),
           Animated.delay(HOLD),
@@ -254,6 +257,8 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
     return () => {
       stopped = true;
       timers.forEach(clearTimeout);
+      // let the sound's tail finish over the news, then free it
+      setTimeout(() => sound?.remove(), 2500);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
