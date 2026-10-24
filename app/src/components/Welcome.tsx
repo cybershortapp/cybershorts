@@ -126,7 +126,7 @@ export function Welcome({ onDone }: { onDone: () => void }) {
         {step === 2 && (
           <>
             <Text style={[styles.title, { fontSize: 26 * k, lineHeight: 32 * k }]}>Pick your look</Text>
-            <Text style={[styles.lead, { fontSize: 15 * k, lineHeight: 22 * k }]}>Choose a theme, a card style and whether you'd like games. You can change these any time in settings.</Text>
+            <Text style={[styles.lead, { fontSize: 15 * k, lineHeight: 22 * k }]}>Choose a theme, a card style, and whether you'd like games and the opening sound. You can change these any time in settings.</Text>
             <Text style={[styles.sub, { fontSize: 15 * k, marginTop: 4 }]}>Theme</Text>
             <View style={styles.grid}>
               {THEMES.map((t) => {
@@ -168,6 +168,13 @@ export function Welcome({ onDone }: { onDone: () => void }) {
                 <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13 * k, marginTop: 2 }}>A 30 second game after some scam and safety stories</Text>
               </View>
               <Switch value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+            </View>
+            <View style={[styles.switchRow, { marginTop: 12 }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontFamily: F.head, fontSize: 15 * k }}>Opening sound</Text>
+                <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13 * k, marginTop: 2 }}>A short sound with the logo when the app opens. Silent when your phone is on silent.</Text>
+              </View>
+              <Switch value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
             </View>
           </>
         )}

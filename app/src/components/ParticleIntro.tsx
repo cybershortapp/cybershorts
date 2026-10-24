@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { AccessibilityInfo, Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
 
 import { buzz, openingSound } from '../lib/buzz';
+import { getPrefs, prefsLoaded } from '../lib/prefs';
+import { welcomeDone } from './Welcome';
 import { F } from '../theme';
 
 const BG = '#05070F'; // same as the phone's own splash screen, so the hand-over is seamless
@@ -223,9 +225,17 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     let stopped = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const sound = openingSound(); // loaded straight away so it starts exactly with the dots
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((reduce) => {
+    const sound = openingSound(); // loaded straight away so it can start exactly with the dots
+    let soundOn = false;
+    // the sound plays only once the reader has had the choice (on the welcome) and left it on
+    const prefsReady = new Promise<void>((res) => {
+      const t0 = Date.now();
+      const wait = () => (prefsLoaded() || Date.now() - t0 > 400 ? res() : setTimeout(wait, 20));
+      wait();
+    });
+    Promise.all([AccessibilityInfo.isReduceMotionEnabled(), welcomeDone().catch(() => false), prefsReady])
+      .then(([reduce, seen]) => {
+        soundOn = !reduce && !!seen && getPrefs().sound;
         if (stopped) return;
         if (reduce) {
           sound?.remove();
@@ -246,7 +256,7 @@ export function ParticleIntro({ onDone }: { onDone: () => void }) {
         timers.push(setTimeout(buzz.thump, lock));
         timers.push(setTimeout(buzz.thump, lock + 90));
         timers.push(setTimeout(buzz.soft, lock + 330));
-        sound?.play(); // the Heartbeat: pulses race with the dots and hit on the lock
+        if (soundOn) sound?.play(); // the Heartbeat: pulses race with the dots and hit on the lock
         Animated.sequence([
           Animated.timing(t, { toValue: 1, duration: DURATION, easing: Easing.linear, useNativeDriver: true }),
           Animated.delay(HOLD),

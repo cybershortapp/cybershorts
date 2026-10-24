@@ -282,6 +282,17 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
           </View>
         </View>
 
+        {/* 2c. opening sound */}
+        <View style={styles.panel}>
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.h, { fontSize: 16 * s }]}>Opening sound</Text>
+              <Text style={[styles.p, { fontSize: 13.5 * s }]}>A short sound with the logo when the app opens. Always silent when your phone is on silent.</Text>
+            </View>
+            <Switch value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+          </View>
+        </View>
+
         {/* 3. appearance */}
         <View style={styles.panel}>
           <Text style={[styles.h, { fontSize: 16 * s }]}>Look and feel</Text>

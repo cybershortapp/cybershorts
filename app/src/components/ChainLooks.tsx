@@ -30,11 +30,13 @@ export function viewFor(story: Story): Exclude<ChainView, 'auto'> {
   const text = `${story.category} ${story.headline}`.toLowerCase();
   let pool: Exclude<ChainView, 'auto'>[];
   if (story.category === 'Ransomware' || /ransom/.test(text)) pool = ['viking', 'breakin', 'metro'];
-  else if (story.category === 'Scams' || /phish|scam|social engineer|help desk|vishing|smish/.test(text)) pool = ['story', 'defend', 'metro'];
-  else if (story.category === 'Breaches' || has('Exfiltration') || /breach|leak|stole|stolen/.test(text)) pool = ['breakin', 'defend', 'viking'];
-  else if (story.actor_group || /state|apt|espionage|spy/.test(text)) pool = ['viking', 'story', 'metro'];
-  else pool = ['list', 'metro', 'story', 'defend', 'breakin', 'viking'];
-  if (steps.length <= 3) pool = pool.filter((v) => v !== 'breakin').concat(pool.includes('story') ? [] : ['story']);
+  else if (story.category === 'Scams' || /phish|scam|social engineer|help desk|vishing|smish/.test(text)) pool = ['metro', 'list'];
+  else if (story.category === 'Breaches' || has('Exfiltration') || /breach|leak|stole|stolen/.test(text)) pool = ['breakin', 'viking', 'metro'];
+  else if (story.actor_group || /state|apt|espionage|spy/.test(text)) pool = ['viking', 'metro'];
+  else pool = ['list', 'metro', 'breakin', 'viking'];
+  // Story (tap through) and Defend were dropped: every chain is one page you can read at a glance
+  if (steps.length <= 3) pool = pool.filter((v) => v !== 'breakin');
+  if (!pool.length) pool = ['metro'];
   let h = 0;
   for (const ch of story.id) h = (h * 31 + ch.charCodeAt(0)) | 0;
   return pool[Math.abs(h) % pool.length];

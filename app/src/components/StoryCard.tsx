@@ -30,9 +30,10 @@ type Props = {
   isNew?: boolean; // added since the reader last opened the app
   caughtUp?: boolean; // first story they have already seen
   onNext?: () => void; // Magazine: a quick flick on the cover goes to the next story
+  onChainOpen?: (open: boolean) => void; // the attack chain page is showing (or not)
 };
 
-function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp, onNext }: Props) {
+function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp, onNext, onChainOpen }: Props) {
   const C = useTheme();
   const cardStyle = useCardStyle();
   const styled = cardStyle !== 'standard';
@@ -121,7 +122,10 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   }, [active, hasChain, chainReady]);
 
   const openArticle = () => Linking.openURL(story.url);
-  const slide = () => pager.current?.scrollToEnd({ animated: true });
+  const slide = () => {
+    pager.current?.scrollToEnd({ animated: true });
+    onChainOpen?.(true);
+  };
   const showChain = () => {
     if (chainReady) {
       slide();
@@ -134,7 +138,8 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   // stable, so the finished chain page is never redrawn just because the card changed
   const hideChain = useCallback(() => {
     pager.current?.scrollTo({ x: 0, animated: true });
-  }, []);
+    onChainOpen?.(false);
+  }, [onChainOpen]);
   const share = () =>
     Share.share({
       message:
@@ -368,6 +373,11 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               nestedScrollEnabled
               directionalLockEnabled
               onScrollBeginDrag={() => setChainReady(true)}
+              // tell the feed when the chain page is showing, so up and down swipes can't leave it
+              onMomentumScrollEnd={(e) => onChainOpen?.(e.nativeEvent.contentOffset.x > cardWidth / 2)}
+              onScrollEndDrag={(e) => {
+                if (e.nativeEvent.contentOffset.x > cardWidth / 2) onChainOpen?.(true);
+              }}
             >
               {cardFace}
               <View style={{ width: cardWidth, flex: 1 }}>

@@ -119,6 +119,8 @@ function Main() {
   const beforeSearch = useRef<Filter>('All');
   const lastLoaded = useRef(0);
   const listRef = useRef<FlatList<FeedItem>>(null);
+  const [chainOpen, setChainOpen] = useState(false);
+  useEffect(() => setChainOpen(false), [index]); // moved to another card (Latest, a tab): the feed scrolls again
   const latestRef = useRef<() => void>(() => {});
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
@@ -453,6 +455,7 @@ function Main() {
   useEffect(() => {
     feedRef.current = feed;
   }, [feed]);
+  useEffect(() => setChainOpen(false), [filter]); // a new tab starts on a card, never on a chain
   // what's been on screen: games and the deck count as seen, tips and history as read today,
   // and every card read counts towards a busy reader's extra games
   useEffect(() => {
@@ -543,6 +546,7 @@ function Main() {
             isNew={!!marker && item.story.created_at > marker}
             caughtUp={i === firstOld && i > 0}
             onNext={() => goNext(i)}
+            onChainOpen={setChainOpen}
           />
         </ErrorBoundary>
       );
@@ -596,6 +600,8 @@ function Main() {
         renderItem={renderItem}
         extraData={extraData}
         pagingEnabled
+        // while a story's attack chain is open, up and down swipes stay on it; swipe it away to the left
+        scrollEnabled={!chainOpen}
         showsVerticalScrollIndicator={false}
         decelerationRate="fast"
         windowSize={3}
