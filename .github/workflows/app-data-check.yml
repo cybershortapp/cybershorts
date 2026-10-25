@@ -24,6 +24,12 @@ jobs:
           jq -c '.[]' s.json | while read -r row; do
             H=$(echo "$row" | jq -r '.headline[0:70] + " | " + .source + " | " + .created_at[5:16]')
             U=$(echo "$row" | jq -r '.image_url // "none"')
-            if [ "$U" = "none" ]; then R="no picture saved"; else R=$(curl -s -o /dev/null -m 15 -A "okhttp/4.12.0" -w "%{http_code} %{content_type} %{size_download}B" "$U"); fi
+            R=""
+            for A in "" "image/avif,image/webp,image/*,*/*" "image/webp,image/*;q=0.8"; do
+              curl -s -m 15 -A "Mozilla/5.0 (Linux; Android 14) okhttp/4.12.0" ${A:+-H "Accept: $A"} -D h.txt -o b.bin "$U"
+              CT=$(grep -i '^content-type' h.txt | tail -1 | tr -d '\r' | cut -d' ' -f2)
+              MAG=$(head -c 16 b.bin | od -An -c | tr -s ' ' | cut -c1-40)
+              R="$R [accept=${A:-none}] $(head -1 h.txt | tr -d '\r') $CT $(stat -c%s b.bin)B magic:$MAG ;"
+            done
             echo "::notice title=$H::$U => $R"
           done
