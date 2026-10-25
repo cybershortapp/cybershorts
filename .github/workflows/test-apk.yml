@@ -1,0 +1,75 @@
+name: test-apk
+
+# Builds the Android test app (.apk) here on GitHub instead of on Expo's servers, so it doesn't use the
+# Expo plan's monthly build allowance. It is signed with the same key Expo keeps for the app (downloaded for
+# the build only), so it installs over the earlier test app. Run it by hand from the Actions tab.
+# The finished .apk is attached to a pre-release on the repo's Releases page, ready to download on a phone.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build profile (preview = test app)"
+        required: true
+        default: "preview"
+      abis:
+        description: "Phone chip types to include (arm64-v8a covers phones from the last 8+ years)"
+        required: true
+        default: "arm64-v8a"
+
+permissions:
+  contents: write   # to attach the .apk to a pre-release
+
+concurrency:
+  group: test-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - run: npm ci
+      - name: Check the app settings are in eas.json
+        run: |
+          jq -e '.build.${{ inputs.profile }}.env.EXPO_PUBLIC_SUPABASE_KEY | startswith("sb_publishable_")' eas.json \
+            || { echo "::error::Supabase settings missing from the ${{ inputs.profile }} profile in eas.json"; exit 1; }
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Build the app here
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ORG_GRADLE_PROJECT_reactNativeArchitectures: ${{ inputs.abis }}
+        run: |
+          if ! npx eas-cli build --platform android --profile "${{ inputs.profile }}" --local --non-interactive \
+               --output "$GITHUB_WORKSPACE/cybersid-test.apk" > build.log 2>&1; then
+            tail -n 80 build.log
+            echo "::error title=Build failed::$(grep -iE 'error|failed|what went wrong' build.log | grep -v '^\s*$' | tail -n 20 | tr '\n' ' ' | cut -c1-3500)"
+            exit 1
+          fi
+          tail -n 20 build.log
+          ls -la "$GITHUB_WORKSPACE/cybersid-test.apk"
+      - name: Attach the app to a pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(jq -r '.expo.version' app.json)
+          tag="test-$v-${{ github.run_number }}"
+          gh release create "$tag" "$GITHUB_WORKSPACE/cybersid-test.apk#CyberSid-$v-test.apk" \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" --prerelease \
+            --title "CyberSid $v test app (${{ github.run_number }})" \
+            --notes "Android test app built from ${{ github.ref_name }} (${{ github.sha }}). Not the Play Store version."
+          url=$(gh release view "$tag" --repo "${{ github.repository }}" --json assets --jq '.assets[0].url')
+          echo "::notice title=Test app ready::$url"
