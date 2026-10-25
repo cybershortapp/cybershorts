@@ -1170,10 +1170,16 @@ def main():
             tint_note = f"problem: {str(ex)[:80]}"
 
     # ---- 3c. awareness games for some stories, and one trending deck a day (release 1.0.4) ----
-    games_note = deck_note = "off"
+    games_note = deck_note = explain_note = "off"
     if db and ai and not TEST_MODE:
         from extras import make_games, make_trending
+        from explain import explain_chains
         deadline = started + timedelta(seconds=RUN_SECONDS)
+        try:
+            explain_note, used = explain_chains(db, ai, max(0, ai_budget - ai_calls), deadline)
+            ai_calls += used
+        except Exception as ex:
+            explain_note = f"problem: {str(ex)[:100]}"
         try:
             games_note, used = make_games(db, ai, max(0, ai_budget - ai_calls), deadline)
             ai_calls += used
@@ -1232,7 +1238,7 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | colours: {tint_note} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | colours: {tint_note} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
             f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
             f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
     print(f"Tip card: {tip_note}")
