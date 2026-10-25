@@ -4,9 +4,13 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { chainLink } from '../lib/actions';
+import { fetchGames, type Game, markGamePlayed } from '../lib/extras';
+import { readyFor } from '../lib/readyGames';
 import type { ChainStep, Story } from '../lib/types';
 import { F, FS } from '../theme';
 import { Defender } from './Defender';
+import { ErrorBoundary } from './ErrorBoundary';
+import { GameCard } from './Games';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -50,6 +54,11 @@ const STOP: Record<string, string> = {
   Exfiltration: 'Watch for large uploads, and limit where data can be sent.',
   Impact: 'Keep offline backups and practise restoring them.',
 };
+const GAME_NAME: Record<string, string> = {
+  scam_or_legit: 'Scam or legit?', patch_or_panic: 'Patch or panic', red_flags: 'Spot the red flags', real_link: 'Which link is real?',
+  order_steps: 'What do you do first?', crack_meter: 'Crack-o-meter', hot_seat: 'Help desk hot seat', approve: "Don't tap Approve",
+  home: 'Lock up your digital home', overshare: 'Overshare detective',
+};
 const kicker = (st: ChainStep) => KICKER[st.stage] ?? st.stage.toUpperCase();
 const plainTitle = (st: ChainStep) => {
   const k = (KICKER[st.stage] ?? st.stage).toLowerCase();
@@ -89,6 +98,22 @@ export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
   const entryIdx = Math.max(0, steps.findIndex((st) => st.stage === 'Initial Access'));
   const [sheet, setSheet] = useState<number | 'group' | null>(null);
   const [playing, setPlaying] = useState(false);
+  // the story's own game (or, if it has none, the everyday game that fits it best)
+  const [game, setGame] = useState<{ g: Game; headline: string; own: boolean } | null>(null);
+  const [gameOpen, setGameOpen] = useState(false);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    let live = true;
+    const fallback = readyFor(story);
+    fetchGames([story.id]).then((list) => {
+      if (!live) return;
+      const own = list[0];
+      setGame(own ? { g: own, headline: story.headline, own: true } : { g: fallback, headline: fallback.headline, own: false });
+    });
+    return () => {
+      live = false;
+    };
+  }, [story.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const d = new Date(story.published_at);
   const when = isNaN(d.getTime()) ? '' : `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   const info = {
@@ -117,12 +142,45 @@ export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
         <Text style={{ flex: 1, color: P.muted, fontFamily: F.label, fontSize: 12.5 * s }}>Story</Text>
         <Text style={{ color: P.muted, fontFamily: F.head, fontSize: 10.5 * s, letterSpacing: 1.6 }}>{dark ? 'HOW IT HAPPENED' : 'CYBERSID EXPLAINER'}</Text>
       </Pressable>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 14 * s, paddingBottom: 30 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-        <Body story={story} s={s} info={info} entryIdx={entryIdx} onOpen={setSheet} onPlay={() => setPlaying(true)} hasGroup={!!story.actor_group && !!renderGroup} />
+      {/* no nestedScrollEnabled: on Android it passed the end of this scroll on to the news feed behind */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 14 * s, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+        <Body story={story} s={s} info={info} entryIdx={entryIdx} onOpen={setSheet} hasGroup={!!story.actor_group && !!renderGroup} />
         <Text style={{ color: P.faint, fontFamily: F.body, fontSize: 11 * s, lineHeight: 16 * s, marginTop: 16 * s }}>
           {inc.researched && inc.sources?.length ? `Steps from the article and trusted reports (${inc.sources.join(', ')}). ` : ''}Stages follow MITRE ATT&CK. Countries are only shown when officially stated.
         </Text>
       </ScrollView>
+
+      {/* the games for this story, always in reach at the bottom */}
+      {(info.canPlay || game) && (
+        <View style={[styles.bar, { backgroundColor: P.bg, borderTopColor: P.line }]}>
+          {info.canPlay && (
+            <Pressable onPress={() => setPlaying(true)} style={[styles.barBtn, { backgroundColor: dark ? '#4ADE80' : LIGHT.text }]} accessibilityRole="button" accessibilityLabel="Play defender">
+              <MaterialCommunityIcons name="shield-sword" size={18 * s} color={dark ? '#07080D' : LIGHT.bg} />
+              <View style={{ flexShrink: 1 }}>
+                <Text style={{ color: dark ? '#07080D' : LIGHT.bg, fontFamily: F.head, fontSize: 13 * s, lineHeight: 16 * s }} numberOfLines={2}>Play defender</Text>
+                <Text style={{ color: dark ? 'rgba(7,8,13,0.7)' : 'rgba(250,247,241,0.75)', fontFamily: F.medium, fontSize: 10.5 * s }} numberOfLines={1}>Could you stop it?</Text>
+              </View>
+            </Pressable>
+          )}
+          {game && (
+            <Pressable
+              onPress={() => {
+                if (game.own) markGamePlayed(game.g.id);
+                setGameOpen(true);
+              }}
+              style={[styles.barBtn, { backgroundColor: dark ? 'rgba(255,255,255,0.1)' : '#FFFFFF', borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.16)' : LIGHT.chipBorder }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Play ${GAME_NAME[game.g.style] ?? 'the game'}`}
+            >
+              <MaterialCommunityIcons name="gamepad-variant" size={18 * s} color={P.text} />
+              <View style={{ flexShrink: 1 }}>
+                <Text style={{ color: P.text, fontFamily: F.head, fontSize: 13 * s, lineHeight: 16 * s }} numberOfLines={2}>{GAME_NAME[game.g.style] ?? 'Play the game'}</Text>
+                <Text style={{ color: P.muted, fontFamily: F.medium, fontSize: 10.5 * s }} numberOfLines={1}>{game.own ? 'Game on this story' : 'Try it yourself'}</Text>
+              </View>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {sheet !== null && (
         <Sheet dark={dark} onClose={() => setSheet(null)}>
@@ -136,6 +194,23 @@ export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
       {playing && ex && (
         <Defender story={story} explainer={ex} dark={dark} s={s} onClose={() => setPlaying(false)} />
       )}
+      {gameOpen && game && (
+        <View key="game" style={[StyleSheet.absoluteFill, { backgroundColor: P.bg }]} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+          <Pressable onPress={() => setGameOpen(false)} style={styles.top} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the chain">
+            <View style={[styles.back, { backgroundColor: P.chip, borderColor: P.chipBorder }]}>
+              <MaterialCommunityIcons name="chevron-left" size={20 * s} color={P.text} />
+            </View>
+            <Text style={{ flex: 1, color: P.muted, fontFamily: F.label, fontSize: 12.5 * s }}>Attack chain</Text>
+          </Pressable>
+          {box.h > 0 && (
+            <View style={{ alignItems: 'center' }}>
+              <ErrorBoundary resetKey={game.g.id} fallback={() => <Text style={{ color: P.muted, fontFamily: F.body, fontSize: 13, padding: 24, textAlign: 'center' }}>Sorry, this game didn't load.</Text>}>
+                <GameCard game={game.g} headline={game.headline} width={box.w - 16} height={box.h - 60} active foot="Finish to earn XP" />
+              </ErrorBoundary>
+            </View>
+          )}
+        </View>
+      )}
       {n === 0 && null}
     </View>
   );
@@ -145,7 +220,7 @@ type Info = {
   title: string; stepTitle: (i: number) => string; stop: (i: number) => string; lesson: string;
   impact: { value: string; label: string }[]; target: string; attacker: string; when: string; canPlay: boolean; hasEx: boolean;
 };
-type BodyProps = { story: Story; s: number; info: Info; entryIdx: number; onOpen: (k: number | 'group') => void; onPlay: () => void; hasGroup: boolean };
+type BodyProps = { story: Story; s: number; info: Info; entryIdx: number; onOpen: (k: number | 'group') => void; hasGroup: boolean };
 
 const DARK = { bg: '#07080D', text: '#F5F6FA', muted: 'rgba(245,246,250,0.55)', faint: 'rgba(245,246,250,0.35)', chip: 'rgba(255,255,255,0.07)', chipBorder: 'rgba(255,255,255,0.1)', line: 'rgba(255,255,255,0.1)', red: '#FF4D5E', green: '#4ADE80' };
 const LIGHT = { bg: '#FAF7F1', text: '#1A1612', muted: '#6B6257', faint: '#9A9083', chip: '#FFFFFF', chipBorder: '#E6DFD3', line: '#E6DFD3', red: '#C2261C', green: '#1F7A4D' };
@@ -153,7 +228,7 @@ const LIGHT = { bg: '#FAF7F1', text: '#1A1612', muted: '#6B6257', faint: '#9A908
 // ------------------------------------------------------------------------------------------------
 // Bento breakdown (dark themes)
 // ------------------------------------------------------------------------------------------------
-function Bento({ story, s, info, entryIdx, onOpen, onPlay, hasGroup }: BodyProps) {
+function Bento({ story, s, info, entryIdx, onOpen, hasGroup }: BodyProps) {
   const steps = story.attack_chain ?? [];
   const last = steps.length - 1;
   // the damage tile: the Impact step if there is one, else the last step
@@ -245,11 +320,6 @@ function Bento({ story, s, info, entryIdx, onOpen, onPlay, hasGroup }: BodyProps
             <LinearGradient colors={['rgba(74,222,128,0.16)', 'rgba(74,222,128,0.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
             <Text style={[styles.tileKicker, { color: DARK.green, fontSize: 10.5 * s }]}>THE MOVE THAT STOPS IT</Text>
             <Text style={{ color: DARK.text, fontFamily: F.head, fontSize: 15 * s, lineHeight: 20 * s, marginTop: 5 }}>{info.lesson}</Text>
-            {info.canPlay && (
-              <Pressable onPress={onPlay} style={[styles.play, { backgroundColor: '#F5F6FA' }]} accessibilityRole="button">
-                <Text style={{ color: '#07080D', fontFamily: F.head, fontSize: 14 * s }}>Could you have stopped it? Play defender →</Text>
-              </Pressable>
-            )}
           </View>
         </Rise>
       </View>
@@ -288,7 +358,7 @@ function whenLabel(i: number, n: number) {
   return ['THEN', 'NEXT', 'AFTER THAT'][(i - 1) % 3];
 }
 
-function Editorial({ story, s, info, entryIdx, onOpen, onPlay, hasGroup }: BodyProps) {
+function Editorial({ story, s, info, entryIdx, onOpen, hasGroup }: BodyProps) {
   const steps = story.attack_chain ?? [];
   const n = steps.length;
   const impactAt = steps.map((st) => st.stage).lastIndexOf('Impact');
@@ -354,11 +424,6 @@ function Editorial({ story, s, info, entryIdx, onOpen, onPlay, hasGroup }: BodyP
       <Rise delay={400 + n * 200} style={{ borderTopWidth: 2, borderTopColor: LIGHT.text, paddingTop: 10, marginTop: 14 }}>
         <Text style={{ color: LIGHT.green, fontFamily: F.head, fontSize: 10.5 * s, letterSpacing: 2 }}>THE LESSON</Text>
         <Text style={{ color: LIGHT.text, fontFamily: FS.serifItalic, fontSize: 16 * s, lineHeight: 24 * s, marginTop: 4 }}>"{info.lesson}"</Text>
-        {info.canPlay && (
-          <Pressable onPress={onPlay} style={[styles.play, { backgroundColor: LIGHT.text, borderRadius: 23 }]} accessibilityRole="button">
-            <Text style={{ color: LIGHT.bg, fontFamily: F.head, fontSize: 14 * s }}>Could you have stopped it? Play defender →</Text>
-          </Pressable>
-        )}
       </Rise>
     </View>
   );
@@ -431,7 +496,8 @@ const styles = StyleSheet.create({
   tileKicker: { fontFamily: F.head, letterSpacing: 1.3 },
   heroIcon: { backgroundColor: 'rgba(255,77,94,0.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   smallIcon: { position: 'absolute', width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(167,139,250,0.14)', alignItems: 'center', justifyContent: 'center' },
-  play: { marginTop: 12, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  bar: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1 },
+  barBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 50, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   rule: { position: 'absolute', top: 8, width: 2 },
   row: { flexDirection: 'row', paddingVertical: 8, borderRadius: 10 },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, paddingBottom: 28 },

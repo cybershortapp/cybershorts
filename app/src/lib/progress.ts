@@ -18,12 +18,18 @@ const EMPTY: Progress = { xp: 0, days: [], badges: {}, played: {} };
 let state: Progress = EMPTY;
 const listeners = new Set<() => void>();
 
+let ready = false;
 AsyncStorage.getItem(KEY)
   .then((raw) => {
     if (raw) state = { ...EMPTY, ...JSON.parse(raw) };
   })
   .catch(() => {})
-  .finally(() => listeners.forEach((l) => l()));
+  .finally(() => {
+    ready = true;
+    listeners.forEach((l) => l());
+  });
+/** The saved progress has been read (before that, XP shows 0 and a jump to the saved XP isn't a win). */
+export const progressReady = () => ready;
 
 const save = () => {
   AsyncStorage.setItem(KEY, JSON.stringify(state)).catch(() => {});
@@ -63,7 +69,7 @@ export function streakOf(p: Progress) {
 export const BADGES: Record<string, { name: string; icon: string }> = {
   defender: { name: 'Chain Breaker', icon: '🛡' },
   hot_seat: { name: 'Help Desk Hero', icon: '🎧' },
-  approve: { name: 'Prompt Bomb Survivor', icon: '📵' },
+  approve: { name: 'Prompt Proof', icon: '📵' },
   home: { name: 'Digital Fortress', icon: '🏰' },
   overshare: { name: 'Overshare Detective', icon: '🕵️' },
   scam_or_legit: { name: 'Scam Spotter', icon: '🔍' },

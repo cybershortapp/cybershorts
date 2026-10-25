@@ -123,6 +123,10 @@ function Main() {
   const listRef = useRef<FlatList<FeedItem>>(null);
   const [chainOpen, setChainOpen] = useState(false);
   useEffect(() => setChainOpen(false), [index]); // moved to another card (Latest, a tab): the feed scrolls again
+  // the chain opened or closed: put the card exactly back in place (a half-moved feed would get stuck while it's locked)
+  useEffect(() => {
+    if (pageHeight > 0) listRef.current?.scrollToOffset({ offset: index * pageHeight, animated: true });
+  }, [chainOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   const latestRef = useRef<() => void>(() => {});
   const pendingJump = useRef<string | null>(null);
   const savedKey = filter === 'Saved' ? savedIds.join(',') : '';
@@ -563,7 +567,7 @@ function Main() {
   let content;
   if (view === 'play') {
     // the games work offline too, so the Play section opens even when the news can't load
-    content = <PlayHub pool={pool} backRef={playBack} />;
+    content = <PlayHub backRef={playBack} />;
   } else if (loading && stories.length === 0) {
     content = <ActivityIndicator style={styles.center} color={C.brand} />;
   } else if (error) {

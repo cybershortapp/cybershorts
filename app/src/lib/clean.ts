@@ -21,6 +21,12 @@ function cleanStep(v: unknown): ChainStep | null {
   };
 }
 
+// a capital to start each sentence (older explainers sometimes came all lowercase); iPhone and eBay stay as they are
+const cap = (v: unknown) => {
+  const t = str(v).trim();
+  return /^[a-z](?![A-Z])/.test(t) ? t[0].toUpperCase() + t.slice(1) : t;
+};
+
 /** The chain page's extra words. Anything odd is dropped, so the page falls back to plain wording. */
 function cleanExplainer(v: unknown, steps: number): Explainer | undefined {
   const o = obj(v);
@@ -30,16 +36,16 @@ function cleanExplainer(v: unknown, steps: number): Explainer | undefined {
   const defend: DefendMove[] = (Array.isArray(o.defend) ? o.defend : [])
     .map(obj)
     .filter((d): d is Record<string, unknown> => !!d)
-    .map((d) => ({ step: Number(d.step), situation: str(d.situation), options: strList(d.options), answer: Number(d.answer), good: str(d.good), bad: Array.isArray(d.bad) ? d.bad.map(str) : [] }))
+    .map((d) => ({ step: Number(d.step), situation: cap(d.situation), options: strList(d.options).map(cap), answer: Number(d.answer), good: cap(d.good), bad: Array.isArray(d.bad) ? d.bad.map(cap) : [] }))
     .filter((d) => Number.isInteger(d.step) && d.step >= 0 && d.step < steps && d.options.length === 3 && d.answer >= 0 && d.answer < 3 && d.situation && d.good && d.bad.length === 3)
     .slice(0, 3);
   return {
-    title: str(o.title),
-    impact: (Array.isArray(o.impact) ? o.impact : []).map(obj).filter((x): x is Record<string, unknown> => !!x && !!str(x.value) && !!str(x.label)).slice(0, 2).map((x) => ({ value: str(x.value), label: str(x.label) })),
-    lesson: str(o.lesson),
-    steps: st.map((s) => ({ title: str(s!.title), stop: str(s!.stop) })),
+    title: cap(o.title),
+    impact: (Array.isArray(o.impact) ? o.impact : []).map(obj).filter((x): x is Record<string, unknown> => !!x && !!str(x.value) && !!str(x.label)).slice(0, 2).map((x) => ({ value: str(x.value), label: cap(x.label) })),
+    lesson: cap(o.lesson),
+    steps: st.map((s) => ({ title: cap(s!.title), stop: cap(s!.stop) })),
     defend,
-    checks: strList(o.checks).slice(0, 3),
+    checks: strList(o.checks).slice(0, 3).map(cap),
   };
 }
 

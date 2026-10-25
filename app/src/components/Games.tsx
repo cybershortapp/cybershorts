@@ -8,6 +8,7 @@ import { buzz } from '../lib/buzz';
 import { recordResult } from '../lib/progress';
 import { F } from '../theme';
 import { Fit } from './Fit';
+import { XpPop } from './XpPop';
 import { Approve, Home, HotSeat, Overshare } from './GamesPlus';
 
 type GameProps = { game: Game; active: boolean };
@@ -41,6 +42,7 @@ export function GameCard({ game, headline, width, height, active, foot }: { game
         <Body game={game} active={active} />
       </Fit>
       <Text style={[styles.foot, { color: theme.muted }]}>{foot ?? 'Swipe up to skip · Turn games off in Settings'}</Text>
+      <XpPop active={active} />
     </View>
   );
 }

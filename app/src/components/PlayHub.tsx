@@ -1,10 +1,11 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { type MutableRefObject, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { type GameStyle, markGamePlayed, type PoolGame } from '../lib/extras';
+import type { GameStyle, PoolGame } from '../lib/extras';
 import { BADGES, getProgress, levelOf, markDone, rankOf, streakOf, totalPlays, useProgress } from '../lib/progress';
+import { READY } from '../lib/readyGames';
 import { F } from '../theme';
 import { ErrorBoundary } from './ErrorBoundary';
 import { GameCard } from './Games';
@@ -12,8 +13,8 @@ import { GameCard } from './Games';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 /**
- * The Play section: the reader's rank, XP, streak and badges, every game from the news of the last few
- * days, and three games that are always ready (so there's something to play on a slow news day).
+ * The Play section (the gamepad button): the reader's rank, XP, streak and badges, plus three games that are
+ * always ready. The news games themselves live between the news cards and inside each attack chain.
  */
 const INFO: Record<GameStyle, { name: string; icon: IconName; tint: [string, string] }> = {
   scam_or_legit: { name: 'Scam or legit?', icon: 'gesture-swipe-horizontal', tint: ['#FDBA74', '#EA580C'] },
@@ -28,25 +29,8 @@ const INFO: Record<GameStyle, { name: string; icon: IconName; tint: [string, str
   overshare: { name: 'Overshare detective', icon: 'account-search', tint: ['#FDA4AF', '#BE185D'] },
 };
 
-// always ready: the same everyday lessons, whatever the news
-const READY: PoolGame[] = [
-  { id: 'ready-home', story_id: '', style: 'home', headline: 'Your own digital life', data: { rounds: [
-    { spot: 'email', kind: 'reused', say: 'I found your password in an old data leak. Bet you use the same one for email!', fail: 'Email hacked. He reset your other passwords from it.' },
-    { spot: 'bank', kind: 'stolen', say: 'You typed your bank password into my fake site. Logging in now!', fail: 'Bank hacked. £2,000 gone to a "safe account".' },
-    { spot: 'router', kind: 'default', say: 'Your Wi-Fi router still uses the password on its sticker!', fail: 'Router hacked. He can see everything on your Wi-Fi.' },
-    { spot: 'phone', kind: 'old_bug', say: "Your phone hasn't updated in a year. I know an old bug that gets me in.", fail: 'Phone hacked. He can read your messages.' },
-    { spot: 'social', kind: 'stolen', say: 'I bought your social media password online. Time to message your friends!', fail: 'Your friends got scam messages from "you".' },
-  ] } },
-  { id: 'ready-approve', story_id: '', style: 'approve', headline: 'A real trick used on big companies', data: {
-    place: 'Rotterdam, Netherlands',
-    real: [{ app: 'MESSAGES', title: 'Mum', body: 'Are you still coming for dinner tonight?' }, { app: 'BANK', title: 'Card payment', body: '£4.20 at the coffee shop' }, { app: 'CALENDAR', title: 'Team meeting', body: 'Starts in 10 minutes' }],
-    call: { name: 'Marek from IT', say: "Sorry about all the alerts, there's a glitch on your account. You'll get one more prompt. Just tap Approve and they'll all stop." },
-  } },
-  { id: 'ready-crack', story_id: '', style: 'crack_meter', headline: 'Make a password nobody can crack', data: { words: ['Teapot', 'Purple', 'Rocket', 'Pickle', 'Lantern', 'Otter', 'Glacier', '42'] } },
-];
-
 /** backRef: the Android back button asks the hub first (it closes an open game). */
-export function PlayHub({ pool, backRef }: { pool: PoolGame[]; backRef: MutableRefObject<() => boolean> }) {
+export function PlayHub({ backRef }: { backRef: MutableRefObject<() => boolean> }) {
   const p = useProgress();
   const rank = rankOf(p.xp);
   const streak = streakOf(p);
@@ -55,23 +39,17 @@ export function PlayHub({ pool, backRef }: { pool: PoolGame[]; backRef: MutableR
   const { width } = useWindowDimensions();
   const playsAtOpen = useRef(0);
   const done = new Set(p.done ?? []);
-  // unplayed news games first, at most one per story
-  const stories = new Set<string>();
-  const news = [...pool]
-    .sort((a, b) => Number(done.has(a.id)) - Number(done.has(b.id)))
-    .filter((g) => (stories.has(g.story_id) ? false : (stories.add(g.story_id), true)))
-    .slice(0, 12);
+  const panelW = Math.min(width - (width >= 600 ? 48 : 24), 760);
+  // four badges to a row, each wide enough for its name on two lines
+  const cell = Math.floor((panelW - 28 - 34) / 4); // minus the list and card padding and borders
 
   const start = (g: PoolGame) => {
     playsAtOpen.current = totalPlays(getProgress());
     setOpen(g);
   };
   const close = () => {
-    // finished at least once while open: tick it, and keep it out of the feed
-    if (open && totalPlays(getProgress()) > playsAtOpen.current) {
-      markDone(open.id);
-      if (open.story_id) markGamePlayed(open.id);
-    }
+    // finished at least once while open: tick it
+    if (open && totalPlays(getProgress()) > playsAtOpen.current) markDone(open.id);
     setOpen(null);
   };
   backRef.current = () => {
@@ -81,7 +59,7 @@ export function PlayHub({ pool, backRef }: { pool: PoolGame[]; backRef: MutableR
   };
   useEffect(() => () => { backRef.current = () => false; }, [backRef]);
 
-  const panel = { width: Math.min(width - (width >= 600 ? 48 : 24), 760), alignSelf: 'center' as const };
+  const panel = { width: panelW, alignSelf: 'center' as const };
 
   if (open) {
     return (
@@ -96,11 +74,10 @@ export function PlayHub({ pool, backRef }: { pool: PoolGame[]; backRef: MutableR
               resetKey={open.id}
               fallback={() => <Text style={[styles.empty, { padding: 24, textAlign: 'center' }]}>Sorry, this game didn't load. Try another one.</Text>}
             >
-              <GameCard key={open.id} game={open} headline={open.headline} width={Math.min(box.w - 16, 520)} height={box.h - 52} active foot="Finish a game to earn XP" />
+              <GameCard key={open.id} game={open} headline={open.headline} width={Math.min(box.w - 16, 520)} height={box.h - 52} active foot="Finish to earn XP" />
             </ErrorBoundary>
           </View>
         )}
-        <Gain xp={p.xp} badges={Object.keys(p.badges).length} />
       </View>
     );
   }
@@ -135,56 +112,30 @@ export function PlayHub({ pool, backRef }: { pool: PoolGame[]; backRef: MutableR
           {Object.entries(BADGES).map(([id, b]) => {
             const got = !!p.badges[id];
             return (
-              <View key={id} style={{ width: 54, alignItems: 'center' }}>
+              <View key={id} style={{ width: cell, alignItems: 'center', marginBottom: 8 }}>
                 <View style={[styles.badge, { backgroundColor: got ? '#FDE68A' : 'rgba(255,255,255,0.08)', opacity: got ? 1 : 0.5 }]}>
-                  <Text style={{ fontSize: 19 }}>{got ? b.icon : '🔒'}</Text>
+                  <Text style={{ fontSize: 19 }} maxFontSizeMultiplier={1.2}>{got ? b.icon : '🔒'}</Text>
                 </View>
-                <Text style={{ color: got ? '#FFFFFF' : 'rgba(255,255,255,0.45)', fontFamily: F.medium, fontSize: 9, textAlign: 'center', marginTop: 3 }} numberOfLines={2}>{b.name}</Text>
+                <Text style={{ color: got ? '#FFFFFF' : 'rgba(255,255,255,0.45)', fontFamily: F.medium, fontSize: 10, lineHeight: 13, textAlign: 'center', marginTop: 4, paddingHorizontal: 2 }} numberOfLines={2} maxFontSizeMultiplier={1.15}>
+                  {b.name}
+                </Text>
               </View>
             );
           })}
         </View>
       </View>
 
-      <Text style={[styles.section, { marginTop: 20 }]}>From this week's news</Text>
-      {news.length === 0 ? (
-        <Text style={styles.empty}>New games appear here as the news comes in. Try the ones below meanwhile.</Text>
-      ) : (
-        news.map((g) => <Row key={g.id} g={g} about={g.headline} done={done.has(g.id)} onPress={() => start(g)} />)
-      )}
+      <View style={styles.how}>
+        <MaterialCommunityIcons name="gamepad-variant" size={20} color="#4ADE80" />
+        <Text style={{ flex: 1, color: 'rgba(255,255,255,0.8)', fontFamily: F.body, fontSize: 13, lineHeight: 19 }}>
+          Earn XP with the games between the news cards and inside each attack chain. Play every day to keep your streak.
+        </Text>
+      </View>
       <Text style={[styles.section, { marginTop: 18 }]}>Always ready</Text>
       {READY.map((g) => <Row key={g.id} g={g} about={g.headline} done={done.has(g.id)} onPress={() => start(g)} />)}
       <Text style={[styles.empty, { marginTop: 14 }]}>Your XP, streak and badges are kept on this phone only.</Text>
     </ScrollView>
     </View>
-  );
-}
-
-/** "+100 XP" (and any new badge) pops up at the top while a game is open. */
-function Gain({ xp, badges }: { xp: number; badges: number }) {
-  const was = useRef({ xp, badges });
-  const [shown, setShown] = useState<{ xp: number; badge: boolean } | null>(null);
-  const fade = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const got = xp - was.current.xp;
-    const badge = badges > was.current.badges;
-    was.current = { xp, badges };
-    if (got <= 0 && !badge) return;
-    setShown({ xp: got, badge });
-    fade.setValue(0);
-    Animated.sequence([
-      Animated.timing(fade, { toValue: 1, duration: 260, useNativeDriver: true }),
-      Animated.delay(2200),
-      Animated.timing(fade, { toValue: 0, duration: 400, useNativeDriver: true }),
-    ]).start();
-  }, [xp, badges]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!shown) return null;
-  return (
-    <Animated.View pointerEvents="none" style={[styles.gain, { opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }]}>
-      <Text style={{ color: '#0B1020', fontFamily: F.brand, fontSize: 13.5 }}>
-        {shown.xp > 0 ? `+${shown.xp} XP` : ''}{shown.xp > 0 && shown.badge ? ' · ' : ''}{shown.badge ? 'New badge!' : ''}
-      </Text>
-    </Animated.View>
   );
 }
 
@@ -213,12 +164,12 @@ const styles = StyleSheet.create({
   small: { color: 'rgba(255,255,255,0.55)', fontFamily: F.medium, fontSize: 10.5 },
   bar: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.1)', marginTop: 5, overflow: 'hidden' },
   kick: { color: 'rgba(255,255,255,0.55)', fontFamily: F.head, fontSize: 10.5, letterSpacing: 1.3 },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
   badge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   section: { color: '#FFFFFF', fontFamily: F.brand, fontSize: 18, marginBottom: 8 },
   empty: { color: 'rgba(255,255,255,0.6)', fontFamily: F.body, fontSize: 13, lineHeight: 19 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', marginBottom: 8 },
   rowIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  gain: { position: 'absolute', top: 8, right: 12, backgroundColor: '#4ADE80', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  how: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, padding: 12, borderRadius: 16, backgroundColor: 'rgba(74,222,128,0.08)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.25)' },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 10, paddingVertical: 10 },
 });
