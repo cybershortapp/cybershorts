@@ -19,7 +19,7 @@ jobs:
           KEY=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY' app/eas.json)
           case "$KEY" in sb_publishable_*) ;; *) echo "::error::not the public key"; exit 1;; esac
           ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
-          ask 'stories?select=headline,source,image_url&image_url=like.*pictures*&order=created_at.desc&limit=40' > s.json
+          ask 'stories?select=headline,source,image_url&or=(source.eq.note,source.ilike.*Iran*)&order=created_at.desc&limit=30' > s.json
           echo "::notice title=copies::$(jq 'length' s.json) stories use a copy"
           jq -r '.[] | [.source, .image_url] | @tsv' s.json > rows.tsv
           python3 - <<'PY'
@@ -37,7 +37,7 @@ jobs:
                           m = b[i+1]; n = int.from_bytes(b[i+2:i+4], "big")
                           if m in (0xC0, 0xC2): h = int.from_bytes(b[i+5:i+7], "big"); w = int.from_bytes(b[i+7:i+9], "big"); break
                           i += 2 + n
-                  out.append(f"{src} {len(b)//1024}KB {ct} {w}x{h}")
+                  out.append(f"{src} {len(b)//1024}KB {ct} {w}x{h} {u[-60:]}")
               except Exception as ex:
                   out.append(f"{src} FAILED {ex}")
           for k in range(0, len(out), 15):
