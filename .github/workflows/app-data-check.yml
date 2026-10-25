@@ -19,17 +19,18 @@ jobs:
           KEY=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY' app/eas.json)
           case "$KEY" in sb_publishable_*) ;; *) echo "::error::not the public key"; exit 1;; esac
           ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
-          ask 'stories?select=headline,source,image_url&image_url=not.is.null&image_url=not.like.*supabase*&order=created_at.desc&limit=60' > s.json
+          ask 'stories?select=headline,source,image_url&image_url=not.is.null&image_url=not.like.*supabase*&order=created_at.desc&limit=120' > s.json
           jq -r '.[] | [.source, .image_url] | @tsv' s.json > rows.tsv
           python3 - <<'PY'
           import struct, urllib.request
+          out = []
           for line in open("rows.tsv"):
               src, u = line.rstrip("\n").split("\t")
               try:
                   req = urllib.request.Request(u, headers={"User-Agent": "okhttp/4.12.0"})
                   r = urllib.request.urlopen(req, timeout=20); b = r.read(); ct = r.headers.get("content-type")
               except Exception as ex:
-                  print(f"::notice title={src}::FAILED {u[:90]} {ex}"); continue
+                  out.append(f"{src} | FAILED {ex} | {u[:70]}"); continue
               info = ""
               if b[:8] == b"\x89PNG\r\n\x1a\n":
                   w, h, depth, ctype, comp, filt, inter = struct.unpack(">IIBBBBB", b[16:29])
@@ -43,5 +44,9 @@ jobs:
               elif b[:4] == b"RIFF": info = "WEBP " + b[12:16].decode("latin1")
               elif b[:2] == b"\xff\xd8": info = "JPEG"
               else: info = "OTHER " + repr(b[:12])
-              print(f"::notice title={src}::{len(b)//1024}KB {ct} {info} {u[:80]}")
+              out.append(f"{src} | {len(b)//1024}KB {ct} {info} | {u[:70]}")
+          keep = [o for o in out if "PNG" in o or "note" in o or "Iran" in o or "FAILED" in o or "OTHER" in o or "WEBP" in o]
+          print(f"::notice title=summary::{len(out)} pictures, {sum('JPEG' in o for o in out)} JPEG, {sum('PNG' in o for o in out)} PNG, {sum('WEBP' in o for o in out)} WEBP")
+          for k in range(0, len(keep), 12):
+              print("::notice title=part" + str(k) + "::" + " %0A ".join(keep[k:k+12]))
           PY
