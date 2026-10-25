@@ -1,0 +1,95 @@
+appId: app.cybersid.news
+name: Reading the news, tabs, saved, search, share, report, full story
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- takeScreenshot: 10-feed-story-1
+- assertVisible: "01 / .*"
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 350
+- waitForAnimationToEnd
+- takeScreenshot: 11-feed-story-2
+- assertVisible: "02 / .*"
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 350
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 350
+- waitForAnimationToEnd
+- takeScreenshot: 12-feed-story-4
+- assertVisible: "04 / .*"
+- swipe:
+    start: "50%, 25%"
+    end: "50%, 80%"
+    duration: 350
+- waitForAnimationToEnd
+- assertVisible: "03 / .*"
+- takeScreenshot: 13-feed-back-to-3
+- tapOn: "Back to the latest stories"
+- waitForAnimationToEnd
+- assertVisible: "01 / .*"
+- takeScreenshot: 14-latest-button
+- tapOn: "Critical"
+- waitForAnimationToEnd
+- takeScreenshot: 15-tab-critical
+- tapOn: "Zero-day"
+- waitForAnimationToEnd
+- takeScreenshot: 16-tab-zero-day
+- tapOn: "For you"
+- waitForAnimationToEnd
+- takeScreenshot: 17-tab-for-you
+- tapOn: "All"
+- waitForAnimationToEnd
+- tapOn: "Save story"
+- assertVisible: "Remove from saved"
+- tapOn: "Saved stories"
+- waitForAnimationToEnd
+- assertVisible: "Remove from saved"
+- takeScreenshot: 18-saved-tab
+- tapOn: "Remove from saved"
+- waitForAnimationToEnd
+- takeScreenshot: 19-saved-tab-empty
+- tapOn: "Saved stories"
+- waitForAnimationToEnd
+- tapOn: "Search stories"
+- inputText: "ransomware"
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 20-search-ransomware
+- tapOn: "Cancel"
+- waitForAnimationToEnd
+- takeScreenshot: 21-search-closed
+- tapOn: "Share story"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 22-share-sheet
+- back
+- tapOn: "Report an error"
+- waitForAnimationToEnd
+- takeScreenshot: 23-report-sheet
+- back
+- waitForAnimationToEnd
+- assertVisible: "Read full story.*"
+- tapOn: "Read full story.*"
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: 24-full-story-opened
+- back
+- runFlow:
+    when:
+      notVisible: "Read full story.*"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 15000
+- takeScreenshot: 25-back-from-full-story

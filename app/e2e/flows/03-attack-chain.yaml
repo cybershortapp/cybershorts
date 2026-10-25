@@ -1,0 +1,97 @@
+appId: app.cybersid.news
+name: Attack chain - open, scroll, games, Android back, swipe left and right
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- scrollUntilVisible:
+    element: "Show attack chain"
+    direction: DOWN
+    timeout: 90000
+    speed: 30
+- waitForAnimationToEnd
+- takeScreenshot: 30-story-with-chain
+- tapOn: "Show attack chain"
+- extendedWaitUntil:
+    visible: "Back to the story"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: 31-chain-page
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 30%"
+    duration: 400
+- waitForAnimationToEnd
+- takeScreenshot: 32-chain-scrolled
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 30%"
+    duration: 400
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 30%"
+    duration: 400
+- waitForAnimationToEnd
+- assertVisible: "Back to the story"
+- takeScreenshot: 33-chain-bottom-still-in-chain
+- runFlow:
+    when:
+      visible: "Play defender"
+    commands:
+      - tapOn: "Play defender"
+      - waitForAnimationToEnd
+      - takeScreenshot: 34-defender
+      - back
+      - waitForAnimationToEnd
+      - assertVisible: "Back to the story"
+- runFlow:
+    when:
+      visible: "Play (?!defender|games).*"
+    commands:
+      - tapOn: "Play (?!defender|games).*"
+      - waitForAnimationToEnd
+      - takeScreenshot: 35-chain-game
+      - back
+      - waitForAnimationToEnd
+      - assertVisible: "Back to the story"
+- runFlow:
+    when:
+      visible: "0[0-9] · .*"
+    commands:
+      - tapOn: "0[0-9] · .*"
+      - waitForAnimationToEnd
+      - takeScreenshot: 36-chain-step-detail
+      - back
+      - waitForAnimationToEnd
+- back
+- waitForAnimationToEnd
+- assertVisible: "Show attack chain"
+- assertNotVisible: "Back to the story"
+- takeScreenshot: 37-android-back-to-story
+- swipe:
+    start: "88%, 55%"
+    end: "8%, 55%"
+    duration: 300
+- waitForAnimationToEnd
+- assertVisible: "Back to the story"
+- takeScreenshot: 38-swiped-left-to-chain
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 25%"
+    duration: 300
+- waitForAnimationToEnd
+- assertVisible: "Back to the story"
+- swipe:
+    start: "8%, 55%"
+    end: "92%, 55%"
+    duration: 300
+- waitForAnimationToEnd
+- assertVisible: "Show attack chain"
+- takeScreenshot: 39-swiped-right-to-story
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 350
+- waitForAnimationToEnd
+- takeScreenshot: 40-next-story-after-chain

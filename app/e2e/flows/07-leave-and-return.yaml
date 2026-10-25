@@ -1,0 +1,45 @@
+appId: app.cybersid.news
+name: Leave the app and come back, rotate, Android back from the top
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 350
+- waitForAnimationToEnd
+- pressKey: Home
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 20000
+- takeScreenshot: 90-came-back
+- runFlow:
+    commands:
+      - setOrientation: LANDSCAPE_LEFT
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 91-landscape
+      - setOrientation: PORTRAIT
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 92-portrait-again
+    optional: true
+- back
+- waitForAnimationToEnd
+- takeScreenshot: 93-back-from-story-2
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 94-back-from-first-story
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 30000
+- takeScreenshot: 95-opened-again

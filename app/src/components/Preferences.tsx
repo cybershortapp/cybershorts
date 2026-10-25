@@ -206,7 +206,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
                 Alerts for zero-days, Critical and High stories. Quiet from 10pm to 7am unless it's urgent; the night's news comes in one alert at 7am.
               </Text>
             </View>
-            <Switch value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+            <Switch testID="switch-alerts" value={prefs.alerts} onValueChange={toggleAlerts} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
           </View>
           {alertsAvailable && prefs.alerts && !blocked && !problem && (
             <View style={[styles.statusRow, { backgroundColor: connected ? C.imageBg : C.card }]}>
@@ -278,7 +278,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
                 A 30 second game after some scam and safety stories. At most 3 a day, never the same one twice.
               </Text>
             </View>
-            <Switch value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+            <Switch testID="switch-games" value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
           </View>
         </View>
 
@@ -289,7 +289,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
               <Text style={[styles.h, { fontSize: 16 * s }]}>Opening sound</Text>
               <Text style={[styles.p, { fontSize: 13.5 * s }]}>A short sound with the logo when the app opens. Always silent when your phone is on silent.</Text>
             </View>
-            <Switch value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+            <Switch testID="switch-sound" value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
           </View>
         </View>
 
@@ -320,7 +320,7 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
           </View>
           <View style={[styles.switchRow, { marginTop: 14 }]}>
             <Text style={{ flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14 * s }}>Match my phone's light or dark mode</Text>
-            <Switch value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
+            <Switch testID="switch-follow-phone" value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
           </View>
           <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 12 * s, marginTop: 6, lineHeight: 17 * s }}>
             When this is on, the app switches between Light and Dark with your phone.

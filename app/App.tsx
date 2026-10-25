@@ -46,6 +46,7 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { GameCard } from './src/components/Games';
 import { Header } from './src/components/Header';
 import { PlayHub } from './src/components/PlayHub';
+import { handleBack } from './src/lib/back';
 import { Preferences } from './src/components/Preferences';
 import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
@@ -344,6 +345,8 @@ function Main() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (welcome) return false;
+      // an open attack chain (or a game or sheet on it) closes first
+      if (view === 'feed' && handleBack()) return true;
       if (view === 'play' && playBack.current()) return true;
       if (view === 'prefs' || view === 'play') {
         setView('feed');

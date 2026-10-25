@@ -144,7 +144,7 @@ export function Welcome({ onDone }: { onDone: () => void }) {
             </View>
             <View style={styles.switchRow}>
               <Text style={{ flex: 1, color: C.text, fontFamily: F.medium, fontSize: 14 * k }}>Match my phone's light or dark mode</Text>
-              <Switch value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
+              <Switch testID="switch-follow-phone" value={followPhone} onValueChange={setFollowPhone} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" />
             </View>
             <Text style={[styles.sub, { fontSize: 15 * k }]}>Card style</Text>
             <View style={styles.grid}>
@@ -167,14 +167,14 @@ export function Welcome({ onDone }: { onDone: () => void }) {
                 <Text style={{ color: C.text, fontFamily: F.head, fontSize: 15 * k }}>Awareness games</Text>
                 <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13 * k, marginTop: 2 }}>A 30 second game after some scam and safety stories</Text>
               </View>
-              <Switch value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+              <Switch testID="switch-games" value={prefs.games} onValueChange={(v) => setPrefs({ games: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
             </View>
             <View style={[styles.switchRow, { marginTop: 12 }]}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.text, fontFamily: F.head, fontSize: 15 * k }}>Opening sound</Text>
                 <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13 * k, marginTop: 2 }}>A short sound with the logo when the app opens. Silent when your phone is on silent.</Text>
               </View>
-              <Switch value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
+              <Switch testID="switch-sound" value={prefs.sound} onValueChange={(v) => setPrefs({ sound: v })} trackColor={{ true: C.glass ? '#34C759' : C.brand, false: C.border }} thumbColor="#FFFFFF" ios_backgroundColor={C.border} />
             </View>
           </>
         )}

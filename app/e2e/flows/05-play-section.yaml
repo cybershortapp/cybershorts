@@ -1,0 +1,55 @@
+appId: app.cybersid.news
+name: Play section - rank, badges, the three ready games, Android back
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- tapOn: "Play games"
+- extendedWaitUntil:
+    visible: "Always ready"
+    timeout: 10000
+- takeScreenshot: 70-play-section
+- scrollUntilVisible:
+    element: "Crack-o-meter"
+    direction: DOWN
+- tapOn: "Crack-o-meter"
+- waitForAnimationToEnd
+- tapOn: "Teapot"
+- tapOn: "Purple"
+- tapOn: "Rocket"
+- tapOn: "Pickle"
+- takeScreenshot: 71-crack-o-meter-won
+- back
+- waitForAnimationToEnd
+- assertVisible: "Always ready"
+- tapOn: "Lock up your digital home"
+- waitForAnimationToEnd
+- takeScreenshot: 72-digital-home-intro
+- runFlow:
+    when:
+      visible: "Start the night"
+    commands:
+      - tapOn: "Start the night"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn: "Unique passwords"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 73-digital-home-playing
+- back
+- waitForAnimationToEnd
+- tapOn: "Don't tap Approve"
+- waitForAnimationToEnd
+- takeScreenshot: 74-dont-tap-approve-intro
+- back
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element: "BADGES.*"
+    direction: UP
+- takeScreenshot: 75-play-section-after-games
+- back
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 10000
+- takeScreenshot: 76-back-to-news

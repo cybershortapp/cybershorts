@@ -1,0 +1,43 @@
+appId: app.cybersid.news
+name: First open, welcome screens and alerts
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- takeScreenshot: 01-opening-effect
+- extendedWaitUntil:
+    visible: "Cyber security news in 60 seconds"
+    timeout: 40000
+- takeScreenshot: 02-welcome-what-it-is
+- tapOn: "Next"
+- assertVisible: "Make it yours"
+- tapOn: "UK"
+- tapOn: "Microsoft 365"
+- tapOn: "Windows"
+- takeScreenshot: 03-welcome-make-it-yours
+- tapOn: "Next"
+- assertVisible: "Pick your look"
+- takeScreenshot: 04-welcome-look
+- scrollUntilVisible:
+    element:
+      id: "switch-sound"
+    direction: DOWN
+- takeScreenshot: 05-welcome-games-and-sound
+- tapOn:
+    id: "switch-sound"
+- takeScreenshot: 06-welcome-sound-off
+- tapOn: "Next"
+- assertVisible: "Alerts only when it matters"
+- takeScreenshot: 07-welcome-alerts
+- tapOn: "Turn on alerts"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - takeScreenshot: 08-android-asks-for-alerts
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- takeScreenshot: 09-first-story

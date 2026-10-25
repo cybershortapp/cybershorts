@@ -1,0 +1,119 @@
+appId: app.cybersid.news
+name: Settings - alerts on/off, region, themes, card styles, games, sound
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- tapOn: "Preferences"
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 10000
+- takeScreenshot: 50-settings-top
+- scrollUntilVisible:
+    element:
+      id: "switch-alerts"
+    direction: DOWN
+- tapOn:
+    id: "switch-alerts"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - takeScreenshot: 51-android-asks-for-alerts
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 52-alerts-switched
+- tapOn:
+    id: "switch-alerts"
+- waitForAnimationToEnd
+- takeScreenshot: 53-alerts-switched-back
+- scrollUntilVisible:
+    element: "India"
+    direction: DOWN
+- tapOn: "India"
+- waitForAnimationToEnd
+- takeScreenshot: 54-region-india
+- tapOn: "UK"
+- scrollUntilVisible:
+    element:
+      id: "switch-games"
+    direction: DOWN
+- takeScreenshot: 55-games-and-sound
+- tapOn:
+    id: "switch-sound"
+- takeScreenshot: 56-sound-on-again
+- scrollUntilVisible:
+    element: "Dark theme"
+    direction: DOWN
+- tapOn: "Dark theme"
+- waitForAnimationToEnd
+- takeScreenshot: 57-theme-dark
+- tapOn: "Vivid theme"
+- waitForAnimationToEnd
+- takeScreenshot: 58-theme-vivid
+- tapOn: "Aurora theme"
+- waitForAnimationToEnd
+- takeScreenshot: 59-theme-aurora
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 15000
+- takeScreenshot: 60-feed-aurora
+- tapOn: "Preferences"
+- scrollUntilVisible:
+    element: "Light theme"
+    direction: DOWN
+- tapOn: "Light theme"
+- scrollUntilVisible:
+    element: "Magazine card style"
+    direction: DOWN
+- tapOn: "Magazine card style"
+- tapOn: "Done"
+- waitForAnimationToEnd
+- takeScreenshot: 61-card-magazine
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 25%"
+    duration: 350
+- waitForAnimationToEnd
+- takeScreenshot: 62-card-magazine-scrolled
+- tapOn: "Preferences"
+- scrollUntilVisible:
+    element: "Newspaper card style"
+    direction: DOWN
+- tapOn: "Newspaper card style"
+- tapOn: "Done"
+- waitForAnimationToEnd
+- takeScreenshot: 63-card-newspaper
+- tapOn: "Preferences"
+- scrollUntilVisible:
+    element: "Terminal card style"
+    direction: DOWN
+- tapOn: "Terminal card style"
+- tapOn: "Done"
+- waitForAnimationToEnd
+- takeScreenshot: 64-card-terminal
+- tapOn: "Preferences"
+- scrollUntilVisible:
+    element: "Ronin card style"
+    direction: DOWN
+- tapOn: "Ronin card style"
+- tapOn: "Done"
+- waitForAnimationToEnd
+- takeScreenshot: 65-card-ronin
+- tapOn: "Preferences"
+- scrollUntilVisible:
+    element: "Standard card style"
+    direction: DOWN
+- tapOn: "Standard card style"
+- scrollUntilVisible:
+    element: "How CyberSid works"
+    direction: DOWN
+- takeScreenshot: 66-settings-bottom
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 15000
+- takeScreenshot: 67-back-to-standard

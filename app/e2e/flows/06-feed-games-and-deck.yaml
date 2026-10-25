@@ -1,0 +1,41 @@
+appId: app.cybersid.news
+name: Games and the trending deck between the news cards
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- runFlow:
+    commands:
+      - scrollUntilVisible:
+          element: "30 SECOND GAME"
+          direction: DOWN
+          timeout: 120000
+          speed: 30
+      - waitForAnimationToEnd
+      - takeScreenshot: 80-game-in-feed
+      - swipe:
+          start: "50%, 85%"
+          end: "50%, 15%"
+          duration: 300
+      - waitForAnimationToEnd
+      - takeScreenshot: 81-after-game
+    optional: true
+- tapOn: "Back to the latest stories"
+- waitForAnimationToEnd
+- runFlow:
+    commands:
+      - scrollUntilVisible:
+          element: "TRENDING.*"
+          direction: DOWN
+          timeout: 120000
+          speed: 30
+      - waitForAnimationToEnd
+      - takeScreenshot: 82-trending-deck
+      - swipe:
+          start: "85%, 50%"
+          end: "10%, 50%"
+          duration: 300
+      - waitForAnimationToEnd
+      - takeScreenshot: 83-trending-deck-slide-2
+    optional: true

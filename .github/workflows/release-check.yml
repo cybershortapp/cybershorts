@@ -1,0 +1,175 @@
+name: release-check
+
+# Before a Play Store release: builds the real Play Store file (.aab) here on GitHub, turns it into an
+# installable app, and runs it on an Android emulator through every test flow in app/e2e/flows like a real
+# user (welcome, swiping news, attack chain, settings, games, leaving and coming back).
+# Screenshots, Maestro notes and the phone log are saved to the "e2e-results" branch.
+# The tested .aab is attached to a private draft release, ready to upload to Play Console.
+on:
+  workflow_dispatch:
+    inputs:
+      from_run:
+        description: "Reuse the files built by an earlier run (its run ID). Leave empty to build fresh."
+        required: false
+        default: ""
+      flows:
+        description: "Which test flows to run (a file pattern in app/e2e/flows)"
+        required: false
+        default: "*"
+
+permissions:
+  contents: write   # results branch and the draft release
+  actions: read     # to reuse files from an earlier run
+
+concurrency:
+  group: release-check
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: inputs.from_run == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+      - run: npm ci
+      - name: Check the app settings are in eas.json
+        run: |
+          jq -e '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY | startswith("sb_publishable_")' eas.json \
+            || { echo "::error::Supabase settings missing from the production profile in eas.json"; exit 1; }
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Build the Play Store file here
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if ! npx eas-cli build --platform android --profile production --local --non-interactive \
+               --output "$GITHUB_WORKSPACE/cybersid.aab" > build.log 2>&1; then
+            tail -n 80 build.log
+            echo "::error title=Build failed::$(grep -iE 'error|failed|what went wrong' build.log | tail -n 20 | tr '\n' ' ' | cut -c1-3500)"
+            exit 1
+          fi
+          tail -n 15 build.log
+      - name: Make an installable app from it (for the emulator only)
+        working-directory: ${{ github.workspace }}
+        run: |
+          curl -fsSL -o bundletool.jar https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+          keytool -genkeypair -keystore test.jks -storepass android -alias test -keypass android \
+            -dname "CN=CyberSid test" -keyalg RSA -keysize 2048 -validity 365 > /dev/null
+          java -jar bundletool.jar build-apks --bundle cybersid.aab --output cybersid.apks --mode universal \
+            --ks test.jks --ks-pass pass:android --ks-key-alias test --key-pass pass:android
+          unzip -o cybersid.apks universal.apk
+          ls -la cybersid.aab universal.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: play-store-aab
+          path: cybersid.aab
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-apk
+          path: universal.apk
+          retention-days: 14
+
+  phone-test:
+    needs: build
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        if: inputs.from_run == ''
+        with:
+          name: emulator-apk
+          path: built
+      - uses: actions/download-artifact@v4
+        if: inputs.from_run != ''
+        with:
+          name: emulator-apk
+          path: built
+          run-id: ${{ inputs.from_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Allow the emulator to use the processor directly
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install Maestro (the "user" that taps and swipes)
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Pick the flows
+        run: |
+          mkdir -p picked
+          for f in app/e2e/flows/${{ inputs.flows }}.yaml; do cp "$f" picked/; done
+          rm -f app/e2e/flows/*.yaml && cp picked/*.yaml app/e2e/flows/
+          ls app/e2e/flows
+      - name: Run the app on an Android phone emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: bash app/e2e/run.sh "$GITHUB_WORKSPACE/built/universal.apk" "$GITHUB_WORKSPACE/results"
+      - name: Save the results to the e2e-results branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/results" || exit 0
+          command -v convert > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick > /dev/null; }
+          # smaller screenshots, so the branch stays light
+          find . -name '*.png' | while read -r p; do convert "$p" -resize 540x -quality 80 "${p%.png}.jpg" && rm "$p"; done
+          echo "run ${{ github.run_id }} ($(date -u +%FT%TZ)) on ${{ github.ref_name }} ${{ github.sha }}" > RUN.txt
+          git init -q && git checkout -q -b e2e-results
+          git add -A
+          git -c user.name="release-check" -c user.email="actions@users.noreply.github.com" commit -qm "Phone test results, run ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" e2e-results
+      - name: Pass or fail
+        run: |
+          n=$(cat "$GITHUB_WORKSPACE/results/failed-count.txt" 2>/dev/null || echo 99)
+          [ "$n" = "0" ] || { echo "::error::$n test flows failed"; exit 1; }
+
+  draft-release:
+    needs: [build, phone-test]
+    if: needs.build.result == 'success' && needs.phone-test.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: play-store-aab
+          path: built
+      - name: Attach the tested Play Store file to a private draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(jq -r '.expo.version' app/app.json)
+          code=$(jq -r '.expo.android.versionCode' app/app.json)
+          gh release create "play-$v-$code-${{ github.run_number }}" "built/cybersid.aab#CyberSid-$v-play-store.aab" \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" --draft \
+            --title "CyberSid $v (versionCode $code) for Play Store" \
+            --notes "Built from ${{ github.ref_name }} (${{ github.sha }}) and tested on an Android emulator in run ${{ github.run_id }}. Upload this .aab in Play Console."
+          echo "::notice title=Play Store file ready::Draft release play-$v-$code-${{ github.run_number }} (only visible to people who can edit the repo)"

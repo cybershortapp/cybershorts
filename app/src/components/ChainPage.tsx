@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { chainLink } from '../lib/actions';
+import { useBack } from '../lib/back';
 import { fetchGames, type Game, markGamePlayed } from '../lib/extras';
 import { readyFor } from '../lib/readyGames';
 import type { ChainStep, Story } from '../lib/types';
@@ -102,6 +103,13 @@ export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
   const [game, setGame] = useState<{ g: Game; headline: string; own: boolean } | null>(null);
   const [gameOpen, setGameOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
+  // Android back: close whatever is open on top of the chain first
+  useBack(gameOpen || playing || sheet !== null, () => {
+    if (gameOpen) setGameOpen(false);
+    else if (playing) setPlaying(false);
+    else setSheet(null);
+    return true;
+  });
   useEffect(() => {
     let live = true;
     const fallback = readyFor(story);

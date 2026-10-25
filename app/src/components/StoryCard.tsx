@@ -5,6 +5,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, ScrollView, type ScrollViewInstance, Share, StyleSheet, Text, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
+import { useBack } from '../lib/back';
 import { SHOW_SOURCE_IMAGES } from '../lib/config';
 import { sendReport } from '../lib/report';
 import { REPORT_REASONS, type ReportReason } from '../lib/types';
@@ -122,9 +123,15 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   }, [active, hasChain, chainReady]);
 
   const openArticle = () => Linking.openURL(story.url);
+  // the chain page is showing (Android back then goes back to the story)
+  const [onChain, setOnChain] = useState(false);
+  const chainShown = (open: boolean) => {
+    setOnChain(open);
+    onChainOpen?.(open);
+  };
   const slide = () => {
     pager.current?.scrollToEnd({ animated: true });
-    onChainOpen?.(true);
+    chainShown(true);
   };
   const showChain = () => {
     if (chainReady) {
@@ -138,8 +145,13 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   // stable, so the finished chain page is never redrawn just because the card changed
   const hideChain = useCallback(() => {
     pager.current?.scrollTo({ x: 0, animated: true });
+    setOnChain(false);
     onChainOpen?.(false);
   }, [onChainOpen]);
+  useBack(onChain && active, () => {
+    hideChain();
+    return true;
+  });
   const share = () =>
     Share.share({
       message:
@@ -374,9 +386,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               directionalLockEnabled
               onScrollBeginDrag={() => setChainReady(true)}
               // tell the feed when the chain page is showing, so up and down swipes can't leave it
-              onMomentumScrollEnd={(e) => onChainOpen?.(e.nativeEvent.contentOffset.x > cardWidth / 2)}
+              onMomentumScrollEnd={(e) => chainShown(e.nativeEvent.contentOffset.x > cardWidth / 2)}
               onScrollEndDrag={(e) => {
-                if (e.nativeEvent.contentOffset.x > cardWidth / 2) onChainOpen?.(true);
+                if (e.nativeEvent.contentOffset.x > cardWidth / 2) chainShown(true);
               }}
             >
               {cardFace}
