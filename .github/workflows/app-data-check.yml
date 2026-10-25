@@ -19,13 +19,29 @@ jobs:
           KEY=$(jq -r '.build.production.env.EXPO_PUBLIC_SUPABASE_KEY' app/eas.json)
           case "$KEY" in sb_publishable_*) ;; *) echo "::error::not the public key"; exit 1;; esac
           ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
-          S=$(ask "stories?select=id&order=created_at.desc&limit=40" | jq -r 'if type=="array" then (map(.id)|join(",")) else tostring end')
-          G=$(ask "games?select=style,story_id&story_id=in.($S)")
-          D=$(ask "decks?select=title,country,expires_at&order=created_at.desc&limit=3")
-          echo "::notice title=Games for the newest 40 stories::$(echo "$G" | jq -c 'if type=="array" then (length|tostring)+" games: "+(map(.style)|group_by(.)|map(.[0]+" x"+(length|tostring))|join(", ")) else . end')"
-          L=$(ask "games?select=style,story_id,created_at&order=created_at.desc&limit=12")
-          echo "::notice title=Newest games::$(echo "$L" | jq -c 'if type=="array" then map(.style+" "+.story_id[0:10]+" "+.created_at[5:16]) else . end')"
-          IDS=$(echo "$L" | jq -r 'map(.story_id)|join(",")')
-          echo "::notice title=Their stories::$(ask "stories?select=id,category,created_at,country&id=in.($IDS)" | jq -c 'if type=="array" then map(.id[0:10]+" "+.category+" "+.country+" "+.created_at[5:16]) else . end')"
-          echo "::notice title=Newest story ids::$(echo "$S" | cut -c1-120)"
-          echo "::notice title=Trending decks::$(echo "$D" | jq -c '.')"
+          ask 'stories?select=headline,source,image_url&image_url=not.is.null&image_url=not.like.*supabase*&order=created_at.desc&limit=60' > s.json
+          jq -r '.[] | [.source, .image_url] | @tsv' s.json > rows.tsv
+          python3 - <<'PY'
+          import struct, urllib.request
+          for line in open("rows.tsv"):
+              src, u = line.rstrip("\n").split("\t")
+              try:
+                  req = urllib.request.Request(u, headers={"User-Agent": "okhttp/4.12.0"})
+                  r = urllib.request.urlopen(req, timeout=20); b = r.read(); ct = r.headers.get("content-type")
+              except Exception as ex:
+                  print(f"::notice title={src}::FAILED {u[:90]} {ex}"); continue
+              info = ""
+              if b[:8] == b"\x89PNG\r\n\x1a\n":
+                  w, h, depth, ctype, comp, filt, inter = struct.unpack(">IIBBBBB", b[16:29])
+                  chunks, i = [], 8
+                  while i < len(b) - 8:
+                      n, = struct.unpack(">I", b[i:i+4]); t = b[i+4:i+8].decode("latin1")
+                      if t not in chunks: chunks.append(t)
+                      i += 12 + n
+                      if t == "IEND": break
+                  info = f"PNG {w}x{h} depth={depth} colour={ctype} interlace={inter} chunks={','.join(chunks)}"
+              elif b[:4] == b"RIFF": info = "WEBP " + b[12:16].decode("latin1")
+              elif b[:2] == b"\xff\xd8": info = "JPEG"
+              else: info = "OTHER " + repr(b[:12])
+              print(f"::notice title={src}::{len(b)//1024}KB {ct} {info} {u[:80]}")
+          PY
