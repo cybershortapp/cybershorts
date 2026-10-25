@@ -39,7 +39,12 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          npx eas-cli build --platform android --profile "${{ inputs.profile }}" --non-interactive --no-wait --json > build.json
+          # any problem is shown on the run page (logs need a download)
+          if ! npx eas-cli build --platform android --profile "${{ inputs.profile }}" --non-interactive --no-wait --json > build.json 2> err.txt; then
+            cat err.txt
+            echo "::error title=Expo build did not start::$(cat err.txt build.json | grep -v '^\s*$' | tail -n 25 | tr '\n' ' ' | cut -c1-3500)"
+            exit 1
+          fi
           cat build.json
           id=$(jq -r '.[0].id' build.json)
           echo "::notice title=Store build started::https://expo.dev/accounts/$(jq -r '.[0].project.ownerAccount.name // empty' build.json)/projects/$(jq -r '.[0].project.slug // empty' build.json)/builds/$id"
