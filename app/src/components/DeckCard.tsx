@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, type ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 
 import type { Deck } from '../lib/extras';
 import { F } from '../theme';
@@ -40,7 +40,7 @@ export function DeckCard(props: { deck: Deck; width: number; height: number; onD
 
 function ClassicDeck({ deck, width, height, onDone }: { deck: Deck; width: number; height: number; onDone?: () => void }) {
   const [i, setI] = useState(0);
-  const pager = useRef<ScrollView>(null);
+  const pager = useRef<ScrollViewInstance>(null);
   const n = deck.slides.length;
   const go = (k: number) => {
     const to = Math.max(0, Math.min(n - 1, k));

@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Linking, Pressable, ScrollView, type ScrollViewInstance, Share, StyleSheet, Text, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
 import { SHOW_SOURCE_IMAGES } from '../lib/config';
@@ -62,7 +62,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const [reportState, setReportState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   const action = actionFor(story);
   const hasChain = (story.attack_chain?.length ?? 0) >= 3;
-  const pager = useRef<ScrollView>(null);
+  const pager = useRef<ScrollViewInstance>(null);
   const pulse = useRef(new Animated.Value(0)).current;
   const nudge = useRef(new Animated.Value(0)).current;
   const scale = L.isTablet ? 1.35 : 1;

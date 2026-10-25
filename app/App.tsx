@@ -36,7 +36,7 @@ import {
   StyleSheet,
   Text,
   View,
-  type ViewToken,
+  type ListViewToken,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -482,7 +482,7 @@ function Main() {
     if (i > 0) setTimeout(() => safeScrollTo(i), 50);
   }, [view, feed, pageHeight, filter]);
 
-  const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+  const onViewable = useRef(({ viewableItems }: { viewableItems: ListViewToken[] }) => {
     const i = viewableItems[0]?.index;
     if (i != null && i >= 0) setIndex(i);
   }).current;

@@ -2,7 +2,7 @@
   "expo": {
     "name": "CyberSid",
     "slug": "cybersid",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,7 @@
     },
     "android": {
       "package": "app.cybersid.news",
-      "versionCode": 5,
+      "versionCode": 6,
       "blockedPermissions": [
         "com.google.android.gms.permission.AD_ID",
         "android.permission.READ_EXTERNAL_STORAGE",
