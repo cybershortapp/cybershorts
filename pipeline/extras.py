@@ -45,6 +45,7 @@ COMMON = """Rules:
   company statements or dates.
 - No real phone numbers. Fake web addresses must look plausible but must not be the brand's real site
   (use typos, extra words or odd endings like .help .info .co, e.g. paypa1-secure.help).
+- Any people need made-up, unusual names, never real people, and never Dave, David, John, Sarah or Mike.
 - No em dashes. Reply with JSON only."""
 
 PROMPTS = {
@@ -72,7 +73,47 @@ JSON: {"ask":"one line question, max 70 chars, e.g. Your parcel. Which link is r
 Give the 4 most useful steps in the right order, each max 60 chars, and one sentence on why the first step comes first.
 JSON: {"ask":"max 90 chars, e.g. Your email and password were in this breach. Tap the steps in order.",
 "steps":["first","second","third","fourth"],"why":"max 120 chars"}""",
+    "hot_seat": """Write a "Help desk hot seat" game for this story about tricking staff. The player works on a company
+IT help desk. An attacker phones pretending to be a colleague, using the same trick as the story. Write 3 rounds;
+in each the caller says something (more pushy each round) and the player has 3 replies:
+one "good" (refuses and checks safely, e.g. calls back on the number on file, or checks with a manager in the
+ticket system), one "bad" (gives in: resets the password, adds a new phone, reads out a code), and one "weak"
+(a check attackers can pass, like asking for a date of birth or the manager's name) with the caller's quick
+"reply" that passes it.
+JSON: {"caller":{"name":"made-up first and last name","role":"their team, max 20 chars"},
+"rounds":[{"say":"max 150 chars","options":[{"t":"max 80 chars","kind":"good"},{"t":"max 80 chars","kind":"bad"},
+{"t":"max 80 chars","kind":"weak","reply":"max 70 chars"}]}],
+"win":"one sentence when the player keeps the caller out, max 110 chars",
+"lose":"one sentence on what the attackers did next, from the story, max 120 chars"}""",
+    "approve": """Write a "Don't tap Approve" game for this story about stolen passwords or sign-in prompts. The
+player's phone is flooded with sign-in approval requests from attackers who have their password. Write 3 ordinary,
+harmless notifications that arrive in between (a message from family or a friend, a small card payment, a calendar
+reminder; one may mention the odd login alerts), the place the sign-in requests come from, and the final call from
+someone pretending to be IT who asks the player to approve one more prompt.
+JSON: {"place":"city, country, max 24 chars","real":[{"app":"MESSAGES, BANK, CALENDAR or EMAIL","title":"max 24 chars",
+"body":"max 60 chars"}],"call":{"name":"who they claim to be, max 24 chars","say":"max 170 chars"}}""",
+    "home": """Write a "Lock up your digital home" game inspired by this story. A burglar tries 5 ways into someone's
+digital life, each in one line in his voice, and the story's trick must be one of them. Each try has a spot and a
+kind. Spots: email, bank, router, phone, social (each once). Kinds: "reused" (a password leaked from another site),
+"stolen" (they already have the password: tricked, phished or bought), "old_bug" (an old unpatched bug), "default"
+(the password printed on the device). Router must be default or old_bug; phone must be old_bug or stolen; email,
+bank and social must be reused or stolen.
+JSON: {"rounds":[{"spot":"email","kind":"reused","say":"the burglar's line, max 110 chars",
+"fail":"what happens if he is not stopped, max 80 chars"}]}""",
+    "overshare": """Write an "Overshare detective" game inspired by this story. Make up a person, their social media
+handle, a made-up employer and job. Write a short bio that overshares one thing, and 7 posts: 5 overshare something a
+scammer could use (birthday, pet's name, mother's maiden name, holiday dates, work badge or staff number, first car,
+school, home street) and 2 are harmless. Pick overshares that fit the story's scam. Use no real people or companies.
+JSON: {"name":"...","handle":"@...","job":"job at company, max 40 chars",
+"bio":{"text":"max 90 chars","what":"the overshare, max 24 chars","why":"how a scammer uses it, max 100 chars"},
+"posts":[{"emoji":"one or two emoji","caption":"max 60 chars","risky":true,"what":"max 24 chars","why":"max 100 chars"},
+{"emoji":"..","caption":"..","risky":false}]}""",
 }
+
+# names the AI likes too much (and that readers asked us not to use)
+BANNED_NAMES = {"dave", "david", "john", "sarah", "mike", "michael", "wilson", "smith", "jane", "doe"}
+HOME_KINDS = {"router": {"default", "old_bug"}, "phone": {"old_bug", "stolen"}, "email": {"reused", "stolen"},
+              "bank": {"reused", "stolen"}, "social": {"reused", "stolen"}}
 
 WORDS = ["Teapot", "Purple", "Rocket", "Pickle", "Lantern", "Otter", "Glacier", "Biscuit", "Cactus", "Marble",
          "Puffin", "Thunder", "Waffle", "Comet", "Saffron", "Ladder", "Kettle", "Mango", "Falcon", "Velvet", "42", "77"]
@@ -94,6 +135,14 @@ def _core(style, data):
         return data["ask"] + " | " + " | ".join(f["url"] for f in data["options"])
     if style == "order_steps":
         return " | ".join(data["steps"])
+    if style == "hot_seat":
+        return " | ".join(r["say"] for r in data["rounds"])
+    if style == "approve":
+        return data["call"]["say"] + " | " + " | ".join(r["title"] for r in data["real"])
+    if style == "home":
+        return " | ".join(r["say"] for r in data["rounds"])
+    if style == "overshare":
+        return data["bio"]["text"] + " | " + " | ".join(p["caption"] for p in data["posts"])
     return style
 
 
@@ -110,12 +159,28 @@ def _brand(text):
     return None, None
 
 
+HOT_SEAT = re.compile(r"\b(help ?desk|vishing|voice phishing|social engineer\w*|scattered spider|posing as (an? )?(employee|staff|worker|it)|"
+                      r"impersonat\w* (it|staff|employees?|support|the help ?desk)|fake it support|called (staff|employees))\b")
+APPROVE = re.compile(r"\b(mfa fatigue|push (bombing|spam)|prompt bombing|approval prompts?|mfa bypass|bypass\w* (mfa|2fa|two.factor|multi.factor)|"
+                     r"session (hijack\w*|cookies?|tokens?)|account takeovers?|credential stuffing|infostealers?)\b")
+OVERSHARE = re.compile(r"\b(romance scams?|pig.butchering|catfish\w*|ceo fraud|business email compromise|fake boss|identity theft|doxx\w*|"
+                       r"osint|investment scams?|crypto scams?|social media scams?)\b")
+HOME = re.compile(r"\b(routers?|smart (home|tv|camera|doorbell|plug)s?|iot|baby monitors?|default passwords?|home wi.?fi)\b")
+
+
 def style_for(story, recent_styles):
     """Which game fits this story (None = no game)."""
     text = f"{story['headline']} {story['technical']}".lower()
     cat = story.get("category") or ""
     if cat in ("Tips", "History", "Other") or story.get("source", "").startswith("CyberSid"):
         return None
+    turn = lambda options: sorted(options, key=lambda s: recent_styles.count(s))[0]   # take turns
+    if HOT_SEAT.search(text):
+        return "hot_seat"
+    if APPROVE.search(text):
+        return "approve"
+    if OVERSHARE.search(text):
+        return turn(["overshare", "scam_or_legit"])
     scammy = cat == "Scams" or re.search(r"\b(phish\w*|smish\w*|scam\w*|fake (text|email|message|website)s?)\b", text)
     if scammy:
         options = ["scam_or_legit", "red_flags"] + (["real_link"] if _brand(text)[0] else [])
@@ -125,10 +190,12 @@ def style_for(story, recent_styles):
     if cat == "Breaches":
         if re.search(r"\bpasswords?\b", text) and "crack_meter" not in recent_styles[:6]:
             return "crack_meter"
-        return "order_steps"
+        return turn(["order_steps", "home"])
     serious = story.get("zero_day") or story.get("severity") == "Critical"
     if serious and set(story.get("products") or []) & CONSUMER:
-        return "patch_or_panic"
+        return turn(["patch_or_panic", "home"])
+    if HOME.search(text):
+        return "home"
     return None
 
 
@@ -169,6 +236,52 @@ def _check(style, d, story):
         options = fakes[:]
         options.insert(h % 3, real)
         return {"ask": _short(d["ask"], 80), "options": options, "answer": options.index(real)}
+    h = int(hashlib.sha1(story["id"].encode()).hexdigest(), 16)   # a fixed shuffle per story
+    if style == "hot_seat":
+        c = d.get("caller") or {}
+        name = _short(c.get("name"), 30)
+        if not name or set(re.findall(r"[a-z]+", name.lower())) & BANNED_NAMES or not c.get("role"):
+            return None
+        rounds = []
+        for k, r in enumerate((d.get("rounds") or [])[:3]):
+            opts = [{"t": _short(o.get("t"), 86), "kind": o.get("kind"), **({"reply": _short(o.get("reply"), 76)} if o.get("kind") == "weak" else {})}
+                    for o in (r.get("options") or []) if isinstance(o, dict) and o.get("t")]
+            if not r.get("say") or len(opts) != 3 or sorted(o["kind"] for o in opts) != ["bad", "good", "weak"] or not next(o for o in opts if o["kind"] == "weak").get("reply"):
+                return None
+            rot = (h >> (k * 3)) % 3                 # the right answer isn't always in the same place
+            rounds.append({"say": _short(r["say"], 160), "options": opts[rot:] + opts[:rot]})
+        if len(rounds) != 3 or not d.get("win") or not d.get("lose"):
+            return None
+        return {"caller": {"name": name, "role": _short(c["role"], 22)}, "rounds": rounds, "win": _short(d["win"], 120), "lose": _short(d["lose"], 130)}
+    if style == "approve":
+        real = [{"app": str(r.get("app", "")).upper(), "title": _short(r.get("title"), 26), "body": _short(r.get("body"), 64)}
+                for r in (d.get("real") or []) if isinstance(r, dict) and r.get("title") and r.get("body")][:3]
+        real = [r for r in real if r["app"] in ("MESSAGES", "BANK", "CALENDAR", "EMAIL")]
+        call = d.get("call") or {}
+        if len(real) != 3 or not call.get("name") or not call.get("say") or not d.get("place"):
+            return None
+        return {"place": _short(d["place"], 26), "real": real, "call": {"name": _short(call["name"], 26), "say": _short(call["say"], 180)}}
+    if style == "home":
+        rounds = [{"spot": r.get("spot"), "kind": r.get("kind"), "say": _short(r.get("say"), 120), "fail": _short(r.get("fail"), 90)}
+                  for r in (d.get("rounds") or []) if isinstance(r, dict)]
+        ok = [r for r in rounds if r["spot"] in HOME_KINDS and r["kind"] in HOME_KINDS[r["spot"]] and r["say"] and r["fail"]]
+        if len(ok) != 5 or len({r["spot"] for r in ok}) != 5:
+            return None
+        return {"rounds": ok}
+    if style == "overshare":
+        bio = d.get("bio") or {}
+        name = _short(d.get("name"), 30)
+        posts = [{"emoji": _short(p.get("emoji"), 6) or "📷", "caption": _short(p.get("caption"), 66), "risky": bool(p.get("risky")),
+                  **({"what": _short(p.get("what"), 28), "why": _short(p.get("why"), 110)} if p.get("risky") else {})}
+                 for p in (d.get("posts") or []) if isinstance(p, dict) and p.get("caption")][:7]
+        risky = [p for p in posts if p["risky"]]
+        if (not name or set(re.findall(r"[a-z]+", name.lower())) & BANNED_NAMES or not bio.get("text") or not bio.get("what") or not bio.get("why")
+                or len(posts) != 7 or len(risky) != 5 or any(not p["what"] or not p["why"] for p in risky)):
+            return None
+        rot = h % 7
+        return {"name": name, "handle": _short(d.get("handle") or "@" + name.lower().replace(" ", "."), 30), "job": _short(d.get("job"), 44),
+                "bio": {"text": _short(bio["text"], 96), "what": _short(bio["what"], 28), "why": _short(bio["why"], 110)},
+                "posts": posts[rot:] + posts[:rot]}
     if style == "order_steps":
         steps = [_short(s, 64) for s in d.get("steps", [])][:4]
         return {"ask": _short(d.get("ask", ""), 100), "steps": steps, "why": _short(d.get("why", ""), 130)} \
@@ -176,7 +289,8 @@ def _check(style, d, story):
     return None
 
 
-LIST_KEY = {"scam_or_legit": "items", "patch_or_panic": "questions", "red_flags": "lines", "real_link": "fakes", "order_steps": "steps"}
+LIST_KEY = {"scam_or_legit": "items", "patch_or_panic": "questions", "red_flags": "lines", "real_link": "fakes", "order_steps": "steps",
+            "hot_seat": "rounds", "approve": "real", "home": "rounds", "overshare": "posts"}
 
 
 def _as_dict(raw, key):
@@ -228,7 +342,8 @@ def make_games(db, ai, budget, deadline):
             try:
                 calls += 1
                 raw = ai.json(PROMPTS[style] + "\n\n" + COMMON,
-                              f"Story headline: {st['headline']}\nStory: {st['technical'][:1400]}{brand_note}", 700)
+                              f"Story headline: {st['headline']}\nStory: {st['technical'][:1400]}{brand_note}",
+                              1500 if style in ("hot_seat", "approve", "home", "overshare") else 700)
             except Exception as ex:
                 print(f"[warn] game for {st['id'][:10]}: {str(ex)[:80]}")
                 continue
