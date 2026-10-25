@@ -45,6 +45,7 @@ import { DeckCard } from './src/components/DeckCard';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { GameCard } from './src/components/Games';
 import { Header } from './src/components/Header';
+import { PlayHub } from './src/components/PlayHub';
 import { Preferences } from './src/components/Preferences';
 import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
@@ -98,7 +99,8 @@ function Main() {
   const { savedIds, toggleSaved } = useSaved();
   const prefs = usePrefs();
   // the app opens straight on the news
-  const [view, setView] = useState<'feed' | 'prefs'>('feed');
+  const [view, setView] = useState<'feed' | 'prefs' | 'play'>('feed');
+  const playBack = useRef<() => boolean>(() => false);
   // first open: a short welcome (null while we check whether it was already seen)
   const [welcome, setWelcome] = useState<boolean | null>(null);
   useEffect(() => {
@@ -338,7 +340,8 @@ function Main() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (welcome) return false;
-      if (view === 'prefs') {
+      if (view === 'play' && playBack.current()) return true;
+      if (view === 'prefs' || view === 'play') {
         setView('feed');
         return true;
       }
@@ -558,7 +561,10 @@ function Main() {
   const counter = feed.length ? `${String(index + 1).padStart(2, '0')} / ${String(feed.length).padStart(2, '0')}` : '';
 
   let content;
-  if (loading && stories.length === 0) {
+  if (view === 'play') {
+    // the games work offline too, so the Play section opens even when the news can't load
+    content = <PlayHub pool={pool} backRef={playBack} />;
+  } else if (loading && stories.length === 0) {
     content = <ActivityIndicator style={styles.center} color={C.brand} />;
   } else if (error) {
     content = (
@@ -633,6 +639,14 @@ function Main() {
           else changeFilter('Saved');
         }}
         onPrefs={() => setView('prefs')}
+        onPlay={() => {
+          if (searching) {
+            setSearching(false);
+            tabMemory.current.delete('Search');
+            changeFilter(beforeSearch.current);
+          }
+          setView(view === 'play' ? 'feed' : 'play');
+        }}
         hasPrefs={prefs.products.length + prefs.terms.length > 0}
         filter={filter}
         onFilterChange={changeFilter}

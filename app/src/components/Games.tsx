@@ -5,6 +5,7 @@ import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
 import type { Game } from '../lib/extras';
 import { buzz } from '../lib/buzz';
+import { recordResult } from '../lib/progress';
 import { F } from '../theme';
 import { Fit } from './Fit';
 import { Approve, Home, HotSeat, Overshare } from './GamesPlus';
@@ -25,7 +26,7 @@ const TITLES: Record<Game['style'], string> = {
 };
 
 /** A game card in the feed, shown after the story it's about. */
-export function GameCard({ game, headline, width, height, active }: { game: Game; headline: string; width: number; height: number; active: boolean }) {
+export function GameCard({ game, headline, width, height, active, foot }: { game: Game; headline: string; width: number; height: number; active: boolean; foot?: string }) {
   const Body = { scam_or_legit: ScamOrLegit, patch_or_panic: PatchOrPanic, red_flags: RedFlags, real_link: RealLink, order_steps: OrderSteps, crack_meter: CrackMeter, hot_seat: HotSeat, approve: Approve, home: Home, overshare: Overshare }[game.style];
   const theme = THEME[game.style];
   if (!Body) return null;
@@ -39,7 +40,7 @@ export function GameCard({ game, headline, width, height, active }: { game: Game
       <Fit>
         <Body game={game} active={active} />
       </Fit>
-      <Text style={[styles.foot, { color: theme.muted }]}>Swipe up to skip · Turn games off in Settings</Text>
+      <Text style={[styles.foot, { color: theme.muted }]}>{foot ?? 'Swipe up to skip · Turn games off in Settings'}</Text>
     </View>
   );
 }
@@ -58,6 +59,20 @@ const THEME: Record<Game['style'], { bg: string; ink: string; muted: string; acc
 };
 
 // ---- little pieces shared by the games ----
+/** Count a finished game once (XP, streak, and the badge for a perfect round). */
+function useReport(style: string, finished: boolean, won: boolean, xp: number, perfect: boolean) {
+  const sent = useRef(false);
+  useEffect(() => {
+    if (!finished) {
+      sent.current = false;
+      return;
+    }
+    if (sent.current) return;
+    sent.current = true;
+    recordResult({ game: style, won, xp, badge: perfect ? style : undefined });
+  }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 function Line({ text, good }: { text: string; good: boolean }) {
   const pop = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -150,6 +165,7 @@ function ScamOrLegit({ game }: GameProps) {
 
   const done = i >= items.length;
   const score = results.filter(Boolean).length;
+  useReport('scam_or_legit', done && items.length > 0, score >= items.length - 1, score * 40, score === items.length);
   const item = items[Math.min(i, items.length - 1)];
   const rotate = pan.x.interpolate({ inputRange: [-200, 0, 200], outputRange: ['-14deg', '0deg', '14deg'] });
   const scamGlow = pan.x.interpolate({ inputRange: [-120, -40, 0], outputRange: [1, 0.2, 0], extrapolate: 'clamp' });
@@ -219,6 +235,7 @@ function PatchOrPanic({ game, active }: GameProps) {
   const wobble = useRef(new Animated.Value(0)).current;
   const result = picked !== null;
   const right = result && picked === qs[i]?.answer;
+  useReport('patch_or_panic', result && i === qs.length - 1, score >= 2, score * 50, score === qs.length);
 
   useEffect(() => {
     const a = Animated.loop(Animated.sequence([
@@ -318,6 +335,7 @@ function RedFlags({ game }: GameProps) {
   const fish = useRef(new Animated.Value(0)).current;
   const total = lines.filter((l) => l.flag).length;
   const won = found.length === total && total > 0;
+  useReport('red_flags', won, true, 120, true);
   useEffect(() => {
     if (won) Animated.timing(fish, { toValue: 1, duration: 1000, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start();
     else {
@@ -404,6 +422,7 @@ function RealLink({ game }: GameProps) {
   const answered = picked !== null;
   const right = picked === d.answer;
   const pulse = useBounce(picked);
+  useReport('real_link', answered, right, right ? 100 : 20, right);
   return (
     <View style={{ flexGrow: 1, paddingHorizontal: 16 }}>
       <Text style={[styles.q, { color: '#1E1A14', marginTop: 4 }]}>{d.ask}</Text>
@@ -461,6 +480,7 @@ function OrderSteps({ game }: GameProps) {
   const [tries, setTries] = useState(0);
   const shake = useBounce(wrong === null ? null : `${wrong}${tries}`);
   const done = placed.length === d.steps.length;
+  useReport('order_steps', done, true, Math.max(40, 120 - tries * 20), tries === 0);
   const stamp = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (done) Animated.spring(stamp, { toValue: 1, friction: 4, useNativeDriver: true }).start();
@@ -539,6 +559,7 @@ function CrackMeter({ game }: GameProps) {
   const [words, setWords] = useState<string[]>([]);
   const [weak, setWeak] = useState(false);
   const L = LEVELS[weak ? 0 : Math.min(words.length, 4)];
+  useReport('crack_meter', L.w >= 100, true, 100, true);
   const meter = useRef(new Animated.Value(4)).current;
   const rage = useRef(new Animated.Value(0)).current;
   useEffect(() => {

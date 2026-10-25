@@ -8,9 +8,10 @@ import { F, type Palette, tabColour, useTheme } from '../theme';
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type Props = {
-  view: 'feed' | 'prefs';
+  view: 'feed' | 'prefs' | 'play';
   onSaved: () => void;
   onPrefs: () => void;
+  onPlay: () => void;
   hasPrefs: boolean;
   filter: Filter;
   onFilterChange: (f: Filter) => void;
@@ -29,7 +30,7 @@ const TAB_ICON: Partial<Record<Filter, IconName>> = {
   Saved: 'bookmark',
 };
 
-export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChange, counter, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {
+export function Header({ view, onSaved, onPrefs, onPlay, hasPrefs, filter, onFilterChange, counter, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
@@ -55,6 +56,9 @@ export function Header({ view, onSaved, onPrefs, hasPrefs, filter, onFilterChang
               {counter}
             </Text>
           )}
+          <Pressable onPress={onPlay} hitSlop={8} style={[styles.iconBtn, view === 'play' && styles.iconOn]} accessibilityLabel="Play games">
+            <MaterialCommunityIcons name="gamepad-variant" size={17 * k} color={view === 'play' ? C.onBrand : C.brandDark} />
+          </Pressable>
           <Pressable onPress={searching ? onSearchClose : onSearchOpen} hitSlop={8} style={[styles.iconBtn, searching && styles.iconOn]} accessibilityLabel="Search stories">
             <MaterialCommunityIcons name="magnify" size={17 * k} color={searching ? C.onBrand : C.brandDark} />
           </Pressable>

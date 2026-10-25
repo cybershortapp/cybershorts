@@ -77,6 +77,13 @@ export function markGameSeen(id: string) {
   AsyncStorage.setItem(GAMES_DAY, JSON.stringify(today)).catch(() => {});
 }
 
+/** Played from the Play section: the feed won't show it again, and it doesn't use up today's feed games. */
+export function markGamePlayed(id: string) {
+  if (seenGames.has(id)) return;
+  seenGames.add(id);
+  AsyncStorage.setItem(SEEN_GAMES, JSON.stringify([...seenGames].slice(-500))).catch(() => {});
+}
+
 export function markDeckSeen(id: string) {
   if (seenDecks.has(id)) return;
   seenDecks.add(id);

@@ -9,6 +9,7 @@ export type Progress = {
   days: string[]; // dates (YYYY-MM-DD, local) with at least one game played, newest first
   badges: Record<string, string>; // badge id -> date earned
   played: Record<string, { plays: number; wins: number; best: number }>;
+  done?: string[]; // games finished from the Play section (by game id), newest first
 };
 export type Result = { game: string; won: boolean; xp: number; badge?: string };
 
@@ -87,6 +88,7 @@ export function recordResult(r: Result) {
     newBadge = r.badge;
   }
   state = {
+    ...state,
     xp: state.xp + Math.max(0, Math.round(r.xp)),
     days,
     badges,
@@ -97,6 +99,15 @@ export function recordResult(r: Result) {
   const after = rankOf(state.xp);
   return { xp: Math.round(r.xp), newBadge, rankUp: after.index > before.index ? after.name : null };
 }
+
+/** A game from the Play section was finished: show a tick next to it. */
+export function markDone(id: string) {
+  const done = state.done ?? [];
+  if (done.includes(id)) return;
+  state = { ...state, done: [id, ...done].slice(0, 300) };
+  save();
+}
+export const totalPlays = (p: Progress) => Object.values(p.played).reduce((n, x) => n + x.plays, 0);
 
 export function getProgress() {
   return state;
