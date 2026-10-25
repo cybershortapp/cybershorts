@@ -18,6 +18,9 @@ Rules:
 - British English, plain words, short sentences, sentence case (not Title Case). No em dashes. No jargon without explaining it.
 - Use only facts from the story and the chain, plus safety advice that is always true.
 - Never invent numbers, money amounts, dates, victims or quotes. Impact numbers must appear in the story text.
+- "Your move" options: the wrong ones must sound sensible and tempting, the kind of thing a busy, helpful person
+  really does (help the caller quickly, trust a familiar name, click to check). Never make a wrong option obviously
+  silly, lazy or reckless (like "ignore it" or "grant full access immediately"). Start every sentence with a capital.
 - If people appear in "Your move" scenes, use clearly made-up first names that are unusual, never real people,
   never the victim's real staff, and never Dave, David, John, Sarah or Mike.
 Reply with JSON only:
@@ -37,6 +40,8 @@ chain order, starting at the entry point, "step" is the chain step number from 0
 
 def _short(s, n):
     s = re.sub(r"\s+", " ", str(s or "")).strip().replace("—", "-").replace("–", "-")
+    if s[:1].islower() and not s[1:2].isupper():   # a capital to start (but leave iPhone and eBay alone)
+        s = s[:1].upper() + s[1:]
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
 
 

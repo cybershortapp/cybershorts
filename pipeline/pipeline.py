@@ -23,6 +23,7 @@ from sources import SOURCES
 from data_feeds import READERS
 from tags import tag_products, is_zero_day
 from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, picture_width, usable_image
+from pictures import cleanup_old_copies, copy_pictures, is_ours
 
 load_dotenv()
 
@@ -785,7 +786,8 @@ def recheck_pictures(db, since, limit=15):
     from concurrent.futures import ThreadPoolExecutor
     rows = (db.table("stories").select("id,source,url,image_url").not_.is_("image_url", "null")
             .gte("created_at", since).order("created_at", desc=True).limit(max(60, limit * 3)).execute().data)
-    rows = [r for r in rows if "/object/public/covers/" not in r["image_url"]][:limit]
+    # our own copies (AI pictures and copied news pictures) always load
+    rows = [r for r in rows if not is_ours(r["image_url"])][:limit]
     with ThreadPoolExecutor(8) as pool:
         widths = list(pool.map(lambda r: picture_width(r["image_url"]), rows))
     bad, tries = [], 0
@@ -1148,6 +1150,21 @@ def main():
         except Exception as ex:
             print(f"[warn] old picture clean-up failed: {ex}")
 
+    # ---- 3b. our own small copy of each news-site picture, so every phone can load it ----
+    copies_note = "off"
+    if db and COVERS and not TEST_MODE:
+        try:
+            look_back = timedelta(days=10 if started.hour == 3 else 3)
+            copies_note = copy_pictures(db, (started - look_back).isoformat(), limit=40,
+                                        deadline=started + timedelta(seconds=RUN_SECONDS))
+            print(f"Picture copies: {copies_note}")
+            removed = cleanup_old_copies(db)
+            if removed:
+                print(f"Removed {removed} old picture copies to save storage.")
+        except Exception as ex:
+            copies_note = f"problem: {str(ex)[:100]}"
+            print(f"[warn] picture copies: {ex}")
+
     # ---- 3a. local stories that came in through "for everyone" feeds (last 7 days, no AI) ----
     if db and not TEST_MODE:
         try:
@@ -1238,7 +1255,7 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | colours: {tint_note} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | copies: {copies_note[:80]} | colours: {tint_note} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
             f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
             f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
     print(f"Tip card: {tip_note}")
@@ -1391,8 +1408,8 @@ def backfill_covers():
             .order("published_at", desc=True).limit(int(os.getenv("COVERS_CHECK", "150"))).execute().data)
     todo, reasons = [], {}
     for r in rows:
-        if r["image_url"] and "/object/public/covers/" in r["image_url"]:
-            continue    # already one of our AI pictures
+        if is_ours(r["image_url"]):
+            continue    # already one of our AI pictures or picture copies
         why = image_problem(r["image_url"])
         if why:
             todo.append(r)
@@ -1466,6 +1483,11 @@ def dedupe_existing():
         if r.get("image_url") and "/object/public/covers/" in r["image_url"]:
             try:   # its AI picture is no longer needed
                 db.storage.from_("covers").remove([r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0]])
+            except Exception:
+                pass
+        if r.get("image_url") and "/object/public/pictures/" in r["image_url"]:
+            try:   # nor its picture copy
+                db.storage.from_("pictures").remove([r["image_url"].split("/object/public/pictures/", 1)[1].split("?")[0]])
             except Exception:
                 pass
         db.table("stories").delete().eq("id", r["id"]).execute()
