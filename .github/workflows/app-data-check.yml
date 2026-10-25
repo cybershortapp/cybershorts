@@ -21,15 +21,19 @@ jobs:
           ask() { curl -s "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"; }
           Q='stories?select=headline,source,image_url,created_at&or=(headline.ilike.*GMO*,headline.ilike.*note*,source.ilike.*Iran*,headline.ilike.*Baluch*)&order=created_at.desc&limit=8'
           ask "$Q" > s.json
-          jq -c '.[]' s.json | while read -r row; do
-            H=$(echo "$row" | jq -r '.headline[0:70] + " | " + .source + " | " + .created_at[5:16]')
-            U=$(echo "$row" | jq -r '.image_url // "none"')
-            R=""
-            for A in "" "image/avif,image/webp,image/*,*/*" "image/webp,image/*;q=0.8"; do
-              curl -s -m 15 -A "Mozilla/5.0 (Linux; Android 14) okhttp/4.12.0" ${A:+-H "Accept: $A"} -D h.txt -o b.bin "$U"
-              CT=$(grep -i '^content-type' h.txt | tail -1 | tr -d '\r' | cut -d' ' -f2)
-              MAG=$(head -c 16 b.bin | od -An -c | tr -s ' ' | cut -c1-40)
-              R="$R [accept=${A:-none}] $(head -1 h.txt | tr -d '\r') $CT $(stat -c%s b.bin)B magic:$MAG ;"
-            done
-            echo "::notice title=$H::$U => $R"
-          done
+          pip install -q pillow
+          jq -r '.[] | select(.image_url != null) | .image_url' s.json > urls.txt
+          python3 - <<'PY'
+          import base64, io, urllib.request
+          from PIL import Image
+          for i, u in enumerate(open("urls.txt").read().split()):
+              try:
+                  req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0 (Linux; Android 14)", "Accept": "image/webp,image/*"})
+                  im = Image.open(io.BytesIO(urllib.request.urlopen(req, timeout=20).read())).convert("RGB")
+                  w, h = im.size
+                  im.thumbnail((200, 120))
+                  b = io.BytesIO(); im.save(b, "JPEG", quality=70)
+                  print(f"::notice title=pic{i} {w}x{h}::{base64.b64encode(b.getvalue()).decode()}")
+              except Exception as ex:
+                  print(f"::notice title=pic{i} failed::{u} {ex}")
+          PY
