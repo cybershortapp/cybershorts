@@ -260,12 +260,6 @@ export function Approve({ game, active }: Props) {
   const live = plan.map((p, k) => ({ ...p, k })).filter((p) => p.at <= t && !gone[p.k]).reverse();
   const waiting = live.filter((p) => p.kind === 'mfa').length;
 
-  const Wall = ({ children }: { children: React.ReactNode }) => (
-    <View style={styles.wall}>
-      <LinearGradient colors={['#1E3A8A', '#6D28D9', '#DB2777']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      {children}
-    </View>
-  );
   if (phase === 'intro') {
     return (
       <Wall>
@@ -359,6 +353,16 @@ export function Approve({ game, active }: Props) {
   );
 }
 
+// the lock screen's wallpaper (defined once, outside the game, so it is never rebuilt while the clock ticks)
+function Wall({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={styles.wall}>
+      <LinearGradient colors={['#1E3A8A', '#6D28D9', '#DB2777']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      {children}
+    </View>
+  );
+}
+
 // ------------------------------------------------------------------------------------------------
 // 3. Lock up your digital home: a burglar tries each way into your digital life; tap the lock that stops him.
 // ------------------------------------------------------------------------------------------------
@@ -408,7 +412,7 @@ export function Home({ game, active }: Props) {
     } else if (now !== null && t >= 1.8) {
       if (r + 1 >= rounds.length) {
         const locked = res.filter((x) => x === 'locked').length;
-        const out = recordResult({ game: 'home', won: locked >= 3, xp: score, badge: locked === rounds.length ? 'home' : undefined });
+        const out = recordResult({ game: 'home', won: locked >= 3, xp: Math.round(score / 2), badge: locked === rounds.length ? 'home' : undefined });
         setReward({ xp: out.xp, badge: out.newBadge });
         setPhase('end');
       } else {
