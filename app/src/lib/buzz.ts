@@ -37,7 +37,9 @@ export function openingSound(): Player | null {
     return {
       play: () => {
         try {
-          player.play();
+          const r = player.play() as unknown;
+          // on the web a blocked autoplay rejects; on phones play() returns nothing
+          if (r && typeof (r as Promise<void>).catch === 'function') (r as Promise<void>).catch(() => {});
         } catch {
           // no sound, no problem
         }

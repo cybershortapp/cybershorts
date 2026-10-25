@@ -1,4 +1,4 @@
-import type { ChainStep, Incident, Story, ThreatGroup } from './types';
+import type { ChainStep, DefendMove, Explainer, Incident, Story, ThreatGroup } from './types';
 
 // Stories are written by different AI models, so a field can occasionally be missing or the wrong shape.
 // Everything is tidied here once, so a single odd story can never crash a screen.
@@ -21,6 +21,28 @@ function cleanStep(v: unknown): ChainStep | null {
   };
 }
 
+/** The chain page's extra words. Anything odd is dropped, so the page falls back to plain wording. */
+function cleanExplainer(v: unknown, steps: number): Explainer | undefined {
+  const o = obj(v);
+  if (!o || o.failed || !str(o.title)) return undefined;
+  const st = Array.isArray(o.steps) ? o.steps.map(obj) : [];
+  if (st.length !== steps || st.some((s) => !s || !str(s.title) || !str(s.stop))) return undefined;
+  const defend: DefendMove[] = (Array.isArray(o.defend) ? o.defend : [])
+    .map(obj)
+    .filter((d): d is Record<string, unknown> => !!d)
+    .map((d) => ({ step: Number(d.step), situation: str(d.situation), options: strList(d.options), answer: Number(d.answer), good: str(d.good), bad: Array.isArray(d.bad) ? d.bad.map(str) : [] }))
+    .filter((d) => Number.isInteger(d.step) && d.step >= 0 && d.step < steps && d.options.length === 3 && d.answer >= 0 && d.answer < 3 && d.situation && d.good && d.bad.length === 3)
+    .slice(0, 3);
+  return {
+    title: str(o.title),
+    impact: (Array.isArray(o.impact) ? o.impact : []).map(obj).filter((x): x is Record<string, unknown> => !!x && !!str(x.value) && !!str(x.label)).slice(0, 2).map((x) => ({ value: str(x.value), label: str(x.label) })),
+    lesson: str(o.lesson),
+    steps: st.map((s) => ({ title: str(s!.title), stop: str(s!.stop) })),
+    defend,
+    checks: strList(o.checks).slice(0, 3),
+  };
+}
+
 export function cleanStory(raw: Story): Story {
   const r = raw as unknown as Record<string, unknown>;
   const chain = Array.isArray(r.attack_chain) ? r.attack_chain.map(cleanStep).filter((x): x is ChainStep => !!x) : [];
@@ -34,6 +56,7 @@ export function cleanStory(raw: Story): Story {
         attributed_by: inc.attributed_by ? str(inc.attributed_by) : undefined,
         researched: !!inc.researched,
         sources: strList(inc.sources),
+        explainer: cleanExplainer(inc.explainer, chain.length),
       }
     : null;
   const also = Array.isArray(r.also_reported)

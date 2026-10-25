@@ -11,6 +11,18 @@ export type Incident = {
   attributed_by?: string;
   researched?: boolean;
   sources?: string[];
+  /** written by the server for the attack chain page (missing on older stories) */
+  explainer?: Explainer;
+};
+
+export type DefendMove = { step: number; situation: string; options: string[]; answer: number; good: string; bad: string[] };
+export type Explainer = {
+  title: string;
+  impact: { value: string; label: string }[];
+  lesson: string;
+  steps: { title: string; stop: string }[];
+  defend: DefendMove[];
+  checks: string[];
 };
 
 export type ThreatGroup = {
