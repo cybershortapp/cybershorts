@@ -54,6 +54,11 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('covers', 'covers', true, 1048576, array['image/jpeg'])
 on conflict (id) do update set public = true, file_size_limit = 1048576, allowed_mime_types = array['image/jpeg'];
 
+-- small copies of news-site pictures (the pipeline also makes this folder itself the first time it runs)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('pictures', 'pictures', true, 1048576, array['image/jpeg'])
+on conflict (id) do update set public = true, file_size_limit = 1048576, allowed_mime_types = array['image/jpeg'];
+
 -- ===== Round 3: products, zero-days, phone alerts, email digest =====
 alter table stories add column if not exists products text[] not null default '{}';
 alter table stories add column if not exists zero_day boolean not null default false;
