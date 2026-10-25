@@ -2,7 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from './supabase';
 
-export type GameStyle = 'scam_or_legit' | 'patch_or_panic' | 'red_flags' | 'real_link' | 'order_steps' | 'crack_meter';
+export const GAME_STYLES = ['scam_or_legit', 'patch_or_panic', 'red_flags', 'real_link', 'order_steps', 'crack_meter', 'hot_seat', 'approve', 'home', 'overshare'] as const;
+export type GameStyle = (typeof GAME_STYLES)[number];
+// a style this app version can't draw yet (sent by a newer server) is simply left out
+const knownStyle = (s: unknown) => (GAME_STYLES as readonly unknown[]).includes(s);
 export type Game = { id: string; story_id: string; style: GameStyle; data: any };
 export type DeckSlide = {
   kicker: string; title: string; text: string; points: string[]; image: string | null;
@@ -23,7 +26,7 @@ export async function fetchGames(storyIds: string[]): Promise<Game[]> {
   try {
     const { data, error } = await supabase.from('games').select('id,story_id,style,data').in('story_id', storyIds.slice(0, 200));
     if (error || !Array.isArray(data)) return [];
-    return (data as Game[]).filter((g) => g && g.id && g.story_id && g.style && g.data);
+    return (data as Game[]).filter((g) => g && g.id && g.story_id && knownStyle(g.style) && g.data);
   } catch {
     return [];
   }
@@ -96,7 +99,7 @@ export async function fetchGamePool(countries: string[]): Promise<PoolGame[]> {
       .limit(60);
     if (error || !Array.isArray(data)) return [];
     return (data as any[])
-      .filter((g) => g && g.id && g.style && g.data && g.stories)
+      .filter((g) => g && g.id && knownStyle(g.style) && g.data && g.stories)
       .map((g) => ({ id: g.id, story_id: g.story_id, style: g.style, data: g.data, headline: g.stories.headline ?? '' }));
   } catch {
     return [];

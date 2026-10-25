@@ -9,13 +9,13 @@ Older apps simply ignore it.
 import re
 from datetime import datetime, timedelta, timezone
 
-PER_RUN = 3            # AI calls per run; chains arrive a few at a time
+PER_RUN = 6            # AI calls per run; chains arrive a few at a time (and the backlog clears in a day)
 LOOKBACK_DAYS = 7      # also fills in recent stories that came before this feature
 
 PROMPT = """You explain how a cyber attack happened, for ordinary readers of a security news app.
 You get a news story and its attack chain (the steps the attackers took, in order).
 Rules:
-- British English, plain words, short sentences. No em dashes. No jargon without explaining it.
+- British English, plain words, short sentences, sentence case (not Title Case). No em dashes. No jargon without explaining it.
 - Use only facts from the story and the chain, plus safety advice that is always true.
 - Never invent numbers, money amounts, dates, victims or quotes. Impact numbers must appear in the story text.
 - If people appear in "Your move" scenes, use clearly made-up first names that are unusual, never real people,
@@ -30,7 +30,7 @@ Reply with JSON only:
              "good": "what happens when they pick the right one, max 100 chars",
              "bad": ["why option 0 fails, max 100 chars", "", "why option 2 fails"]}],
  "checks": ["a yes or no question about the reader's real setup, max 80 chars", "...", "..."]}
-"impact": 0 to 2 items. "steps": exactly one per chain step, in order. "defend": 1 to 3 decision moments in
+"impact": 0 to 2 items. "steps": exactly one per chain step, in order. "defend": 2 or 3 decision moments in
 chain order, starting at the entry point, "step" is the chain step number from 0; exactly one right answer each;
 "bad" has an empty string at the right answer. "checks": exactly 3."""
 

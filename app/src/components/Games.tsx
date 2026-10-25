@@ -7,6 +7,7 @@ import type { Game } from '../lib/extras';
 import { buzz } from '../lib/buzz';
 import { F } from '../theme';
 import { Fit } from './Fit';
+import { Approve, Home, HotSeat, Overshare } from './GamesPlus';
 
 type GameProps = { game: Game; active: boolean };
 
@@ -17,11 +18,15 @@ const TITLES: Record<Game['style'], string> = {
   real_link: 'Which link is real?',
   order_steps: 'What do you do first?',
   crack_meter: "Build a password the hacker can't crack",
+  hot_seat: 'Help desk hot seat',
+  approve: "Don't tap Approve",
+  home: 'Lock up your digital home',
+  overshare: 'Overshare detective',
 };
 
 /** A game card in the feed, shown after the story it's about. */
 export function GameCard({ game, headline, width, height, active }: { game: Game; headline: string; width: number; height: number; active: boolean }) {
-  const Body = { scam_or_legit: ScamOrLegit, patch_or_panic: PatchOrPanic, red_flags: RedFlags, real_link: RealLink, order_steps: OrderSteps, crack_meter: CrackMeter }[game.style];
+  const Body = { scam_or_legit: ScamOrLegit, patch_or_panic: PatchOrPanic, red_flags: RedFlags, real_link: RealLink, order_steps: OrderSteps, crack_meter: CrackMeter, hot_seat: HotSeat, approve: Approve, home: Home, overshare: Overshare }[game.style];
   const theme = THEME[game.style];
   if (!Body) return null;
   return (
@@ -46,6 +51,10 @@ const THEME: Record<Game['style'], { bg: string; ink: string; muted: string; acc
   real_link: { bg: '#FFF8EC', ink: '#1E1A14', muted: '#7A6F5E', accent: '#B45309' },
   order_steps: { bg: '#F1EEFF', ink: '#1C1440', muted: '#5D5585', accent: '#6A3FE0' },
   crack_meter: { bg: '#0F1420', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#4ADE80' },
+  hot_seat: { bg: '#0D1325', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#7DD3FC' },
+  approve: { bg: '#120B2E', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#F0ABFC' },
+  home: { bg: '#141238', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.6)', accent: '#FDE68A' },
+  overshare: { bg: '#F8FAFC', ink: '#0F172A', muted: '#64748B', accent: '#B45309' },
 };
 
 // ---- little pieces shared by the games ----
