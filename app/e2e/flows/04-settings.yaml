@@ -66,6 +66,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
 - tapOn: "Aurora theme"
 - waitForAnimationToEnd
 - takeScreenshot: 59-theme-aurora
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - extendedWaitUntil:
     visible: "Read full story.*"
@@ -80,6 +83,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
     element: "Magazine card style"
     direction: DOWN
 - tapOn: "Magazine card style"
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - waitForAnimationToEnd
 - takeScreenshot: 61-card-magazine
@@ -94,6 +100,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
     element: "Newspaper card style"
     direction: DOWN
 - tapOn: "Newspaper card style"
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - waitForAnimationToEnd
 - takeScreenshot: 63-card-newspaper
@@ -102,6 +111,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
     element: "Terminal card style"
     direction: DOWN
 - tapOn: "Terminal card style"
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - waitForAnimationToEnd
 - takeScreenshot: 64-card-terminal
@@ -110,6 +122,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
     element: "Ronin card style"
     direction: DOWN
 - tapOn: "Ronin card style"
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - waitForAnimationToEnd
 - takeScreenshot: 65-card-ronin
@@ -122,6 +137,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
     element: "How CyberSid works"
     direction: DOWN
 - takeScreenshot: 66-settings-bottom
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - extendedWaitUntil:
     visible: "Read full story.*"

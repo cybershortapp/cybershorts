@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, ScrollView, type ScrollViewInstance, Share, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Linking, Pressable, ScrollView, type ScrollViewInstance, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { actionFor } from '../lib/actions';
 import { useBack } from '../lib/back';
@@ -40,6 +40,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const styled = cardStyle !== 'standard';
   const styles = useMemo(() => makeStyles(C), [C]);
   const L = useCardLayout(height);
+  // phones with bigger text (Settings > Display) make every line taller, so count lines at the real height
+  const { fontScale } = useWindowDimensions();
+  const lineReal = L.bodyLine * Math.max(1, fontScale);
   // Vivid: a card in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
   const vivid = C.mode === 'vivid';
   const tint = storyTint(story);
@@ -125,7 +128,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const openArticle = () => Linking.openURL(story.url);
   // the chain page is showing (Android back then goes back to the story)
   const [onChain, setOnChain] = useState(false);
+  const onChainNow = useRef(false);
   const chainShown = (open: boolean) => {
+    onChainNow.current = open;
     setOnChain(open);
     onChainOpen?.(open);
   };
@@ -145,6 +150,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   // stable, so the finished chain page is never redrawn just because the card changed
   const hideChain = useCallback(() => {
     pager.current?.scrollTo({ x: 0, animated: true });
+    onChainNow.current = false;
     setOnChain(false);
     onChainOpen?.(false);
   }, [onChainOpen]);
@@ -241,7 +247,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             so it can never push the buttons below over each other (big-text phones, iPhones) */}
         <Pressable
           style={{ flex: 1, overflow: 'hidden' }}
-          onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / L.bodyLine)))}
+          onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / lineReal)))}
           onPress={truncated ? () => setSheet('summary') : undefined}
           disabled={!truncated}
           accessibilityRole={truncated ? 'button' : undefined}
@@ -250,7 +256,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
           <Text
             style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
-            onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / L.bodyLine))}
+            onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / lineReal))}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
@@ -387,6 +393,14 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
               onScrollBeginDrag={() => setChainReady(true)}
               // tell the feed when the chain page is showing, so up and down swipes can't leave it
               onMomentumScrollEnd={(e) => chainShown(e.nativeEvent.contentOffset.x > cardWidth / 2)}
+              // Android doesn't always send "momentum end" after a paging swipe, so also watch where it settles:
+              // fully back on the story unlocks the feed again (it got stuck before)
+              scrollEventThrottle={64}
+              onScroll={(e) => {
+                const x = e.nativeEvent.contentOffset.x;
+                if (x <= 1 && onChainNow.current) chainShown(false);
+                else if (x >= cardWidth - 1 && !onChainNow.current) chainShown(true);
+              }}
               onScrollEndDrag={(e) => {
                 if (e.nativeEvent.contentOffset.x > cardWidth / 2) chainShown(true);
               }}

@@ -40,6 +40,9 @@ name: Large phone text (accessibility) - feed, chain, settings, Play
 - tapOn: "Preferences"
 - waitForAnimationToEnd
 - takeScreenshot: A2-big-text-settings
+- scrollUntilVisible:
+    element: "Done"
+    direction: UP
 - tapOn: "Done"
 - tapOn: "Play games"
 - waitForAnimationToEnd

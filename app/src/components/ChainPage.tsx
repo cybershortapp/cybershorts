@@ -80,14 +80,18 @@ function Rise({ delay, style, children }: { delay: number; style?: object; child
   const a = useRise(delay);
   return <Animated.View style={[style, a]}>{children}</Animated.View>;
 }
-function usePulse() {
+/** A soft ring that grows and fades. A pill grows only a little sideways, so it never covers the words next to it. */
+function usePulse(sx = 2.4, sy = 2.4) {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const a = Animated.loop(Animated.timing(v, { toValue: 1, duration: 1600, easing: Easing.out(Easing.quad), useNativeDriver: true }));
     a.start();
     return () => a.stop();
   }, [v]);
-  return { opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }) }] };
+  return {
+    opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] }),
+    transform: [{ scaleX: v.interpolate({ inputRange: [0, 1], outputRange: [1, sx] }) }, { scaleY: v.interpolate({ inputRange: [0, 1], outputRange: [1, sy] }) }],
+  };
 }
 
 export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
@@ -346,7 +350,7 @@ function Chip({ dot, text, s, onPress }: { dot: string; text: string; s: number;
 }
 
 function EntryBadge({ s }: { s: number }) {
-  const p = usePulse();
+  const p = usePulse(1.18, 1.8);
   return (
     <View>
       <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 999, backgroundColor: '#FF4D5E' }, p]} />

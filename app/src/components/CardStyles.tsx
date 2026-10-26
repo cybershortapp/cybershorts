@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Image as RNImage, Pressable, StyleSheet, Text, type TextStyle, View } from 'react-native';
+import { Animated, Image as RNImage, Pressable, StyleSheet, Text, type TextStyle, View, useWindowDimensions } from 'react-native';
 import Svg, { Path, Polygon } from 'react-native-svg';
 
 import { highlight, type Mark } from '../lib/highlight';
@@ -55,6 +55,8 @@ function Rich({ text, story, base, marks, lines, containerStyle }: {
 
 /** Works out how many lines of summary fit in the space left, so long stories end with "Read more". */
 function useFit(lineHeight: number) {
+  // bigger phone text makes every line taller: count lines at the real height
+  lineHeight *= Math.max(1, useWindowDimensions().fontScale);
   const [lines, setLines] = useState(8);
   const [full, setFull] = useState(0);
   return {

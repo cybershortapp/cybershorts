@@ -687,7 +687,7 @@ function Main() {
       {header}
       <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
         {content}
-        {view === 'feed' && index >= 2 && stories.length > 0 && !loading && (
+        {view === 'feed' && index >= 2 && !chainOpen && stories.length > 0 && !loading && (
           <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
             <MaterialCommunityIcons name="arrow-up" size={16} color={C.onBrand} />
             <Text style={styles.latestText}>Latest</Text>
