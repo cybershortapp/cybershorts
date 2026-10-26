@@ -1,0 +1,43 @@
+Running on test
+ > Flow Play section - rank, badges, the three ready games, Android back
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Tap on "Play games"... COMPLETED
+Assert that "Always ready" is visible... COMPLETED
+Take screenshot 70-play-section... COMPLETED
+Scrolling DOWN until "Crack-o-meter" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Crack-o-meter"... COMPLETED
+Wait for animation to end... COMPLETED
+Tap on "Teapot"... COMPLETED
+Tap on "Purple"... COMPLETED
+Tap on "Rocket"... COMPLETED
+Tap on "Pickle"... COMPLETED
+Take screenshot 71-crack-o-meter-won... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Always ready" is visible... COMPLETED
+Tap on "Lock up your digital home"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 72-digital-home-intro... COMPLETED
+Run flow when "Start the night" is visible...
+  Tap on "Start the night"... COMPLETED
+  Wait for animation to end within 3000 ms... COMPLETED
+  Tap on "Unique passwords"... COMPLETED
+  Wait for animation to end within 3000 ms... COMPLETED
+  Take screenshot 73-digital-home-playing... COMPLETED
+Run flow when "Start the night" is visible... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Tap on "Don't tap Approve"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 74-dont-tap-approve-intro... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Scrolling UP until "BADGES.*" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Take screenshot 75-play-section-after-games... COMPLETED
+Press back... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 76-back-to-news... COMPLETED

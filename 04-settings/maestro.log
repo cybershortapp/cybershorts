@@ -1,0 +1,84 @@
+Running on test
+ > Flow Settings - alerts on/off, region, themes, card styles, games, sound
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Tap on "Preferences"... COMPLETED
+Assert that "Done" is visible... COMPLETED
+Take screenshot 50-settings-top... COMPLETED
+Scrolling DOWN until id: switch-alerts is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: switch-alerts... COMPLETED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Wait for animation to end within 4000 ms... COMPLETED
+Take screenshot 52-alerts-switched... COMPLETED
+Tap on id: switch-alerts... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 53-alerts-switched-back... COMPLETED
+Scrolling DOWN until "India" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "India"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 54-region-india... COMPLETED
+Tap on "UK"... COMPLETED
+Scrolling DOWN until id: switch-sound is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+Take screenshot 55-games-and-sound... COMPLETED
+Tap on id: switch-sound... COMPLETED
+Take screenshot 56-sound-on-again... COMPLETED
+Scrolling DOWN until "Dark theme" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Dark theme"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 57-theme-dark... COMPLETED
+Tap on "Vivid theme"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 58-theme-vivid... COMPLETED
+Tap on "Aurora theme"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 59-theme-aurora... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 60-feed-aurora... COMPLETED
+Tap on "Preferences"... COMPLETED
+Scrolling DOWN until "Light theme" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Light theme"... COMPLETED
+Scrolling DOWN until "Magazine card style" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Magazine card style"... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 61-card-magazine... COMPLETED
+Swipe from (50%, 75%) to (50%, 25%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 62-card-magazine-scrolled... COMPLETED
+Tap on "Preferences"... COMPLETED
+Scrolling DOWN until "Newspaper card style" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Newspaper card style"... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 63-card-newspaper... COMPLETED
+Tap on "Preferences"... COMPLETED
+Scrolling DOWN until "Terminal card style" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Terminal card style"... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 64-card-terminal... COMPLETED
+Tap on "Preferences"... COMPLETED
+Scrolling DOWN until "Ronin card style" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Ronin card style"... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 65-card-ronin... COMPLETED
+Tap on "Preferences"... COMPLETED
+Scrolling DOWN until "Standard card style" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Standard card style"... COMPLETED
+Scrolling DOWN until "How CyberSid works" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Take screenshot 66-settings-bottom... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 67-back-to-standard... COMPLETED

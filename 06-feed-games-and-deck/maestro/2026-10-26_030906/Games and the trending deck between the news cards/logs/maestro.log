@@ -1,0 +1,898 @@
+03:09:14.545 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Define variables RUNNING
+03:09:14.557 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Define variables metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(defineVariablesCommand=DefineVariablesCommand(env={MAESTRO_FILENAME=06-feed-games-and-deck, MAESTRO_DEVICE_UDID=emulator-5554, MAESTRO_SHARD_ID=1, MAESTRO_SHARD_INDEX=0}, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:14.559 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Define variables COMPLETED
+03:09:14.560 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Apply configuration RUNNING
+03:09:14.566 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Apply configuration metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(applyConfigurationCommand=ApplyConfigurationCommand(config=MaestroConfig(appId=app.cybersid.news, name=Games and the trending deck between the news cards, tags=[], ext={}, onFlowStart=null, onFlowComplete=null, properties={}), label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:14.567 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Apply configuration COMPLETED
+03:09:14.568 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Launch app "app.cybersid.news" RUNNING
+03:09:14.574 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Launch app "app.cybersid.news" metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(launchAppCommand=LaunchAppCommand(appId=app.cybersid.news, clearState=null, clearKeychain=null, stopApp=null, permissions=null, launchArguments=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:15.526 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.543 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.sec.android.provider.badge.permission.READ for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.sec.android.provider.badge.permission.READ
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.560 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.sec.android.provider.badge.permission.WRITE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.sec.android.provider.badge.permission.WRITE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.575 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.htc.launcher.permission.READ_SETTINGS for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.htc.launcher.permission.READ_SETTINGS
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.592 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.htc.launcher.permission.UPDATE_SHORTCUT for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.htc.launcher.permission.UPDATE_SHORTCUT
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.607 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.sonyericsson.home.permission.BROADCAST_BADGE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.sonyericsson.home.permission.BROADCAST_BADGE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.623 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.sonymobile.home.permission.PROVIDER_INSERT_BADGE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.sonymobile.home.permission.PROVIDER_INSERT_BADGE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.639 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.anddoes.launcher.permission.UPDATE_COUNT for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.anddoes.launcher.permission.UPDATE_COUNT
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.656 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.majeur.launcher.permission.UPDATE_BADGE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.majeur.launcher.permission.UPDATE_BADGE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.672 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.huawei.android.launcher.permission.CHANGE_BADGE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.huawei.android.launcher.permission.CHANGE_BADGE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.689 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.huawei.android.launcher.permission.READ_SETTINGS for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.huawei.android.launcher.permission.READ_SETTINGS
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.707 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.huawei.android.launcher.permission.WRITE_SETTINGS for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.huawei.android.launcher.permission.WRITE_SETTINGS
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.723 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission android.permission.READ_APP_BADGE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: android.permission.READ_APP_BADGE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.740 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.oppo.launcher.permission.READ_SETTINGS for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.oppo.launcher.permission.READ_SETTINGS
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.757 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission com.oppo.launcher.permission.WRITE_SETTINGS for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: com.oppo.launcher.permission.WRITE_SETTINGS
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.774 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission me.everything.badger.permission.BADGE_COUNT_READ for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: me.everything.badger.permission.BADGE_COUNT_READ
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.792 [DEBUG] maestro.Maestro.setPermissionInternal: Failed to set permission me.everything.badger.permission.BADGE_COUNT_WRITE for app app.cybersid.news: shell command failed (exit -1): 
+Exception occurred while executing 'grant':
+java.lang.IllegalArgumentException: Unknown permission: me.everything.badger.permission.BADGE_COUNT_WRITE
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermissionInternal(PermissionManagerServiceImpl.java:1380)
+	at com.android.server.pm.permission.PermissionManagerServiceImpl.grantRuntimePermission(PermissionManagerServiceImpl.java:1337)
+	at com.android.server.pm.permission.PermissionManagerService.grantRuntimePermission(PermissionManagerService.java:551)
+	at android.permission.PermissionManager.grantRuntimePermission(PermissionManager.java:609)
+	at com.android.server.pm.PackageManagerShellCommand.runGrantRevokePermission(PackageManagerShellCommand.java:2672)
+	at com.android.server.pm.PackageManagerShellCommand.onCommand(PackageManagerShellCommand.java:291)
+	at com.android.modules.utils.BasicShellCommandHandler.exec(BasicShellCommandHandler.java:97)
+	at android.os.ShellCommand.exec(ShellCommand.java:38)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onShellCommand(PackageManagerService.java:6350)
+	at android.os.Binder.shellCommand(Binder.java:1068)
+	at android.os.Binder.onTransact(Binder.java:888)
+	at android.content.pm.IPackageManager$Stub.onTransact(IPackageManager.java:4352)
+	at com.android.server.pm.PackageManagerService$IPackageManagerImpl.onTransact(PackageManagerService.java:6334)
+	at android.os.Binder.execTransactInternal(Binder.java:1344)
+	at android.os.Binder.execTransact(Binder.java:1275)
+
+03:09:15.794 [ INFO] maestro.Maestro.launchApp$lambda$5: Launching app app.cybersid.news
+03:09:15.794 [ INFO] maestro.Maestro.launchApp$lambda$5: Stopping app.cybersid.news app during launch
+03:09:16.124 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Launch app "app.cybersid.news" COMPLETED
+03:09:16.126 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Assert that "(Read full story.*|Skip)" is visible RUNNING
+03:09:16.158 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Assert that "(Read full story.*|Skip)" is visible metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=(Read full story.*|Skip), idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=40000, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:22.250 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Assert that "(Read full story.*|Skip)" is visible COMPLETED
+03:09:22.251 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Run flow when "Skip" is visible RUNNING
+03:09:22.261 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Run flow when "Skip" is visible metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(runFlowCommand=RunFlowCommand(commands=[MaestroCommand(tapOnElementCommand=TapOnElementCommand(selector=ElementSelector(textRegex=Skip, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), retryIfNoChange=false, waitUntilVisible=false, longPress=false, repeat=null, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false))], condition=Condition(platform=null, visible=ElementSelector(textRegex=Skip, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), sourceDescription=null, config=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:24.701 [ INFO] maestro.orchestra.Orchestra.executeCommands: [Command execution] CommandSkipped: null
+03:09:24.701 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$8: Run flow when "Skip" is visible SKIPPED
+03:09:24.702 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Assert that "Read full story.*" is visible RUNNING
+03:09:24.703 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Assert that "Read full story.*" is visible metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=Read full story.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=40000, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:24.939 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Assert that "Read full story.*" is visible COMPLETED
+03:09:24.940 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Run flow RUNNING
+03:09:24.952 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Run flow metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(runFlowCommand=RunFlowCommand(commands=[MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=80-game-in-feed, cropOn=null, label=null, optional=false)), MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 85%, endRelative=50%, 15%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=81-after-game, cropOn=null, label=null, optional=false))], condition=null, sourceDescription=null, config=null, label=null, optional=true)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:24.953 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Repeat while "30 SECOND GAME" is not visible (up to 30 times) RUNNING
+03:09:24.954 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:25.702 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:25.702 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:27.377 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:09:27.377 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:09:27.378 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:27.380 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:09:27.382 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:27.382 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:28.143 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:28.143 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:29.130 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:09:29.131 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=1, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:29.874 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:09:29.874 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:09:29.875 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:29.875 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:31.507 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:09:31.507 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:09:31.508 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:31.509 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:09:31.509 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:31.509 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:31.971 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:31.971 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:32.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:09:32.628 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=2, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:33.454 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:09:33.454 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:09:33.455 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:33.455 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:35.023 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:09:35.023 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:09:35.024 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:35.025 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:09:35.025 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:35.025 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:35.673 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:35.674 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:36.482 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:09:36.483 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=3, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:37.207 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:09:37.207 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:09:37.207 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:37.208 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:38.796 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:09:38.796 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:09:38.797 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:38.797 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:09:38.797 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:38.798 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:39.190 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:39.190 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:39.868 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:09:39.869 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=4, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:40.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:09:40.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:09:40.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:40.628 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:42.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:09:42.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:09:42.058 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:42.058 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:09:42.058 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:42.059 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:42.258 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:42.259 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:42.636 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:09:42.636 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "30 SECOND GAME" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=5, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:49.693 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Repeat while "30 SECOND GAME" is not visible (up to 30 times) COMPLETED
+03:09:49.693 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Assert that "30 SECOND GAME" is visible RUNNING
+03:09:49.694 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Assert that "30 SECOND GAME" is visible metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=30 SECOND GAME, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:49.833 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Assert that "30 SECOND GAME" is visible COMPLETED
+03:09:49.833 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end RUNNING
+03:09:49.834 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:49.834 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 15000
+03:09:49.834 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:49.835 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:50.023 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:50.023 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:50.445 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end COMPLETED
+03:09:50.445 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Take screenshot 80-game-in-feed RUNNING
+03:09:50.446 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Take screenshot 80-game-in-feed metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=80-game-in-feed, cropOn=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:50.448 [ INFO] maestro.Maestro.takeScreenshot: Taking screenshot
+03:09:50.449 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:50.605 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Take screenshot 80-game-in-feed COMPLETED
+03:09:50.605 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 85%) to (50%, 15%) in 300 ms RUNNING
+03:09:50.606 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 85%) to (50%, 15%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 85%, endRelative=50%, 15%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:52.067 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 85%) to (50%, 15%) in 300 ms COMPLETED
+03:09:52.067 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end RUNNING
+03:09:52.067 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:52.068 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 15000
+03:09:52.068 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:52.068 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:52.626 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:52.626 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:53.370 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end COMPLETED
+03:09:53.371 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Take screenshot 81-after-game RUNNING
+03:09:53.371 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Take screenshot 81-after-game metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=81-after-game, cropOn=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:53.371 [ INFO] maestro.Maestro.takeScreenshot: Taking screenshot
+03:09:53.372 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:53.950 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Take screenshot 81-after-game COMPLETED
+03:09:53.951 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Run flow COMPLETED
+03:09:53.951 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Tap on (Optional) "Back to the latest stories" RUNNING
+03:09:53.951 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Tap on (Optional) "Back to the latest stories" metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(tapOnElementCommand=TapOnElementCommand(selector=ElementSelector(textRegex=Back to the latest stories, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=true, selected=null, checked=null, focused=null, childOf=null, css=null), retryIfNoChange=false, waitUntilVisible=false, longPress=false, repeat=null, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=true)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:54.105 [ INFO] maestro.Maestro.tap-HgV9Ck0: Tapping on element:  UiElement(treeNode=TreeNode(attributes={text=, accessibilityText=Back to the latest stories, hintText=, ignoreBoundsFiltering=false, resource-id=, clickable=true, bounds=[423,398][657,486], enabled=true, focused=false, checked=false, scrollable=false, selected=false, class=android.widget.Button, important-for-accessibility=true, error=}, children=[TreeNode(attributes={text=󰁝, accessibilityText=, hintText=, ignoreBoundsFiltering=false, resource-id=, clickable=false, bounds=[459,420][501,464], enabled=true, focused=false, checked=false, scrollable=false, selected=false, class=android.widget.TextView, important-for-accessibility=true, error=}, children=[], clickable=false, enabled=true, focused=false, checked=false, selected=false), TreeNode(attributes={text=Latest, accessibilityText=, hintText=, ignoreBoundsFiltering=false, resource-id=, clickable=false, bounds=[512,416][620,468], enabled=true, focused=false, checked=false, scrollable=false, selected=false, class=android.widget.TextView, important-for-accessibility=true, error=}, children=[], clickable=false, enabled=true, focused=false, checked=false, selected=false)], clickable=true, enabled=true, focused=false, checked=false, selected=false), bounds=Bounds(x=423, y=398, width=234, height=88))
+03:09:55.355 [ INFO] maestro.Maestro.tap-HgV9Ck0: Tap aimed via settled hierarchy
+03:09:55.358 [ INFO] maestro.Maestro.hierarchyBasedTap-ogj28Uc: Tapping at (540, 442) using hierarchy based logic for wait
+03:09:57.589 [ INFO] maestro.Maestro.hierarchyBasedTap-ogj28Uc: Something has changed in the UI judging by view hierarchy. Proceed.
+03:09:57.589 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Tap on (Optional) "Back to the latest stories" COMPLETED
+03:09:57.589 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end RUNNING
+03:09:57.590 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:57.590 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 15000
+03:09:57.590 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:57.590 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:58.068 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:09:58.069 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:09:58.750 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end COMPLETED
+03:09:58.751 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Run flow RUNNING
+03:09:58.751 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Run flow metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(runFlowCommand=RunFlowCommand(commands=[MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=82-trending-deck, cropOn=null, label=null, optional=false)), MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=85%, 50%, endRelative=10%, 50%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=83-trending-deck-slide-2, cropOn=null, label=null, optional=false))], condition=null, sourceDescription=null, config=null, label=null, optional=true)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:58.752 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Repeat while "TRENDING.*" is not visible (up to 30 times) RUNNING
+03:09:58.752 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:09:59.411 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:09:59.412 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:01.064 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:01.065 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:01.066 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:01.067 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:01.067 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:01.067 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:01.642 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:01.643 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:02.292 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:02.293 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=1, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:03.107 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:03.107 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:03.107 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:03.107 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:04.673 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:04.674 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:04.674 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:04.674 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:04.674 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:04.674 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:05.153 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:05.154 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:05.772 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:05.773 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=2, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:06.446 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:06.446 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:06.446 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:06.446 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:07.999 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:07.999 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:08.000 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:08.000 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:08.000 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:08.000 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:08.387 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:08.388 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:08.943 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:08.944 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=3, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:09.626 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:09.626 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:09.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:09.627 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:11.056 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:11.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:11.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:11.058 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:11.058 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:11.058 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:11.283 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:11.284 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:11.697 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:11.698 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=4, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:12.396 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:12.396 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:12.397 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:12.397 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:13.810 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:13.811 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:13.811 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:13.812 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:13.812 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:13.812 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:14.488 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:14.488 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:15.271 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:15.271 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=5, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:15.941 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:15.942 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:15.942 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:15.942 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:17.492 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:17.493 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:17.493 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:17.494 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:17.494 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:17.494 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:17.916 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:17.917 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:18.514 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:18.514 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=6, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:19.210 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:19.210 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:19.211 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:19.211 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:34.319 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:34.319 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:34.326 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:34.328 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:34.328 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:34.328 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:35.658 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:35.658 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:37.350 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:37.350 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=7, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:44.468 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:44.469 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:44.469 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:44.469 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:46.200 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:46.200 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:46.201 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:46.201 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:46.201 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:46.201 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:46.532 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:46.532 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:47.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:47.057 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=8, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:47.772 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:47.772 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:47.772 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:47.772 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:49.318 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:49.318 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:49.318 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:49.319 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:49.319 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:49.319 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:49.755 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:49.755 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:50.340 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:50.340 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=9, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:50.992 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:50.992 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:50.993 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:50.993 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:52.594 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:52.595 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:52.595 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:52.596 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:52.596 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:52.596 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:52.930 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:52.931 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:53.474 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:53.475 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=10, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:54.158 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:54.159 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:54.159 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:54.159 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:55.790 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:55.790 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:55.790 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:55.791 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:55.791 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:55.791 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:56.139 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:56.139 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:56.640 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:56.641 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=11, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:57.374 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:10:57.374 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:10:57.374 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:10:57.374 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:58.968 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:10:58.968 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:10:58.968 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:10:58.969 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:10:58.969 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:58.969 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:59.316 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:10:59.316 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:10:59.841 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:10:59.842 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=12, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:00.988 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:00.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:00.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:00.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:02.476 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:02.476 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:02.476 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:02.477 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:02.477 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:02.477 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:02.713 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:02.713 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:03.088 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:03.088 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=13, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:03.748 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:03.748 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:03.748 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:03.748 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:05.286 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:05.286 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:05.286 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:05.287 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:05.287 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:05.287 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:05.618 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:05.618 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:06.062 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:06.062 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=14, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:06.725 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:06.725 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:06.725 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:06.725 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:08.356 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:08.357 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:08.357 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:08.357 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:08.357 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:08.357 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:08.743 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:08.743 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:09.311 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:09.311 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=15, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:09.973 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:09.974 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:09.974 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:09.974 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:11.494 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:11.494 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:11.494 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:11.495 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:11.495 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:11.495 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:11.779 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:11.779 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:12.227 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:12.227 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=16, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:12.913 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:12.913 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:12.914 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:12.914 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:14.612 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:14.612 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:14.612 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:14.613 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:14.613 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:14.613 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:14.975 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:14.975 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:15.514 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:15.514 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=17, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:16.259 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:16.259 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:16.259 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:16.259 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:17.901 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:17.902 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:17.902 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:17.902 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:17.902 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:17.903 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:18.353 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:18.353 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:18.952 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:18.952 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=18, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:19.700 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:19.700 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:19.700 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:19.701 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:21.314 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:21.314 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:21.314 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:21.314 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:21.315 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:21.315 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:21.633 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:21.633 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:22.099 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:22.100 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=19, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:22.798 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:22.798 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:22.798 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:22.798 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:24.277 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:24.277 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:24.278 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:24.278 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:24.278 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:24.278 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:24.572 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:24.572 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:24.977 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:24.977 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=20, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:25.632 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:25.632 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:25.632 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:25.633 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:27.182 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:27.182 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:27.182 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:27.182 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:27.183 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:27.183 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:27.708 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:27.708 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:28.368 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:28.368 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=21, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:29.162 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:29.163 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:29.163 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:29.163 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:30.778 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:30.778 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:30.778 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:30.779 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:30.779 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:30.779 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:31.047 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:31.047 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:31.469 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:31.469 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=22, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:32.112 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:32.112 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:32.112 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:32.113 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:33.790 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:33.791 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:33.791 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:33.791 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:33.791 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:33.791 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:34.257 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:34.257 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:34.863 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:34.863 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=23, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:35.556 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:35.556 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:35.556 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:35.557 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:37.059 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:37.059 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:37.059 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:37.060 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:37.060 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:37.060 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:37.422 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:37.422 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:37.932 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:37.932 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=24, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:38.657 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:38.657 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:38.657 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:38.658 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:40.333 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:40.334 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:40.334 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:40.334 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:40.334 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:40.334 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:40.708 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:40.709 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:41.235 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:41.235 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=25, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:41.961 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:41.961 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:41.961 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:41.962 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:43.473 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:43.473 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:43.473 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:43.474 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:43.474 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:43.474 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:43.832 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:43.832 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:44.364 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:44.365 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=26, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:44.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:44.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:44.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:44.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:46.585 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:46.585 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:46.586 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:46.586 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:46.586 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:46.586 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:46.985 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:46.985 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:47.493 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:47.493 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=27, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:48.201 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:48.201 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:48.201 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:48.201 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:49.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:49.989 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:49.990 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:49.990 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:49.990 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:49.990 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:50.432 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:50.432 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:51.063 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:51.063 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=28, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:51.797 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:51.797 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:51.797 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:51.797 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:53.425 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:53.425 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:53.425 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:53.425 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:53.425 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:53.425 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:53.839 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:53.839 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:54.373 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:54.373 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=29, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:55.073 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Swipe from (50%, 80%) to (50%, 20%) in 300 ms PENDING
+03:11:55.073 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$10: Wait for animation to end within 2500 ms PENDING
+03:11:55.073 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Swipe from (50%, 80%) to (50%, 20%) in 300 ms RUNNING
+03:11:55.074 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Swipe from (50%, 80%) to (50%, 20%) in 300 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:56.633 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Swipe from (50%, 80%) to (50%, 20%) in 300 ms COMPLETED
+03:11:56.633 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Wait for animation to end within 2500 ms RUNNING
+03:11:56.633 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Wait for animation to end within 2500 ms metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:56.633 [ INFO] maestro.Maestro.waitForAnimationToEnd$lambda$53: Waiting for animation to end with timeout 2500
+03:11:56.633 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:56.633 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:57.159 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to byte array
+03:11:57.159 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:11:57.745 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Wait for animation to end within 2500 ms COMPLETED
+03:11:57.745 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Repeat while "TRENDING.*" is not visible (up to 30 times) metadata CommandMetadata(numberOfRuns=30, evaluatedCommand=MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:11:58.449 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$2: Repeat while "TRENDING.*" is not visible (up to 30 times) COMPLETED
+03:11:58.449 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$0: Assert that "TRENDING.*" is visible RUNNING
+03:11:58.449 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Assert that "TRENDING.*" is visible metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=null, label=null, optional=false)), logMessages=[], insight=Insight(message=, level=NONE), aiReasoning=null, labeledCommand=null)
+03:12:16.034 [ INFO] maestro.Maestro.takeScreenshot: Taking screenshot
+03:12:16.035 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:12:16.459 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$4: Assert that "TRENDING.*" is visible FAILED
+03:12:16.460 [ INFO] maestro.orchestra.Orchestra.executeCommands: [Command execution] CommandWarned: Assertion is false: "TRENDING.*" is visible
+03:12:16.460 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$11: Run flow metadata CommandMetadata(numberOfRuns=null, evaluatedCommand=MaestroCommand(runFlowCommand=RunFlowCommand(commands=[MaestroCommand(repeatCommand=RepeatCommand(times=30, condition=Condition(platform=null, visible=null, notVisible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), scriptCondition=null, label=null), commands=[MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=50%, 80%, endRelative=50%, 20%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=2500, label=null, optional=false))], label=null, optional=false)), MaestroCommand(assertConditionCommand=AssertConditionCommand(condition=Condition(platform=null, visible=ElementSelector(textRegex=TRENDING.*, idRegex=null, size=null, below=null, above=null, leftOf=null, rightOf=null, containsChild=null, containsDescendants=null, traits=null, index=null, enabled=null, optional=false, selected=null, checked=null, focused=null, childOf=null, css=null), notVisible=null, scriptCondition=null, label=null), timeout=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=82-trending-deck, cropOn=null, label=null, optional=false)), MaestroCommand(swipeCommand=SwipeCommand(direction=null, startPoint=null, endPoint=null, elementSelector=null, startRelative=85%, 50%, endRelative=10%, 50%, duration=300, waitToSettleTimeoutMs=null, relativePoint=null, label=null, optional=false)), MaestroCommand(waitForAnimationToEndCommand=WaitForAnimationToEndCommand(timeout=null, label=null, optional=false)), MaestroCommand(takeScreenshotCommand=TakeScreenshotCommand(path=83-trending-deck-slide-2, cropOn=null, label=null, optional=false))], condition=null, sourceDescription=null, config=null, label=null, optional=true)), logMessages=[], insight=Insight(message=Assertion is false: "TRENDING.*" is visible, level=WARNING), aiReasoning=null, labeledCommand=null)
+03:12:16.461 [ INFO] maestro.Maestro.takeScreenshot: Taking screenshot
+03:12:16.461 [TRACE] maestro.utils.ScreenshotUtils.takeScreenshot: Taking screenshot to output sink
+03:12:16.874 [ INFO] maestro.cli.runner.MaestroCommandRunner.runCommands$lambda$6: Run flow WARNED

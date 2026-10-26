@@ -1,0 +1,63 @@
+Running on test
+ > Flow Attack chain - open, scroll, games, Android back, swipe left and right
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Repeat while "Show attack chain" is not visible (up to 30 times)...
+  Swipe from (50%, 80%) to (50%, 20%) in 300 ms... COMPLETED
+  Wait for animation to end within 2500 ms... COMPLETED
+Repeat while "Show attack chain" is not visible (up to 30 times)... COMPLETED
+Assert that "Show attack chain" is visible... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 30-story-with-chain... COMPLETED
+Tap on "Show attack chain"... COMPLETED
+Assert that "Back to the story" is visible... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 31-chain-page... COMPLETED
+Swipe from (50%, 75%) to (50%, 30%) in 400 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 32-chain-scrolled... COMPLETED
+Swipe from (50%, 75%) to (50%, 30%) in 400 ms... COMPLETED
+Swipe from (50%, 75%) to (50%, 30%) in 400 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Back to the story" is visible... COMPLETED
+Take screenshot 33-chain-bottom-still-in-chain... COMPLETED
+Run flow when "Play defender" is visible...
+  Tap on "Play defender"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot 34-defender... COMPLETED
+  Press back... COMPLETED
+  Wait for animation to end... COMPLETED
+  Assert that "Back to the story" is visible... COMPLETED
+Run flow when "Play defender" is visible... COMPLETED
+Run flow when "Play (?!defender|games).*" is visible...
+  Tap on "Play (?!defender|games).*"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot 35-chain-game... COMPLETED
+  Press back... COMPLETED
+  Wait for animation to end... COMPLETED
+  Assert that "Back to the story" is visible... COMPLETED
+Run flow when "Play (?!defender|games).*" is visible... COMPLETED
+Run flow when "0[0-9] · .*" is visible...
+Run flow when "0[0-9] · .*" is visible... SKIPPED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Show attack chain" is visible... COMPLETED
+Assert that "Back to the story" is not visible... COMPLETED
+Take screenshot 37-android-back-to-story... COMPLETED
+Swipe from (88%, 55%) to (8%, 55%) in 300 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Back to the story" is visible... COMPLETED
+Take screenshot 38-swiped-left-to-chain... COMPLETED
+Swipe from (50%, 75%) to (50%, 25%) in 300 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Back to the story" is visible... COMPLETED
+Swipe from (8%, 55%) to (92%, 55%) in 300 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Show attack chain" is visible... COMPLETED
+Take screenshot 39-swiped-right-to-story... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 40-next-story-after-chain... COMPLETED

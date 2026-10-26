@@ -1,0 +1,31 @@
+Running on test
+ > Flow Leave the app and come back, rotate, Android back from the top
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Press Home key... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Launch app "app.cybersid.news" without stopping app... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 90-came-back... COMPLETED
+Run flow...
+  Set orientation LANDSCAPE_LEFT... COMPLETED
+  Wait for animation to end within 3000 ms... COMPLETED
+  Take screenshot 91-landscape... COMPLETED
+  Set orientation PORTRAIT... COMPLETED
+  Wait for animation to end within 3000 ms... COMPLETED
+  Take screenshot 92-portrait-again... COMPLETED
+Run flow... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 93-back-from-story-2... COMPLETED
+Press back... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Take screenshot 94-back-from-first-story... COMPLETED
+Launch app "app.cybersid.news" without stopping app... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 95-opened-again... COMPLETED

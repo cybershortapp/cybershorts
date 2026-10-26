@@ -1,0 +1,75 @@
+Running on test
+ > Flow Reading the news, tabs, saved, search, share, report, full story
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 10-feed-story-1... COMPLETED
+Assert that "01 / .*" is visible... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 11-feed-story-2... COMPLETED
+Assert that "02 / .*" is visible... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 12-feed-story-4... COMPLETED
+Assert that "04 / .*" is visible... COMPLETED
+Swipe from (50%, 25%) to (50%, 80%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "03 / .*" is visible... COMPLETED
+Take screenshot 13-feed-back-to-3... COMPLETED
+Tap on "Back to the latest stories"... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "01 / .*" is visible... COMPLETED
+Take screenshot 14-latest-button... COMPLETED
+Tap on "Critical"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 15-tab-critical... COMPLETED
+Tap on "Zero-day"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 16-tab-zero-day... COMPLETED
+Tap on "For you"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 17-tab-for-you... COMPLETED
+Tap on "All"... COMPLETED
+Wait for animation to end... COMPLETED
+Tap on "Save story"... COMPLETED
+Assert that "Remove from saved" is visible... COMPLETED
+Tap on "Saved stories"... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Remove from saved" is visible... COMPLETED
+Take screenshot 18-saved-tab... COMPLETED
+Tap on "Remove from saved"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 19-saved-tab-empty... COMPLETED
+Tap on "Saved stories"... COMPLETED
+Wait for animation to end... COMPLETED
+Tap on "Search stories"... COMPLETED
+Input text ransomware... COMPLETED
+Hide Keyboard... COMPLETED
+Wait for animation to end within 4000 ms... COMPLETED
+Take screenshot 20-search-ransomware... COMPLETED
+Tap on "Cancel"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 21-search-closed... COMPLETED
+Tap on "Share story"... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Take screenshot 22-share-sheet... COMPLETED
+Press back... COMPLETED
+Tap on "Report an error"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 23-report-sheet... COMPLETED
+Press back... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Read full story.*" is visible... COMPLETED
+Tap on "Read full story.*"... COMPLETED
+Wait for animation to end within 6000 ms... COMPLETED
+Take screenshot 24-full-story-opened... COMPLETED
+Press back... COMPLETED
+Run flow when "Read full story.*" is not visible...
+Run flow when "Read full story.*" is not visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 25-back-from-full-story... COMPLETED

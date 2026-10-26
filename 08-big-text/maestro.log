@@ -1,0 +1,29 @@
+Running on test
+ > Flow Large phone text (accessibility) - feed, chain, settings, Play
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot A0-big-text-feed... COMPLETED
+Run flow...
+  Repeat while "Show attack chain" is not visible (up to 30 times)...
+    Swipe from (50%, 80%) to (50%, 20%) in 300 ms... COMPLETED
+    Wait for animation to end within 2500 ms... COMPLETED
+  Repeat while "Show attack chain" is not visible (up to 30 times)... COMPLETED
+  Assert that "Show attack chain" is visible... COMPLETED
+  Tap on "Show attack chain"... COMPLETED
+  Assert that "Back to the story" is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot A1-big-text-chain... COMPLETED
+  Press back... COMPLETED
+Run flow... COMPLETED
+Tap on "Preferences"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot A2-big-text-settings... COMPLETED
+Scrolling UP until "Done" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Done"... COMPLETED
+Tap on "Play games"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot A3-big-text-play... COMPLETED
+Press back... COMPLETED

@@ -1,0 +1,29 @@
+Anonymous analytics enabled. To opt out, set MAESTRO_CLI_NO_ANALYTICS environment variable to any value before running Maestro.
+
+Running on test
+ > Flow First open, welcome screens and alerts
+Launch app "app.cybersid.news" with clear state... COMPLETED
+Take screenshot 01-opening-effect... COMPLETED
+Assert that "Cyber security news in 60 seconds" is visible... COMPLETED
+Take screenshot 02-welcome-what-it-is... COMPLETED
+Tap on "Next"... COMPLETED
+Assert that "Make it yours" is visible... COMPLETED
+Tap on "UK"... COMPLETED
+Tap on "Microsoft 365"... COMPLETED
+Tap on "Windows"... COMPLETED
+Take screenshot 03-welcome-make-it-yours... COMPLETED
+Tap on "Next"... COMPLETED
+Assert that "Pick your look" is visible... COMPLETED
+Take screenshot 04-welcome-look... COMPLETED
+Scrolling DOWN until id: switch-sound is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Take screenshot 05-welcome-games-and-sound... COMPLETED
+Tap on id: switch-sound... COMPLETED
+Take screenshot 06-welcome-sound-off... COMPLETED
+Tap on "Next"... COMPLETED
+Assert that "Alerts only when it matters" is visible... COMPLETED
+Take screenshot 07-welcome-alerts... COMPLETED
+Tap on "Turn on alerts"... COMPLETED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 09-first-story... COMPLETED
