@@ -3,6 +3,15 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
 ---
 - launchApp
 - extendedWaitUntil:
+    visible: "(Read full story.*|Skip)"
+    timeout: 40000
+# a fresh install shows the welcome screens first
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+- extendedWaitUntil:
     visible: "Read full story.*"
     timeout: 40000
 - tapOn: "Preferences"

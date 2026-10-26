@@ -3,6 +3,15 @@ name: Play section - rank, badges, the three ready games, Android back
 ---
 - launchApp
 - extendedWaitUntil:
+    visible: "(Read full story.*|Skip)"
+    timeout: 40000
+# a fresh install shows the welcome screens first
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+- extendedWaitUntil:
     visible: "Read full story.*"
     timeout: 40000
 - tapOn: "Play games"
