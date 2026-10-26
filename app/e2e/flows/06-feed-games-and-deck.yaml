@@ -7,11 +7,18 @@ name: Games and the trending deck between the news cards
     timeout: 40000
 - runFlow:
     commands:
-      - scrollUntilVisible:
-          element: "30 SECOND GAME"
-          direction: DOWN
-          timeout: 120000
-          speed: 30
+      - repeat:
+          while:
+            notVisible: "30 SECOND GAME"
+          times: 30
+          commands:
+            - swipe:
+                start: "50%, 80%"
+                end: "50%, 20%"
+                duration: 300
+            - waitForAnimationToEnd:
+                timeout: 2500
+      - assertVisible: "30 SECOND GAME"
       - waitForAnimationToEnd
       - takeScreenshot: 80-game-in-feed
       - swipe:
@@ -21,15 +28,24 @@ name: Games and the trending deck between the news cards
       - waitForAnimationToEnd
       - takeScreenshot: 81-after-game
     optional: true
-- tapOn: "Back to the latest stories"
+- tapOn:
+    text: "Back to the latest stories"
+    optional: true
 - waitForAnimationToEnd
 - runFlow:
     commands:
-      - scrollUntilVisible:
-          element: "TRENDING.*"
-          direction: DOWN
-          timeout: 120000
-          speed: 30
+      - repeat:
+          while:
+            notVisible: "TRENDING.*"
+          times: 30
+          commands:
+            - swipe:
+                start: "50%, 80%"
+                end: "50%, 20%"
+                duration: 300
+            - waitForAnimationToEnd:
+                timeout: 2500
+      - assertVisible: "TRENDING.*"
       - waitForAnimationToEnd
       - takeScreenshot: 82-trending-deck
       - swipe:

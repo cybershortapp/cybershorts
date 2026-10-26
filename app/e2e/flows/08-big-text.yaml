@@ -8,11 +8,18 @@ name: Large phone text (accessibility) - feed, chain, settings, Play
 - takeScreenshot: A0-big-text-feed
 - runFlow:
     commands:
-      - scrollUntilVisible:
-          element: "Show attack chain"
-          direction: DOWN
-          timeout: 90000
-          speed: 30
+      - repeat:
+          while:
+            notVisible: "Show attack chain"
+          times: 30
+          commands:
+            - swipe:
+                start: "50%, 80%"
+                end: "50%, 20%"
+                duration: 300
+            - waitForAnimationToEnd:
+                timeout: 2500
+      - assertVisible: "Show attack chain"
       - tapOn: "Show attack chain"
       - extendedWaitUntil:
           visible: "Back to the story"

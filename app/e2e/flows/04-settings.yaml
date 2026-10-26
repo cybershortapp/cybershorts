@@ -38,8 +38,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
 - tapOn: "UK"
 - scrollUntilVisible:
     element:
-      id: "switch-games"
+      id: "switch-sound"
     direction: DOWN
+    centerElement: true
 - takeScreenshot: 55-games-and-sound
 - tapOn:
     id: "switch-sound"

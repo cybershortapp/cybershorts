@@ -5,11 +5,18 @@ name: Attack chain - open, scroll, games, Android back, swipe left and right
 - extendedWaitUntil:
     visible: "Read full story.*"
     timeout: 40000
-- scrollUntilVisible:
-    element: "Show attack chain"
-    direction: DOWN
-    timeout: 90000
-    speed: 30
+- repeat:
+    while:
+      notVisible: "Show attack chain"
+    times: 30
+    commands:
+      - swipe:
+          start: "50%, 80%"
+          end: "50%, 20%"
+          duration: 300
+      - waitForAnimationToEnd:
+          timeout: 2500
+- assertVisible: "Show attack chain"
 - waitForAnimationToEnd
 - takeScreenshot: 30-story-with-chain
 - tapOn: "Show attack chain"
