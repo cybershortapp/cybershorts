@@ -62,25 +62,10 @@ jobs:
             exit 1
           fi
           tail -n 15 build.log
-      - name: Make an installable app from it (for the emulator only)
-        working-directory: ${{ github.workspace }}
-        run: |
-          curl -fsSL -o bundletool.jar https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
-          keytool -genkeypair -keystore test.jks -storepass android -alias test -keypass android \
-            -dname "CN=CyberSid test" -keyalg RSA -keysize 2048 -validity 365 > /dev/null
-          java -jar bundletool.jar build-apks --bundle cybersid.aab --output cybersid.apks --mode universal \
-            --ks test.jks --ks-pass pass:android --ks-key-alias test --key-pass pass:android
-          unzip -o cybersid.apks universal.apk
-          ls -la cybersid.aab universal.apk
       - uses: actions/upload-artifact@v4
         with:
           name: play-store-aab
           path: cybersid.aab
-          retention-days: 14
-      - uses: actions/upload-artifact@v4
-        with:
-          name: emulator-apk
-          path: universal.apk
           retention-days: 14
 
   phone-test:
@@ -93,12 +78,12 @@ jobs:
       - uses: actions/download-artifact@v4
         if: inputs.from_run == ''
         with:
-          name: emulator-apk
+          name: play-store-aab
           path: built
       - uses: actions/download-artifact@v4
         if: inputs.from_run != ''
         with:
-          name: emulator-apk
+          name: play-store-aab
           path: built
           run-id: ${{ inputs.from_run }}
           github-token: ${{ github.token }}
@@ -106,6 +91,20 @@ jobs:
         with:
           distribution: zulu
           java-version: 17
+      - name: Make an installable app from the Play Store file (for the emulator only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          gh release download --repo google/bundletool --pattern 'bundletool-all-*.jar' --output bundletool.jar 2> err.txt \
+            || { echo "::error title=No bundletool::$(cat err.txt | tr '\n' ' ')"; exit 1; }
+          keytool -genkeypair -keystore test.jks -storepass android -alias test -keypass android \
+            -dname "CN=CyberSid test" -keyalg RSA -keysize 2048 -validity 365 > /dev/null
+          java -jar bundletool.jar build-apks --bundle built/cybersid.aab --output built/cybersid.apks --mode universal \
+            --ks test.jks --ks-pass pass:android --ks-key-alias test --key-pass pass:android 2> err.txt \
+            || { echo "::error title=bundletool failed::$(tail -n 20 err.txt | tr '\n' ' ' | cut -c1-2000)"; exit 1; }
+          unzip -o built/cybersid.apks universal.apk -d built
+          ls -la built
       - name: Allow the emulator to use the processor directly
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

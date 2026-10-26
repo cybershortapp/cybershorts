@@ -21,6 +21,8 @@ for f in "$FLOWS"/*.yaml; do
   name=$(basename "$f" .yaml)
   mkdir -p "$OUT/$name"
   start=$(date +%s)
+  # the big-text flow runs with the phone's text set to 130% (the accessibility setting many people use)
+  case "$name" in *big-text*) adb shell settings put system font_scale 1.3; sleep 2;; esac
   # screenshots from takeScreenshot land in the working folder
   if (cd "$OUT/$name" && timeout 900 maestro test "$f" --test-output-dir "$OUT/$name/maestro" > "$OUT/$name/maestro.log" 2>&1); then
     result="passed"
@@ -31,6 +33,7 @@ for f in "$FLOWS"/*.yaml; do
     # the last lines of Maestro's notes say which step failed
     echo "::error title=$name failed::$(grep -vE '^\s*$' "$OUT/$name/maestro.log" | tail -n 12 | tr '\n' ' ' | cut -c1-1500)"
   fi
+  case "$name" in *big-text*) adb shell settings put system font_scale 1.0;; esac
   secs=$(( $(date +%s) - start ))
   summary="$summary $name: $result (${secs}s) |"
   echo "$name: $result in ${secs}s"

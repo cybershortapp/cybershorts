@@ -1,0 +1,31 @@
+appId: app.cybersid.news
+name: Large phone text (accessibility) - feed, chain, settings, Play
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 40000
+- takeScreenshot: A0-big-text-feed
+- runFlow:
+    commands:
+      - scrollUntilVisible:
+          element: "Show attack chain"
+          direction: DOWN
+          timeout: 90000
+          speed: 30
+      - tapOn: "Show attack chain"
+      - extendedWaitUntil:
+          visible: "Back to the story"
+          timeout: 15000
+      - waitForAnimationToEnd
+      - takeScreenshot: A1-big-text-chain
+      - back
+    optional: true
+- tapOn: "Preferences"
+- waitForAnimationToEnd
+- takeScreenshot: A2-big-text-settings
+- tapOn: "Done"
+- tapOn: "Play games"
+- waitForAnimationToEnd
+- takeScreenshot: A3-big-text-play
+- back
