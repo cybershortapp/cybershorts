@@ -16,6 +16,10 @@ on:
         description: "Which test flows to run (a file pattern in app/e2e/flows)"
         required: false
         default: "*"
+      draft_from:
+        description: "Only make the Play Store draft from a run that already passed (its run ID)"
+        required: false
+        default: ""
 
 permissions:
   contents: write   # results branch and the draft release
@@ -27,7 +31,7 @@ concurrency:
 
 jobs:
   build:
-    if: inputs.from_run == ''
+    if: inputs.from_run == '' && inputs.draft_from == ''
     runs-on: ubuntu-latest
     timeout-minutes: 100
     defaults:
@@ -89,7 +93,7 @@ jobs:
 
   phone-test:
     needs: build
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    if: always() && inputs.draft_from == '' && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 100
     steps:
@@ -181,14 +185,22 @@ jobs:
 
   draft-release:
     needs: [build, phone-test]
-    if: needs.build.result == 'success' && needs.phone-test.result == 'success'
+    if: always() && ((needs.build.result == 'success' && needs.phone-test.result == 'success') || inputs.draft_from != '')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
+        if: inputs.draft_from == ''
         with:
           name: play-store-aab
           path: built
+      - uses: actions/download-artifact@v4
+        if: inputs.draft_from != ''
+        with:
+          name: play-store-aab
+          path: built
+          run-id: ${{ inputs.draft_from }}
+          github-token: ${{ github.token }}
       - name: Attach the tested Play Store file to a private draft release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -197,10 +209,15 @@ jobs:
           code=$(jq -r '.expo.android.versionCode' app/app.json)
           # only the newest tested file stays: older Play Store drafts are removed
           gh release list --repo "${{ github.repository }}" --json tagName,isDraft --jq '.[] | select(.isDraft and (.tagName | startswith("play-"))) | .tagName' \
-            | while read -r old; do gh release delete "$old" --repo "${{ github.repository }}" --yes || true; done
+            | while read -r old; do gh release delete "$old" --repo "${{ github.repository }}" --yes || true; done || true
           extra=""; [ -f built/mapping.txt ] && extra="built/mapping.txt#mapping.txt (upload in Play Console for readable crash reports)"
-          gh release create "play-$v-$code-${{ github.run_number }}" "built/cybersid.aab#CyberSid-$v-play-store.aab" ${extra:+"$extra"} \
+          ls -la built
+          tested="${{ inputs.draft_from || github.run_id }}"
+          if ! gh release create "play-$v-$code-${{ github.run_number }}" "built/cybersid.aab#CyberSid-$v-play-store.aab" ${extra:+"$extra"} \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" --draft \
             --title "CyberSid $v (versionCode $code) for Play Store" \
-            --notes "Built from ${{ github.ref_name }} (${{ github.sha }}) and tested on an Android emulator in run ${{ github.run_id }}. Upload this .aab in Play Console."
+            --notes "Built from ${{ github.ref_name }} and tested on an Android emulator in run $tested. Upload this .aab in Play Console." 2> err.txt; then
+            echo "::error title=Draft release failed::$(tr '\n' ' ' < err.txt | cut -c1-1500)"
+            exit 1
+          fi
           echo "::notice title=Play Store file ready::Draft release play-$v-$code-${{ github.run_number }} (only visible to people who can edit the repo)"
