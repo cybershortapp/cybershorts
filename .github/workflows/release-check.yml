@@ -195,6 +195,9 @@ jobs:
         run: |
           v=$(jq -r '.expo.version' app/app.json)
           code=$(jq -r '.expo.android.versionCode' app/app.json)
+          # only the newest tested file stays: older Play Store drafts are removed
+          gh release list --repo "${{ github.repository }}" --json tagName,isDraft --jq '.[] | select(.isDraft and (.tagName | startswith("play-"))) | .tagName' \
+            | while read -r old; do gh release delete "$old" --repo "${{ github.repository }}" --yes || true; done
           extra=""; [ -f built/mapping.txt ] && extra="built/mapping.txt#mapping.txt (upload in Play Console for readable crash reports)"
           gh release create "play-$v-$code-${{ github.run_number }}" "built/cybersid.aab#CyberSid-$v-play-store.aab" ${extra:+"$extra"} \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" --draft \
