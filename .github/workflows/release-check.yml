@@ -54,29 +54,30 @@ jobs:
       - name: Build the Play Store file here
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # everything the build makes (the .aab and R8's mapping.txt) lands in eas-out
+          EAS_LOCAL_BUILD_ARTIFACTS_DIR: ${{ github.workspace }}/eas-out
         run: |
-          if ! npx eas-cli build --platform android --profile production --local --non-interactive \
-               --output "$GITHUB_WORKSPACE/cybersid.aab" > build.log 2>&1; then
+          mkdir -p "$GITHUB_WORKSPACE/eas-out"
+          if ! npx eas-cli build --platform android --profile production --local --non-interactive > build.log 2>&1; then
             tail -n 80 build.log
             echo "::error title=Build failed::$(grep -iE 'error|failed|what went wrong' build.log | tail -n 20 | tr '\n' ' ' | cut -c1-3500)"
             exit 1
           fi
           tail -n 15 build.log
-      - name: Unpack the Play Store file if it came in an archive
+          find "$GITHUB_WORKSPACE/eas-out" -type f -exec ls -la {} +
+      - name: Collect the Play Store file and its mapping
         working-directory: ${{ github.workspace }}
         run: |
-          f=cybersid.aab
-          file "$f"
-          if ! unzip -tq "$f" > /dev/null 2>&1; then
-            mkdir -p unpacked && { tar -xzf "$f" -C unpacked 2>/dev/null || tar -xf "$f" -C unpacked; }
-            find unpacked -type f | head -20
-            aab=$(find unpacked -name '*.aab' | head -1)
-            [ -n "$aab" ] || { echo "::error title=No .aab in the build output::$(find unpacked -type f | head | tr '\n' ' ')"; exit 1; }
-            mv "$aab" "$f"
-            map=$(find unpacked -name 'mapping.txt' | head -1)
-            [ -n "$map" ] && mv "$map" mapping.txt
-          fi
-          unzip -tq "$f" > /dev/null && ls -la "$f" mapping.txt 2>/dev/null || true
+          aab=$(find eas-out app -maxdepth 2 -name '*.aab' -newer app/package.json | head -1)
+          [ -n "$aab" ] || { echo "::error title=No .aab made::$(find eas-out -type f | tr '\n' ' ')"; exit 1; }
+          cp "$aab" cybersid.aab
+          for m in $(find eas-out -type f ! -name '*.aab'); do
+            if file "$m" | grep -qi 'gzip\|tar'; then mkdir -p x && tar -xf "$m" -C x 2>/dev/null || true; else cp "$m" x-mapping.txt 2>/dev/null || true; fi
+          done
+          map=$(find x -name 'mapping.txt' 2>/dev/null | head -1 || true)
+          if [ -n "$map" ]; then cp "$map" mapping.txt; elif [ -f x-mapping.txt ] && head -c 20 x-mapping.txt | grep -q compiler; then cp x-mapping.txt mapping.txt; fi
+          unzip -tq cybersid.aab > /dev/null || { echo "::error::cybersid.aab is not a valid bundle"; exit 1; }
+          echo "::notice title=Play Store file::$(ls -la cybersid.aab mapping.txt 2>/dev/null | awk '{print $5, $9}' | tr '\n' ' ')"
       - uses: actions/upload-artifact@v4
         with:
           name: play-store-aab
