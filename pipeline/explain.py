@@ -15,7 +15,8 @@ LOOKBACK_DAYS = 7      # also fills in recent stories that came before this feat
 PROMPT = """You explain how a cyber attack happened, for ordinary readers of a security news app.
 You get a news story and its attack chain (the steps the attackers took, in order).
 Rules:
-- British English, plain words, short sentences, sentence case (not Title Case). No em dashes. No jargon without explaining it.
+- British English, plain words, short sentences, sentence case (not Title Case), but keep every name written exactly as
+  the story writes it (GitHub, Microsoft, Scattered Spider, iPhone). No em dashes. No jargon without explaining it.
 - Use only facts from the story and the chain, plus safety advice that is always true.
 - Never invent numbers, money amounts, dates, victims or quotes. Impact numbers must appear in the story text.
 - "Your move" options: the wrong ones must sound sensible and tempting, the kind of thing a busy, helpful person
