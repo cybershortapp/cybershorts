@@ -42,7 +42,9 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const L = useCardLayout(height);
   // phones with bigger text (Settings > Display) make every line taller, so count lines at the real height
   const { fontScale } = useWindowDimensions();
-  const lineReal = L.bodyLine * Math.max(1, fontScale);
+  // the real height of one line, measured (Android 14+ grows big text less than the setting says)
+  const [lineMeasured, setLineMeasured] = useState(0);
+  const lineReal = lineMeasured || L.bodyLine * Math.max(1, fontScale);
   // Vivid: a card in the colour of the story's picture. Aurora: a glass card. Light and Dark: a plain card.
   const vivid = C.mode === 'vivid';
   const tint = storyTint(story);
@@ -53,11 +55,13 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
   const showImage = SHOW_SOURCE_IMAGES && !!story.image_url && !imageFailed;
   const [sheet, setSheet] = useState<null | 'report' | 'summary'>(null);
   // measured full height of the summary, to know when it doesn't fit and needs "Read more"
-  const [fullLines, setFullLines] = useState(0);
+  const [fullH, setFullH] = useState(0);
 
   // the chain page is only built when the reader opens it (tap CHAIN or swipe), so scrolling stays fast
   const [chainReady, setChainReady] = useState(false);
-  const [bodyLines, setBodyLines] = useState(6);
+  const [boxH, setBoxH] = useState(0);
+  const bodyLines = boxH ? Math.max(2, Math.floor((boxH + 1) / lineReal)) : 6;
+  const fullLines = Math.round(fullH / lineReal);
   const truncated = fullLines > bodyLines;
   const historyCard = story.category === 'History';
   // tips and history are always "Info", so that label tells the reader nothing there
@@ -247,7 +251,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             so it can never push the buttons below over each other (big-text phones, iPhones) */}
         <Pressable
           style={{ flex: 1, overflow: 'hidden' }}
-          onLayout={(e) => setBodyLines(Math.max(2, Math.floor(e.nativeEvent.layout.height / lineReal)))}
+          onLayout={(e) => setBoxH(e.nativeEvent.layout.height)}
           onPress={truncated ? () => setSheet('summary') : undefined}
           disabled={!truncated}
           accessibilityRole={truncated ? 'button' : undefined}
@@ -256,11 +260,21 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
           {/* invisible full-length copy, only measured, to know whether the summary was cut short */}
           <Text
             style={{ position: 'absolute', left: 0, right: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
-            onLayout={(e) => setFullLines(Math.round(e.nativeEvent.layout.height / lineReal))}
+            onLayout={(e) => setFullH(e.nativeEvent.layout.height)}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
             {story.technical}
+          </Text>
+          {/* one invisible line, to measure the real line height at this phone's text size */}
+          <Text
+            style={{ position: 'absolute', left: 0, opacity: 0, fontSize: L.bodySize, lineHeight: L.bodyLine, fontFamily: F.body }}
+            onLayout={(e) => setLineMeasured(e.nativeEvent.layout.height)}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            numberOfLines={1}
+          >
+            A
           </Text>
           <Justified
             pieces={[{ text: story.technical }]}
