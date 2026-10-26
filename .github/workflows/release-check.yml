@@ -114,9 +114,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
+          ls -la built
+          echo "::notice title=Build file::$(file built/cybersid.aab) | $(head -c 64 built/cybersid.aab | od -An -c | tr -s ' ' | head -c 200)"
           # older runs uploaded the build output as an archive: take the .aab out of it
           if ! unzip -tq built/cybersid.aab > /dev/null 2>&1; then
-            mkdir -p built/x && { tar -xzf built/cybersid.aab -C built/x 2>/dev/null || tar -xf built/cybersid.aab -C built/x; }
+            mkdir -p built/x && { tar -xzf built/cybersid.aab -C built/x 2>/dev/null || tar -xf built/cybersid.aab -C built/x 2>/dev/null || true; }
             aab=$(find built/x -name '*.aab' | head -1)
             [ -n "$aab" ] || { echo "::error title=No .aab found::$(file built/cybersid.aab) $(find built/x -type f | head | tr '\n' ' ')"; exit 1; }
             mv "$aab" built/cybersid.aab
