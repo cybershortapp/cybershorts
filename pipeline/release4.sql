@@ -31,3 +31,10 @@ create index if not exists decks_expires_idx on decks (expires_at desc);
 alter table decks enable row level security;
 drop policy if exists "public read" on decks;
 create policy "public read" on decks for select using (true);
+
+-- 28 Oct 2026: four more game styles (hot seat, approve or deny, smart home, overshare).
+-- Without this the pipeline can't save games in those styles ("violates check constraint games_style_check").
+alter table games drop constraint if exists games_style_check;
+alter table games add constraint games_style_check check (style in (
+  'scam_or_legit', 'patch_or_panic', 'red_flags', 'real_link', 'order_steps', 'crack_meter',
+  'hot_seat', 'approve', 'home', 'overshare'));
