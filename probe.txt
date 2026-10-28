@@ -1,0 +1,43 @@
+gemini models (200): gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-preview-tts, gemini-2.5-pro-preview-tts, gemma-4-26b-a4b-it, gemma-4-31b-it, gemini-flash-latest, gemini-flash-lite-latest, gemini-pro-latest, gemini-2.5-flash-lite, gemini-2.5-flash-image, gemini-3-flash-preview, gemini-3.1-pro-preview, gemini-3.1-pro-preview-customtools, gemini-3.1-flash-lite-preview, gemini-3.1-flash-lite, gemini-3-pro-image-preview, gemini-3-pro-image, nano-banana-pro-preview, gemini-3.1-flash-image-preview, gemini-3.1-flash-image, gemini-3.1-flash-lite-image, gemini-nano-banana-2.1, gemini-3.5-flash, gemini-3.5-flash-lite, gemini-omni-flash-preview, gemini-omni-1.1-flash, gemini-3.5-transcribe, gemini-3.6-flash, gemini-3.7-flash, gemini-3.8-flash, gemini-4-argon, lyria-3-clip-preview, lyria-3-pro-preview, lyria-3.5, gemini-3.1-flash-tts-preview, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts, gemini-robotics-er-2-preview, gemini-2.5-computer-use-preview-10-2025, antigravity-preview-05-2026, antigravity-preview-09-2026, antigravity-preview-latest, deep-research-max-preview-04-2026, deep-research-preview-04-2026, deep-research-pro-preview-12-2025
+gemini gemini-2.5-flash: 404 in 0.3s -> {
+  "error": {
+    "code": 404,
+    "message": "This model models/gemini-2.5-flash is no longer available to new users. Please update your c
+gemini gemma-4-26b-a4b-it: 200 in 4.3s -> {"ok": true, "word": "Hello"}
+gemini gemma-4-31b-it: 200 in 15.9s -> {"ok": true, "word": "Hello"}
+gemini gemini-flash-latest: 0 in 40.0s -> The read operation timed out
+gemini gemini-flash-lite-latest: 429 in 0.3s -> {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more inform
+gemini gemini-2.5-flash-lite: 404 in 0.1s -> {
+  "error": {
+    "code": 404,
+    "message": "This model models/gemini-2.5-flash-lite is no longer available to new users. Please update y
+gemini gemini-3-flash-preview: 200 in 1.4s -> {"ok": true, "word": "Hello"}
+gemini gemini-3.1-flash-lite-preview: 200 in 4.7s -> {"ok": true, "word": "Hello"}
+gemini gemini-3.1-flash-lite: 200 in 8.4s -> {"ok": true, "word": "Hello"}
+gemini gemini-3.5-flash: 200 in 2.8s -> {"ok": true, "word": "Hello"}
+gemini gemini-3.5-flash-lite: 429 in 0.1s -> {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more inform
+gemini gemini-omni-flash-preview: 429 in 0.3s -> {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more inform
+gemini gemini-omni-1.1-flash: 429 in 0.1s -> {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more inform
+gemini gemini-3.6-flash: 200 in 1.5s -> {"ok": true, "word": "Hello"}
+groq models (200): allam-2-7b, canopylabs/orpheus-arabic-saudi, canopylabs/orpheus-v1-english, meta-llama/llama-prompt-guard-2-22m, meta-llama/llama-prompt-guard-2-86m, openai/gpt-oss-120b, openai/gpt-oss-20b, openai/gpt-oss-safeguard-20b, qwen/qwen3.8-27b, whisper-large-v3, whisper-large-v3-turbo
+groq allam-2-7b: 200 in 0.3s -> {"ok": true, "word": "Hello"}  | limits {'x-ratelimit-limit-requests': '7000', 'x-ratelimit-limit-tokens': '6000', 'x-ratelimit-remaining-requests': '6999', 'x-ratelimit-remaining-tokens': '5895', 'x-ratelimit-reset-requests': '12.342s', 'x-ratelimit-reset-tokens': '1.05s'}
+groq openai/gpt-oss-120b: 200 in 0.3s ->  | limits {'x-ratelimit-limit-requests': '1000', 'x-ratelimit-limit-tokens': '8000', 'x-ratelimit-remaining-requests': '999', 'x-ratelimit-remaining-tokens': '7842', 'x-ratelimit-reset-requests': '1m26.4s', 'x-ratelimit-reset-tokens': '1.185s'}
+groq openai/gpt-oss-20b: 200 in 0.2s ->  | limits {'x-ratelimit-limit-requests': '1000', 'x-ratelimit-limit-tokens': '8000', 'x-ratelimit-remaining-requests': '999', 'x-ratelimit-remaining-tokens': '7842', 'x-ratelimit-reset-requests': '1m26.4s', 'x-ratelimit-reset-tokens': '1.185s'}
+groq qwen/qwen3.8-27b: 200 in 0.1s -> {"ok": true, "word": "Hello"} | limits {'x-ratelimit-limit-requests': '1000', 'x-ratelimit-limit-tokens': '8000', 'x-ratelimit-remaining-requests': '999', 'x-ratelimit-remaining-tokens': '7899', 'x-ratelimit-reset-requests': '1m26.4s', 'x-ratelimit-reset-tokens': '757ms'}
+cerebras models (200): gpt-oss-120b, qwen-3.8-27b
+cerebras gpt-oss-120b: 402 in 0.2s -> {"message":"Payment required to access this resource. Visit your billing tab.","type":"payment_required_error","param":"quota","code":"payment_required"} | limits {}
+cerebras qwen-3.8-27b: 402 in 0.1s -> {"message":"Payment required to access this resource. Visit your billing tab.","type":"payment_required_error","param":"quota","code":"payment_required"} | limits {}
+mistral: key MISSING
+github models catalog (0): 
