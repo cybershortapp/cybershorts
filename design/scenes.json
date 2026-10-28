@@ -1,0 +1,17 @@
+{
+  "styles": {
+    "world": "A charming miniature 3D diorama, tilt-shift photograph of a tiny handcrafted toy world, soft matte clay and painted wood materials, bright soft daylight, pastel colour palette with cheerful accents, gentle soft shadows, isometric three-quarter view, set on a clean light cream background, crisp detail, premium editorial illustration. Scene: {scene}. No text, no letters, no numbers, no logos, no watermark, faceless toy figures only.",
+    "object": "A premium glossy 3D render of {scene}, presented as one centred sculptural object floating on a smooth seamless {bg} background, soft studio lighting, subtle reflections, gentle soft shadow underneath, bright saturated accent colours, minimal and elegant like an Apple product photograph, generous empty space around the object. No text, no letters, no numbers, no logos, no watermark.",
+    "paper": "An elegant layered paper-cut illustration, many layers of bright coloured paper with soft depth shadows between them, cheerful light colour palette, clean light background, premium magazine cover art. Scene: {scene}. No text, no letters, no numbers, no logos, no watermark, no faces."
+  },
+  "scenes": {
+    "ship": {"bg": "soft peach", "text": "a large cargo ship stacked with colourful shipping containers on calm turquoise water, one red container wrapped in heavy steel chains with a big gold padlock and a small paper ransom tag hanging from the lock"},
+    "plex": {"bg": "soft lavender", "text": "a sleek home media server box with a film reel on top, its lid cracked open, a tiny faceless miner with a pickaxe digging shiny gold coins out of it, four broken chain links lying beside it"},
+    "gate": {"bg": "pale mint", "text": "a small fortress gate shaped like a shield guarding a neat row of laptops, the gate slightly open, a faceless masked toy figure sneaking through holding a glowing keycard"}
+  },
+  "jobs": [
+    {"scene": "ship", "style": "world"}, {"scene": "ship", "style": "object"}, {"scene": "ship", "style": "paper"},
+    {"scene": "plex", "style": "world"}, {"scene": "plex", "style": "object"}, {"scene": "plex", "style": "paper"},
+    {"scene": "gate", "style": "world"}, {"scene": "gate", "style": "object"}, {"scene": "gate", "style": "paper"}
+  ]
+}

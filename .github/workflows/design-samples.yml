@@ -1,0 +1,38 @@
+name: Design samples (picture styles)
+# Only runs on the design-samples branch. Makes a few sample pictures in new art styles with the
+# free Cloudflare picture model, and saves them to the design-samples-out branch for review.
+# It does not touch the app, the database or the news pipeline.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/**", ".github/workflows/design-samples.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q pillow
+      - name: Make the sample pictures
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: python design/samples.py "$GITHUB_WORKSPACE/out"
+      - name: Save them to the design-samples-out branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          echo "run ${{ github.run_id }} $(date -u +%FT%TZ) ${{ github.sha }}" > RUN.txt
+          git init -q && git checkout -q -b design-samples-out
+          git add -A
+          git -c user.name="design-samples" -c user.email="actions@users.noreply.github.com" commit -qm "Design samples, run ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-samples-out
