@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 from sources import SOURCES
 from data_feeds import READERS
 from tags import tag_products, is_zero_day
-from covers import CoverMaker, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, picture_width, usable_image
+from covers import CoverMaker, Library, cleanup_old_covers, cover_prompt, covers_made_today, image_problem, is_library, picture_width, usable_image
 from pictures import cleanup_old_copies, copy_pictures, is_ours
 
 load_dotenv()
@@ -1118,6 +1118,12 @@ def main():
             for r in [r for r in missing if r["id"] not in have][:int(os.getenv("COVERS_RETRY", "6"))]:
                 need_cover.append((r["id"], cover_prompt("", r["category"] or "Other"), r["headline"]))
                 cover_ranks[r["id"]] = cover_rank(r.get("severity"), r.get("zero_day"))
+            # cards that only have a backup picture: their own picture, after everything else (rank below all others)
+            backup = (db.table("stories").select("id,headline,category").like("image_url", "%/covers/library/%")
+                      .gte("created_at", since).order("created_at", desc=True).limit(10).execute().data)
+            for r in [r for r in backup if r["id"] not in have][:int(os.getenv("COVERS_UPGRADE", "3"))]:
+                need_cover.append((r["id"], cover_prompt("", r["category"] or "Other"), r["headline"]))
+                cover_ranks[r["id"]] = -1
         except Exception as ex:
             print(f"[warn] picture retry list: {str(ex)[:80]}")
     # daily tip and history first, then zero-days, Critical, High... (stable: newest first within each level)
@@ -1127,9 +1133,12 @@ def main():
     covers_made, covers_note = 0, "off"
     if COVERS and db and need_cover:
         maker = CoverMaker(db)
+        # slow services (Horde, Pollinations) get a slice of the run, so explainers and games still have time after
+        maker.deadline = min(started.timestamp() + RUN_SECONDS, time.time() + int(os.getenv("PICTURE_SECONDS", "200")))
         day_start = started.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         allowed = max(0, min(COVERS_PER_RUN, COVERS_PER_DAY - covers_made_today(db, day_start)))
         print(f"\nAI pictures: {len(need_cover)} stories need one, making up to {allowed} ({maker.describe()})")
+        made_ids, failed_ids = set(), set()
         for sid, prompt, headline in need_cover[:allowed]:
             if (datetime.now(timezone.utc) - started).total_seconds() > RUN_SECONDS or not maker.available:
                 break
@@ -1141,8 +1150,32 @@ def main():
             if url:
                 db.table("stories").update({"image_url": url, "tint": None}).eq("id", sid).execute()
                 covers_made += 1
+                made_ids.add(sid)
                 print(f"[pic] {headline[:70]}")
+            else:
+                failed_ids.add(sid)
         covers_note = f"{covers_made} made ({maker.used})" + (f", problems: {' | '.join(dict.fromkeys(maker.errors))[:300]}" if maker.errors else "")
+        # ---- 3a. worst case: the picture services are out, so cards waiting for a picture get a ready-made one ----
+        # (only when the services failed or hit their limit, not when there simply wasn't time for every picture)
+        services_out = bool(failed_ids) or not maker.available or allowed == 0 or maker.cf_dead
+        waiting = [c[0] for c in need_cover if c[0] not in made_ids]
+        if services_out and waiting and os.getenv("LIBRARY", "true").lower() != "false":
+            try:
+                lib, used = Library(db), 0
+                rows = db.table("stories").select("id,category,image_url").in_("id", waiting[:40]).execute().data
+                for r in rows:
+                    if r.get("image_url"):
+                        continue   # has a picture already (a news picture, or a backup one from an earlier run)
+                    url = lib.pick(r.get("category"))
+                    if not url:
+                        break
+                    db.table("stories").update({"image_url": url, "tint": None}).eq("id", r["id"]).execute()
+                    used += 1
+                if used:
+                    covers_note += f" | {used} backup pictures"
+                    print(f"[pic] {used} cards got a backup picture (picture services out)")
+            except Exception as ex:
+                print(f"[warn] backup pictures: {str(ex)[:80]}")
         try:
             removed = cleanup_old_covers(db)
             if removed:
@@ -1480,7 +1513,7 @@ def dedupe_existing():
         match["also_reported"] = also
         db.table("stories").update({"also_reported": also}).eq("id", match["id"]).execute()
         db.table("seen_links").upsert({"id": r["id"], "reason": "duplicate", "story_id": match["id"]}).execute()
-        if r.get("image_url") and "/object/public/covers/" in r["image_url"]:
+        if r.get("image_url") and "/object/public/covers/" in r["image_url"] and not is_library(r["image_url"]):
             try:   # its AI picture is no longer needed
                 db.storage.from_("covers").remove([r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0]])
             except Exception:
