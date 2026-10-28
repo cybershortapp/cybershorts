@@ -242,6 +242,9 @@ class CoverMaker:
         if self.use_pollinations and not self.poll_dead:
             providers.append(("pollinations", self._pollinations))
         for name, fn in providers:
+            if name != "cloudflare" and self._time_left() < 45:
+                self.errors.append(f"{name}: no time left in this run")
+                continue
             try:
                 try:
                     raw = fn(prompt, seed)

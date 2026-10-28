@@ -1133,7 +1133,8 @@ def main():
     covers_made, covers_note = 0, "off"
     if COVERS and db and need_cover:
         maker = CoverMaker(db)
-        maker.deadline = started.timestamp() + RUN_SECONDS
+        # slow services (Horde, Pollinations) get a slice of the run, so explainers and games still have time after
+        maker.deadline = min(started.timestamp() + RUN_SECONDS, time.time() + int(os.getenv("PICTURE_SECONDS", "200")))
         day_start = started.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         allowed = max(0, min(COVERS_PER_RUN, COVERS_PER_DAY - covers_made_today(db, day_start)))
         print(f"\nAI pictures: {len(need_cover)} stories need one, making up to {allowed} ({maker.describe()})")
