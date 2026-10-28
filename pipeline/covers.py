@@ -5,16 +5,10 @@ Every picture uses the same house style (dark navy, cyan / blue / violet glow) s
 Pictures are saved in Supabase Storage (bucket "covers") and shown in the app as "AI illustration".
 
 Providers, tried in order:
-  1. Cloudflare Workers AI (FLUX.1 schnell). Free: 10,000 "neurons" a day.
+  1. Cloudflare Workers AI (FLUX.1 schnell). Free: 10,000 "neurons" a day, about 150 pictures.
      Needs CF_ACCOUNT_ID and CF_API_TOKEN.
-  2. AI Horde (aihorde.net), free and run by volunteers. No card, no watermark, but slow (about 1 to 3
-     minutes a picture). Works without a key; a free key in AI_HORDE_KEY gets a faster place in the queue.
-     Set HORDE=false to turn it off.
-  3. Pollinations.ai. Free, slow, and adds a small watermark unless POLLINATIONS_TOKEN is set.
-     Set POLLINATIONS=false to turn it off.
-If all three fail, the story gets a ready-made picture from the backup library (covers/library/<category>-NN.jpg,
-made once by design/library.py), so a card is never left without a picture. Library pictures are shared by
-many stories, so they are never deleted with a story.
+  2. Pollinations.ai. Free, no key needed, but slower (about one picture every 15 seconds).
+     Set POLLINATIONS=false to turn it off. POLLINATIONS_TOKEN is optional.
 """
 import base64, io, json, os, random, re, time, urllib.error, urllib.parse, urllib.request
 
@@ -25,16 +19,6 @@ BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/128.0 Safari/537.36")
 BUCKET = "covers"
 W, H = 1024, 576
-LIBRARY = "library/"
-HORDE_API = "https://aihorde.net/api/v2"
-HORDE_MODELS = ["Juggernaut XL", "AlbedoBase XL (SDXL)"]   # safe, well-supported picture models (no adult models)
-HORDE_AVOID = " ### text, letters, words, numbers, logo, watermark, brand, signature, nsfw, nude"
-
-
-def is_library(url_or_path):
-    """A shared ready-made picture from the backup library (never deleted with a story)."""
-    v = str(url_or_path or "")
-    return v.startswith(LIBRARY) or f"/object/public/{BUCKET}/{LIBRARY}" in v
 
 STYLE = ("Editorial 3D illustration for a cyber security news story: {scene}. "
          "Clean modern isometric style, dark navy background, glowing cyan, blue and violet light, "
@@ -134,14 +118,9 @@ class CoverMaker:
         # tolerate copy-paste mistakes: spaces and quote marks around the values
         self.cf_account = os.getenv("CF_ACCOUNT_ID", "").strip().strip("'\"").strip()
         self.cf_token = os.getenv("CF_API_TOKEN", "").strip().strip("'\"").strip()
-        self.use_horde = os.getenv("HORDE", "true").lower() != "false"
-        self.horde_key = os.getenv("AI_HORDE_KEY", "").strip().strip("'\"").strip() or "0000000000"   # 0000000000 = anonymous
-        self.horde_wait = int(os.getenv("HORDE_WAIT", "200"))   # seconds to wait for one picture
         self.use_pollinations = os.getenv("POLLINATIONS", "true").lower() != "false"
         self.poll_token = os.getenv("POLLINATIONS_TOKEN", "").strip()
-        self.deadline = None   # time.time() after which no slow picture is started (set by the pipeline)
         self.cf_dead = False
-        self.horde_dead = False
         self.poll_dead = False
         self._last_poll = 0.0
         self.used = {}
@@ -151,19 +130,13 @@ class CoverMaker:
         parts = []
         if self.cf_account and self.cf_token:
             parts.append("cloudflare")
-        if self.use_horde:
-            parts.append("horde")
         if self.use_pollinations:
             parts.append("pollinations")
         return " > ".join(parts) or "none"
 
     @property
     def available(self):
-        return ((self.cf_account and self.cf_token and not self.cf_dead) or (self.use_horde and not self.horde_dead)
-                or (self.use_pollinations and not self.poll_dead))
-
-    def _time_left(self):
-        return 10_000 if self.deadline is None else self.deadline - time.time()
+        return (self.cf_account and self.cf_token and not self.cf_dead) or (self.use_pollinations and not self.poll_dead)
 
     def _cloudflare(self, prompt, seed):
         url = (f"https://api.cloudflare.com/client/v4/accounts/{self.cf_account}"
@@ -177,43 +150,6 @@ class CoverMaker:
         if not img:
             raise ValueError(f"no image in reply: {str(data)[:120]}")
         return base64.b64decode(img)
-
-    def _horde(self, prompt, seed):
-        """AI Horde: queue the picture, wait for a volunteer's computer to make it, download it."""
-        wait = min(self.horde_wait, self._time_left() - 20)
-        if wait < 60:
-            raise TimeoutError("not enough time left in this run")
-        head = {"apikey": self.horde_key, "Client-Agent": "CyberSid:1.0:cybershortapp.github.io",
-                "Content-Type": "application/json", "Accept": "application/json", "User-Agent": UA}
-
-        def call(method, path, body=None):
-            req = urllib.request.Request(HORDE_API + path, method=method, headers=head,
-                                         data=json.dumps(body).encode() if body is not None else None)
-            with urllib.request.urlopen(req, timeout=30) as r:
-                return json.loads(r.read() or b"{}")
-
-        job = call("POST", "/generate/async", {
-            "prompt": prompt + HORDE_AVOID, "models": HORDE_MODELS, "nsfw": False, "censor_nsfw": True,
-            "r2": True, "shared": False, "slow_workers": True,
-            "params": {"width": W, "height": H, "steps": 25, "n": 1, "sampler_name": "k_euler_a",
-                       "cfg_scale": 6, "seed": str(seed)}})
-        jid, t0 = job["id"], time.time()
-        while time.time() - t0 < wait:
-            time.sleep(6)
-            st = call("GET", f"/generate/check/{jid}")
-            if st.get("faulted") or not st.get("is_possible", True):
-                raise ValueError("no volunteer can make this picture right now")
-            if st.get("done"):
-                gens = call("GET", f"/generate/status/{jid}").get("generations") or []
-                if not gens or gens[0].get("censored"):
-                    raise ValueError("picture was blocked by the safety filter")
-                with urllib.request.urlopen(urllib.request.Request(gens[0]["img"], headers={"User-Agent": UA}), timeout=60) as r:
-                    return r.read(8_000_000)
-        try:
-            call("DELETE", f"/generate/status/{jid}")   # give the place in the queue back
-        except Exception:
-            pass
-        raise TimeoutError(f"queue too long (waited {int(time.time() - t0)}s)")
 
     def _pollinations(self, prompt, seed):
         wait = 16 - (time.time() - self._last_poll)
@@ -237,14 +173,9 @@ class CoverMaker:
         providers = []
         if self.cf_account and self.cf_token and not self.cf_dead:
             providers.append(("cloudflare", self._cloudflare))
-        if self.use_horde and not self.horde_dead:
-            providers.append(("horde", self._horde))
         if self.use_pollinations and not self.poll_dead:
             providers.append(("pollinations", self._pollinations))
         for name, fn in providers:
-            if name != "cloudflare" and self._time_left() < 45:
-                self.errors.append(f"{name}: no time left in this run")
-                continue
             try:
                 try:
                     raw = fn(prompt, seed)
@@ -268,14 +199,10 @@ class CoverMaker:
                 # wrong ID / key, or the free daily limit is used up: stop asking this one for the rest of the run
                 if name == "cloudflare" and ex.code in (400, 401, 403, 429) and "prompt" not in detail.lower():
                     self.cf_dead = True
-                elif name == "horde" and ex.code in (401, 403, 429):
-                    self.horde_dead = True
                 elif name == "pollinations" and ex.code in (401, 402, 403, 429):
                     self.poll_dead = True
             except Exception as ex:
                 self.errors.append(f"{name}: {str(ex)[:80]}")
-                if name == "horde" and isinstance(ex, TimeoutError):
-                    self.horde_dead = True   # a long queue now usually stays long for the rest of this run
         return None
 
     def make(self, story_id, prompt):
@@ -292,8 +219,7 @@ class CoverMaker:
 def covers_made_today(db, day_start):
     try:
         res = (db.table("stories").select("id", count="exact")
-               .like("image_url", "%/object/public/covers/%").not_.like("image_url", f"%/covers/{LIBRARY}%")
-               .gte("created_at", day_start).execute())
+               .like("image_url", "%/object/public/covers/%").gte("created_at", day_start).execute())
         return res.count or 0
     except Exception:
         return 0
@@ -309,48 +235,7 @@ def cleanup_old_covers(db, days=120, limit=50):
     if not rows:
         return 0
     paths = [r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0] for r in rows]
-    paths = [p for p in paths if not is_library(p)]   # shared by many stories: kept
-    if paths:
-        db.storage.from_(BUCKET).remove(paths)
+    db.storage.from_(BUCKET).remove(paths)
     for r in rows:
         db.table("stories").update({"image_url": None}).eq("id", r["id"]).execute()
     return len(rows)
-
-
-class Library:
-    """The backup pictures: 20 ready-made pictures per category, used only when no service could make one."""
-
-    def __init__(self, db):
-        self.db = db
-        self.files = None
-        self.recent = []
-
-    def _load(self):
-        if self.files is not None:
-            return
-        self.files = {}
-        try:
-            for f in self.db.storage.from_(BUCKET).list(LIBRARY.rstrip("/"), {"limit": 1000}) or []:
-                name = f.get("name") or ""
-                if name.endswith(".jpg") and "-" in name:
-                    self.files.setdefault(name.rsplit("-", 1)[0], []).append(name)
-        except Exception as ex:
-            print(f"[warn] backup pictures: {str(ex)[:80]}")
-        try:   # pictures used most recently are picked last, so the feed doesn't repeat itself
-            rows = (self.db.table("stories").select("image_url").like("image_url", f"%/covers/{LIBRARY}%")
-                    .order("created_at", desc=True).limit(40).execute().data)
-            self.recent = [r["image_url"].rsplit("/", 1)[-1].split("?")[0] for r in rows]
-        except Exception:
-            self.recent = []
-
-    def pick(self, category):
-        """Public link of a backup picture for this category, or None if the library is empty."""
-        self._load()
-        key = (category or "other").lower()
-        names = self.files.get(key) or self.files.get("other") or [n for v in self.files.values() for n in v]
-        if not names:
-            return None
-        fresh = [n for n in names if n not in self.recent]
-        name = random.choice(fresh or names)
-        self.recent.insert(0, name)
-        return self.db.storage.from_(BUCKET).get_public_url(LIBRARY + name).rstrip("?")
