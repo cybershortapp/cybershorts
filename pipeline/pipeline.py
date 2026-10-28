@@ -1159,9 +1159,9 @@ def main():
         allowed = max(0, min(COVERS_PER_RUN, COVERS_PER_DAY - covers_made_today(db, day_start)))
         print(f"\nAI pictures: {len(need_cover)} stories need one, making up to {allowed} ({maker.describe()})")
         made_ids, failed_ids = set(), set()
-        if early_jobs:   # pictures started on AI Horde at the beginning of the run
+        if early_jobs:   # pictures started on AI Horde at the beginning of the run: take the ones already made
             try:
-                links = maker.collect_early(early_jobs, min(maker.deadline, time.time() + int(os.getenv("HORDE_COLLECT", "120"))))
+                links, early_jobs = maker.collect_early(early_jobs, time.time() + int(os.getenv("HORDE_COLLECT", "20")), cancel=False)
                 for sid, url in links.items():
                     db.table("stories").update({"image_url": url, "tint": None}).eq("id", sid).execute()
                     covers_made += 1
@@ -1287,6 +1287,17 @@ def main():
             email_note = run_email(db)
         except Exception as ex:
             email_note = f"problem: {str(ex)[:100]}"
+
+    # ---- 5. AI Horde pictures started at the beginning that weren't ready in step 3: last wait at the very end ----
+    if early_jobs and early_maker and db:
+        try:
+            links, _ = early_maker.collect_early(early_jobs, started.timestamp() + int(os.getenv("HORDE_LAST", "630")), cancel=True)
+            for sid, url in links.items():
+                db.table("stories").update({"image_url": url, "tint": None}).eq("id", sid).execute()
+            covers_note += f" | AI Horde at the end: {len(links)} of {len(early_jobs)}"
+            print(f"AI Horde at the end of the run: {len(links)} of {len(early_jobs)} pictures ready")
+        except Exception as ex:
+            print(f"[warn] last AI Horde pictures: {str(ex)[:80]}")
 
     health = [rows[s["name"]] for s in sources]
     for r in health:

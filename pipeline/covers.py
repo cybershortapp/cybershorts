@@ -228,9 +228,10 @@ class CoverMaker:
         self.horde_cancel(jid)
         raise TimeoutError(f"queue too long (waited {int(time.time() - t0)}s)")
 
-    def collect_early(self, jobs, until):
-        """Pictures started at the beginning of the run (jobs = {story_id: job_id}): wait for them until the
-        given time, upload the finished ones and return {story_id: public link}. Unfinished jobs are cancelled."""
+    def collect_early(self, jobs, until, cancel=True):
+        """Pictures started on AI Horde (jobs = {story_id: job_id}): wait for them until the given time and upload
+        the finished ones. Returns ({story_id: public link}, {story_id: job_id still waiting}).
+        With cancel=True the jobs still waiting are cancelled (their place in the queue is given back)."""
         links, pending = {}, dict(jobs)
         while pending and time.time() < until:
             for sid, jid in list(pending.items()):
@@ -251,11 +252,12 @@ class CoverMaker:
                 self.used["horde"] = self.used.get("horde", 0) + 1
             if pending:
                 time.sleep(6)
-        for jid in pending.values():
-            self.horde_cancel(jid)
-        if pending:
-            self.errors.append(f"horde: {len(pending)} early pictures not ready in time")
-        return links
+        if cancel:
+            for jid in pending.values():
+                self.horde_cancel(jid)
+            if pending:
+                self.errors.append(f"horde: {len(pending)} pictures not ready in time")
+        return links, pending
 
     def _pollinations(self, prompt, seed):
         wait = 16 - (time.time() - self._last_poll)
