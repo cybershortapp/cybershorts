@@ -1,0 +1,27 @@
+Stories in the last 3 days: 400
+  our AI pictures: 116
+  our copies of news pictures: 262
+  news-site pictures (not copied yet): 4, of which the app can't load: 0
+  NO picture at all: 18
+
+No picture:
+  2026-10-28T18:04 [Medium] WTAQ News Talk: German Police Arrest Two Suspected of Russian-Backed Sabotage
+  2026-10-28T17:37 [High] The State: Columbia city services disrupted by ongoing ransomware attack
+  2026-10-28T17:35 [Info] The Chosun Ilbo: Samsung Life Insurance deploys AI and police links against voice phishing
+  2026-10-28T17:34 [Info] The Indian Express: UP Police rescue twenty four children from online abuse
+  2026-10-28T17:32 [Info] Help Net Security: GitHub launches npm package firewall and AI security additions
+  2026-10-28T17:03 [Info] ZDNET Security: Opera introduces local AI browser feature using WebAI standard
+  2026-10-28T16:01 [Info] Cisco Security Advisories: Cisco issues advance notice for November 2026 security advisories
+  2026-10-28T15:25 [Info] Infosecurity Magazine: AI Adoption Transforms CISOs Into Business-Risk Translators
+  2026-10-28T15:05 [Info] The Hindu: Tiruchi police seize six illegal SIM boxes, arrest suspect
+  2026-10-28T15:03 [Info] BleepingComputer: Microsoft to retire SMS/voice auth, urges passkey migration
+  2026-10-28T14:36 [Info] Edex Live: India Enhances Financial Sector Cybersecurity with Quantum-Safe Initiatives
+  2026-10-28T14:35 [Info] Reuters: Odido appoints new CEO following February cyberattack
+  2026-10-28T12:34 [Info] The Punch: AI-powered fraud threatens Nigerian telecoms and banking infrastructure
+  2026-10-28T12:33 [Info] Computer Weekly: Austrian hospitals trial encrypted open source messaging to replace fax
+  2026-10-28T12:32 [Medium] DataBreaches.net: PowerSchool Data Breach Lawsuit Moves Forward
+  2026-10-28T12:03 [Info] tradersunion: UK financial sector faces AI-driven cryptographic risks
+  2026-10-28T11:33 [Info] Peoples Gazette: EFCC enhances digital systems and cybersecurity to combat financial crime
+  2026-10-28T11:32 [Info] Schneier on Security: Researchers study North Korean IT workers using a fake start-up
+
+Picture the app can't load:
