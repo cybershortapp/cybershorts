@@ -1,11 +1,13 @@
 """AI providers for the pipeline. Free by default.
 
-AI_PROVIDER   order to try, comma separated. Default "gemini,cerebras,groq,mistral" (all have free plans).
+AI_PROVIDER   order to try, comma separated. Default "gemini,groq,mistral,cerebras" (free plans).
               Any provider without a key in .env is skipped automatically.
               Use "claude" (paid) if you ever want Claude instead, or "gemini,groq,claude" as a last resort.
 GEMINI_MODELS models to try in order (free tier). Change here if Google renames them.
-GROQ_MODELS   models to try in order (free tier).
-If a model hits its free limit, the next one is used automatically for the rest of the run.
+              Each Gemini and Gemma model has its OWN free daily limit, so a longer list means more free calls a day.
+GROQ_MODELS   models to try in order (free tier). Each has its own limit too.
+If a model hits its free limit (or is retired, or the account needs payment), the next one is used
+automatically for the rest of the run.
 """
 import json
 import os
@@ -14,8 +16,11 @@ import time
 import urllib.error
 import urllib.request
 
-GEMINI_MODELS = [m.strip() for m in os.getenv("GEMINI_MODELS", "gemini-3.8-flash,gemini-3.5-flash-lite").split(",") if m.strip()]
-GROQ_MODELS = [m.strip() for m in os.getenv("GROQ_MODELS", "openai/gpt-oss-120b,llama-3.3-70b-versatile").split(",") if m.strip()]
+# checked 28 Oct 2026: these all answer on the free tier (newest and best first, Gemma last: big free limits)
+GEMINI_MODELS = [m.strip() for m in os.getenv(
+    "GEMINI_MODELS", "gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,"
+                     "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemma-4-26b-a4b-it,gemma-4-31b-it").split(",") if m.strip()]
+GROQ_MODELS = [m.strip() for m in os.getenv("GROQ_MODELS", "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b").split(",") if m.strip()]
 CEREBRAS_MODELS = [m.strip() for m in os.getenv("CEREBRAS_MODELS", "gpt-oss-120b").split(",") if m.strip()]
 MISTRAL_MODELS = [m.strip() for m in os.getenv("MISTRAL_MODELS", "mistral-small-latest").split(",") if m.strip()]
 
@@ -51,7 +56,7 @@ def _post(url, headers, body, timeout=40):
             return json.load(r)
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "ignore")[:300]
-        if e.code in (429, 404, 403, 503):
+        if e.code in (429, 404, 403, 503, 401, 402):   # 402: the account now needs payment
             raise LimitHit(f"HTTP {e.code}: {detail}")
         raise RuntimeError(f"HTTP {e.code}: {detail}")
 
@@ -70,7 +75,7 @@ def extract_json(text):
 
 class AI:
     def __init__(self):
-        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,cerebras,groq,mistral").lower().split(",") if p.strip()]
+        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,groq,mistral,cerebras").lower().split(",") if p.strip()]
         self.chain = []
         for p in order:
             if p == "gemini" and os.getenv("GEMINI_API_KEY"):
@@ -101,12 +106,14 @@ class AI:
     def describe(self):
         return " -> ".join(f"{p}:{m}" for p, m in self.chain)
 
-    def _wait(self, provider):
+    def _wait(self, provider, model=""):
+        # Gemini and Groq count their per-minute limits per model, so moving on to the next model needs no pause
+        key = (provider, model) if provider in ("gemini", "groq") else provider
         gap = GAP_SECONDS.get(provider, 1)
-        since = time.time() - self.last.get(provider, 0)
+        since = time.time() - self.last.get(key, 0)
         if since < gap:
             time.sleep(gap - since)
-        self.last[provider] = time.time()
+        self.last[key] = time.time()
 
     def json(self, system, user, max_tokens=800):
         """Ask for a JSON reply. Tries each provider/model in order until one works."""
@@ -114,7 +121,7 @@ class AI:
         for provider, model in self.chain:
             if (provider, model) in self.dead:
                 continue
-            self._wait(provider)
+            self._wait(provider, model)
             try:
                 try:
                     text = self._call(provider, model, system, user, max_tokens)
@@ -132,7 +139,8 @@ class AI:
                     # busy right now: use the next model for this story only, try this one again next time
                     print(f"[busy]  {provider}:{model} busy, using the next model for this story")
                     continue
-                reason = "free limit reached" if "429" in str(ex) else "not available"
+                reason = ("free limit reached" if "429" in str(ex) else
+                          "needs payment" if "HTTP 402" in str(ex) else "not available")
                 print(f"[limit] {provider}:{model} {reason}, using the next model for the rest of this run")
                 self.dead.add((provider, model))
             except Exception as ex:
@@ -145,16 +153,18 @@ class AI:
         raise RuntimeError("All AI options failed: " + " | ".join(e[:120] for e in errors[-3:]))
 
     def _gemini(self, model, system, user, max_tokens):
-        data = _post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-            {"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
-            {
-                "systemInstruction": {"parts": [{"text": system}]},
-                "contents": [{"role": "user", "parts": [{"text": user}]}],
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": max(max_tokens, 2048),
-                                     "responseMimeType": "application/json"},
-            },
-        )
+        if model.startswith("gemma"):
+            # Gemma (open models on the same free key): no system instruction or JSON mode, so the
+            # instructions go into the message and the reply's JSON is picked out by extract_json
+            body = {"contents": [{"role": "user", "parts": [{"text": f"{system}\n\n{user}"}]}],
+                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": max(max_tokens, 2048)}}
+        else:
+            body = {"systemInstruction": {"parts": [{"text": system}]},
+                    "contents": [{"role": "user", "parts": [{"text": user}]}],
+                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": max(max_tokens, 2048),
+                                         "responseMimeType": "application/json"}}
+        data = _post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                     {"x-goog-api-key": os.environ["GEMINI_API_KEY"]}, body)
         cands = data.get("candidates") or []
         if not cands:
             raise RuntimeError(f"no answer ({data.get('promptFeedback', {})})")
