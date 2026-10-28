@@ -47,3 +47,28 @@ for r, p in broken:
     lines.append(f"  {r['created_at'][:16]} {r['source']}: {r['headline'][:70]}  ({p})")
 open(os.path.join(out, "report.txt"), "w").write("\n".join(lines) + "\n")
 print("\n".join(lines))
+
+# A sample of real recent cards (text + picture), so the design can be tested with real content.
+import json, urllib.request
+sample = (db.table("stories").select("id,source,headline,simple,technical,severity,action,cves,category,image_url,tint,zero_day,published_at,chain_checked,attack_chain")
+          .order("published_at", desc=True).limit(40).execute().data)
+os.makedirs(os.path.join(out, "pics"), exist_ok=True)
+for r in sample:
+    r["has_chain"] = bool(r.pop("attack_chain"))
+    u = r.get("image_url") or ""
+    r["kind"] = "none" if not u else ("ai" if "/object/public/covers/" in u else ("copy" if is_ours(u) else "news"))
+    if u:
+        try:
+            req = urllib.request.Request(u, headers={"User-Agent": "okhttp/4.12.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read(3_000_000)
+            from PIL import Image
+            import io
+            im = Image.open(io.BytesIO(data)).convert("RGB")
+            im.thumbnail((900, 900))
+            im.save(os.path.join(out, "pics", r["id"][:40].replace("/", "_") + ".jpg"), "JPEG", quality=84)
+            r["pic"] = r["id"][:40].replace("/", "_") + ".jpg"
+        except Exception as ex:
+            r["pic_error"] = str(ex)[:80]
+json.dump(sample, open(os.path.join(out, "stories.json"), "w"), indent=1, ensure_ascii=False)
+print("sample saved", len(sample))
