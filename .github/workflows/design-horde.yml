@@ -1,0 +1,26 @@
+name: Design test (AI Horde pictures)
+# Only on the design-samples branch. Tries the free AI Horde picture service and saves the result
+# to the design-horde-out branch. Touches nothing in the app or database.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/horde_test.py", ".github/workflows/design-horde.yml"]
+permissions:
+  contents: write
+jobs:
+  horde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: python design/horde_test.py "$GITHUB_WORKSPACE/out"
+      - name: Save to the design-horde-out branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-horde-out
+          git add -A
+          git -c user.name="design-horde" -c user.email="actions@users.noreply.github.com" commit -qm "Horde test, run ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-horde-out
