@@ -1,0 +1,6 @@
+top models: WAI-NSFW-illustrious-SDXL x12 q716881920.0 eta55; stable_diffusion x11 q20971520.0 eta38; Juggernaut XL x9 q452009984.0 eta36; AlbedoBase XL (SDXL) x9 q281354240.0 eta30; Deliberate x9 q1638400.0 eta3; WAI-ANI-NSFW-PONYXL x8 q0.0 eta0; CyberRealistic Pony x8 q268173312.0 eta22; Dreamshaper x7 q21626880.0 eta41; AMPonyXL x7 q31457280.0 eta6; Rev Animated x6 q0.0 eta0; Prefect Pony x6 q95682560.0 eta10; AbsoluteReality x6 q0.0 eta0
+flux models: Flux.1-Schnell fp8 (Compact) x5 eta70
+flux: queued 012c5f21-e624-444a-b67b-663162b6c6f1 models ['Flux.1-Schnell fp8 (Compact)'] kudos 6.0
+flux: timed out after 420s, last {'finished': 0, 'processing': 0, 'restarted': 0, 'waiting': 1, 'done': False, 'faulted': False, 'wait_time': 45, 'queue_position': 9, 'kudos': 1.0, 'is_possible': True, 'eligible_workers': 1, 'eligible_worker_threads': 1, 'might_stall': False}
+sdxl: queued eec705de-8987-4060-91bd-e9a89b010481 models ['WAI-NSFW-illustrious-SDXL', 'Juggernaut XL', 'AlbedoBase XL (SDXL)'] kudos 11.0
+sdxl: done in 101s model Juggernaut XL censored False bytes 48232
