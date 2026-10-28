@@ -1,0 +1,143 @@
+submit ransomware 3: HTTP 429 b'{"message":"2 per 1 second"}\n'
+saved library/ransomware-01.jpg (Juggernaut XL) after 325s
+saved library/ransomware-02.jpg (Juggernaut XL) after 326s
+saved library/ransomware-03.jpg (AlbedoBase XL (SDXL)) after 328s
+saved library/ransomware-04.jpg (AlbedoBase XL (SDXL)) after 329s
+saved library/ransomware-05.jpg (Juggernaut XL) after 357s
+saved library/ransomware-06.jpg (Juggernaut XL) after 358s
+saved library/ransomware-07.jpg (AlbedoBase XL (SDXL)) after 347s
+saved library/ransomware-08.jpg (AlbedoBase XL (SDXL)) after 347s
+saved library/ransomware-09.jpg (Juggernaut XL) after 197s
+saved library/ransomware-10.jpg (AlbedoBase XL (SDXL)) after 199s
+saved library/ransomware-11.jpg (Juggernaut XL) after 245s
+saved library/ransomware-12.jpg (Juggernaut XL) after 246s
+saved library/ransomware-13.jpg (AlbedoBase XL (SDXL)) after 203s
+saved library/ransomware-14.jpg (AlbedoBase XL (SDXL)) after 204s
+saved library/ransomware-15.jpg (Juggernaut XL) after 268s
+saved library/ransomware-16.jpg (AlbedoBase XL (SDXL)) after 269s
+ransomware 9.0: censored, skipped
+saved library/ransomware-17.jpg (Juggernaut XL) after 153s
+saved library/breaches-01.jpg (Juggernaut XL) after 153s
+saved library/breaches-02.jpg (Juggernaut XL) after 154s
+saved library/breaches-03.jpg (Juggernaut XL) after 208s
+saved library/breaches-04.jpg (Juggernaut XL) after 209s
+saved library/breaches-05.jpg (AlbedoBase XL (SDXL)) after 210s
+saved library/breaches-06.jpg (AlbedoBase XL (SDXL)) after 211s
+saved library/breaches-07.jpg (AlbedoBase XL (SDXL)) after 184s
+saved library/breaches-08.jpg (AlbedoBase XL (SDXL)) after 185s
+saved library/breaches-09.jpg (AlbedoBase XL (SDXL)) after 113s
+saved library/breaches-10.jpg (AlbedoBase XL (SDXL)) after 114s
+breaches 5.0: censored, skipped
+saved library/breaches-11.jpg (Juggernaut XL) after 111s
+saved library/breaches-12.jpg (Juggernaut XL) after 111s
+saved library/breaches-13.jpg (Juggernaut XL) after 111s
+saved library/breaches-14.jpg (Juggernaut XL) after 52s
+saved library/breaches-15.jpg (Juggernaut XL) after 53s
+saved library/breaches-16.jpg (AlbedoBase XL (SDXL)) after 42s
+saved library/breaches-17.jpg (AlbedoBase XL (SDXL)) after 43s
+saved library/breaches-18.jpg (AlbedoBase XL (SDXL)) after 40s
+saved library/breaches-19.jpg (AlbedoBase XL (SDXL)) after 41s
+vulnerabilities 0.0: censored, skipped
+vulnerabilities 0.1: censored, skipped
+saved library/vulnerabilities-01.jpg (AlbedoBase XL (SDXL)) after 40s
+saved library/vulnerabilities-02.jpg (AlbedoBase XL (SDXL)) after 41s
+vulnerabilities 3.0: censored, skipped
+vulnerabilities 3.1: censored, skipped
+saved library/vulnerabilities-03.jpg (AlbedoBase XL (SDXL)) after 43s
+saved library/vulnerabilities-04.jpg (AlbedoBase XL (SDXL)) after 44s
+saved library/vulnerabilities-05.jpg (Juggernaut XL) after 84s
+saved library/vulnerabilities-06.jpg (Juggernaut XL) after 85s
+saved library/vulnerabilities-07.jpg (AlbedoBase XL (SDXL)) after 89s
+saved library/vulnerabilities-08.jpg (AlbedoBase XL (SDXL)) after 89s
+saved library/vulnerabilities-09.jpg (Juggernaut XL) after 120s
+saved library/vulnerabilities-10.jpg (Juggernaut XL) after 121s
+saved library/vulnerabilities-11.jpg (Juggernaut XL) after 97s
+saved library/vulnerabilities-12.jpg (Juggernaut XL) after 98s
+saved library/vulnerabilities-13.jpg (AlbedoBase XL (SDXL)) after 141s
+saved library/vulnerabilities-14.jpg (Juggernaut XL) after 142s
+saved library/vulnerabilities-15.jpg (AlbedoBase XL (SDXL)) after 66s
+saved library/vulnerabilities-16.jpg (AlbedoBase XL (SDXL)) after 67s
+saved library/scams-01.jpg (Juggernaut XL) after 62s
+saved library/scams-02.jpg (Juggernaut XL) after 63s
+saved library/scams-03.jpg (AlbedoBase XL (SDXL)) after 51s
+scams 2.1: censored, skipped
+saved library/scams-04.jpg (Juggernaut XL) after 51s
+saved library/scams-05.jpg (Juggernaut XL) after 52s
+saved library/scams-06.jpg (AlbedoBase XL (SDXL)) after 116s
+saved library/scams-07.jpg (AlbedoBase XL (SDXL)) after 116s
+saved library/scams-08.jpg (Juggernaut XL) after 80s
+saved library/scams-09.jpg (AlbedoBase XL (SDXL)) after 80s
+saved library/scams-10.jpg (AlbedoBase XL (SDXL)) after 46s
+saved library/scams-11.jpg (AlbedoBase XL (SDXL)) after 47s
+submit scams 9: HTTP 429 b'{"message":"2 per 1 second"}\n'
+saved library/scams-12.jpg (Juggernaut XL) after 49s
+saved library/scams-13.jpg (Juggernaut XL) after 50s
+scams 7.0: censored, skipped
+saved library/scams-14.jpg (Juggernaut XL) after 59s
+saved library/scams-15.jpg (Juggernaut XL) after 159s
+saved library/scams-16.jpg (Juggernaut XL) after 160s
+saved library/policy-01.jpg (Juggernaut XL) after 137s
+saved library/policy-02.jpg (Juggernaut XL) after 138s
+saved library/policy-03.jpg (Juggernaut XL) after 149s
+saved library/policy-04.jpg (AlbedoBase XL (SDXL)) after 150s
+saved library/policy-05.jpg (Juggernaut XL) after 137s
+saved library/policy-06.jpg (AlbedoBase XL (SDXL)) after 138s
+policy 3.0: censored, skipped
+saved library/policy-07.jpg (AlbedoBase XL (SDXL)) after 85s
+policy 4.0: censored, skipped
+saved library/policy-08.jpg (AlbedoBase XL (SDXL)) after 73s
+policy 5.0: censored, skipped
+saved library/policy-09.jpg (Juggernaut XL) after 140s
+saved library/policy-10.jpg (AlbedoBase XL (SDXL)) after 130s
+saved library/policy-11.jpg (AlbedoBase XL (SDXL)) after 131s
+saved library/policy-12.jpg (Juggernaut XL) after 195s
+saved library/policy-13.jpg (Juggernaut XL) after 195s
+saved library/policy-14.jpg (Juggernaut XL) after 223s
+saved library/policy-15.jpg (AlbedoBase XL (SDXL)) after 224s
+saved library/policy-16.jpg (Juggernaut XL) after 204s
+saved library/policy-17.jpg (Juggernaut XL) after 205s
+saved library/tools-01.jpg (AlbedoBase XL (SDXL)) after 216s
+saved library/tools-02.jpg (AlbedoBase XL (SDXL)) after 217s
+tools 1.0: censored, skipped
+saved library/tools-03.jpg (AlbedoBase XL (SDXL)) after 177s
+saved library/tools-04.jpg (AlbedoBase XL (SDXL)) after 171s
+saved library/tools-05.jpg (AlbedoBase XL (SDXL)) after 171s
+saved library/tools-06.jpg (AlbedoBase XL (SDXL)) after 123s
+saved library/tools-07.jpg (AlbedoBase XL (SDXL)) after 124s
+saved library/tools-08.jpg (AlbedoBase XL (SDXL)) after 137s
+saved library/tools-09.jpg (AlbedoBase XL (SDXL)) after 138s
+saved library/tools-10.jpg (AlbedoBase XL (SDXL)) after 210s
+saved library/tools-11.jpg (AlbedoBase XL (SDXL)) after 210s
+saved library/tools-12.jpg (Juggernaut XL) after 236s
+saved library/tools-13.jpg (Juggernaut XL) after 237s
+saved library/tools-14.jpg (AlbedoBase XL (SDXL)) after 278s
+saved library/tools-15.jpg (AlbedoBase XL (SDXL)) after 278s
+tools 8.0: censored, skipped
+saved library/tools-16.jpg (Juggernaut XL) after 239s
+saved library/tools-17.jpg (Juggernaut XL) after 304s
+saved library/tools-18.jpg (Juggernaut XL) after 305s
+other 0.0: censored, skipped
+saved library/other-01.jpg (AlbedoBase XL (SDXL)) after 308s
+other 1.0: censored, skipped
+other 1.1: censored, skipped
+saved library/other-02.jpg (Juggernaut XL) after 342s
+saved library/other-03.jpg (Juggernaut XL) after 343s
+saved library/other-04.jpg (Juggernaut XL) after 321s
+saved library/other-05.jpg (Juggernaut XL) after 322s
+saved library/other-06.jpg (AlbedoBase XL (SDXL)) after 312s
+other 4.1: censored, skipped
+saved library/other-07.jpg (Juggernaut XL) after 250s
+saved library/other-08.jpg (Juggernaut XL) after 251s
+saved library/other-09.jpg (AlbedoBase XL (SDXL)) after 267s
+saved library/other-10.jpg (Juggernaut XL) after 268s
+saved library/other-11.jpg (Juggernaut XL) after 295s
+saved library/other-12.jpg (Juggernaut XL) after 296s
+saved library/other-13.jpg (Juggernaut XL) after 292s
+saved library/other-14.jpg (Juggernaut XL) after 293s
+saved library/other-15.jpg (Juggernaut XL) after 335s
+saved library/other-16.jpg (Juggernaut XL) after 336s
+saved library/ransomware-18.jpg (AlbedoBase XL (SDXL)) after 338s
+saved library/ransomware-19.jpg (AlbedoBase XL (SDXL)) after 339s
+saved library/scams-17.jpg (AlbedoBase XL (SDXL)) after 275s
+saved library/scams-18.jpg (AlbedoBase XL (SDXL)) after 276s
+saved per category: {"ransomware": 19, "breaches": 19, "vulnerabilities": 16, "scams": 18, "policy": 17, "tools": 18, "other": 16} in 3285s
