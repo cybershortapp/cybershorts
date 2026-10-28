@@ -1,0 +1,22 @@
+name: Backup picture library fix
+# Only on the design-samples branch: removes backup pictures that came out with a brand logo.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/library_fix.py", ".github/workflows/design-library-fix.yml"]
+permissions:
+  contents: read
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python design/library_fix.py "$GITHUB_WORKSPACE/out"
