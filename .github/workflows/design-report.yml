@@ -1,0 +1,36 @@
+name: Design report (missing pictures)
+# Only runs on the design-samples branch. Read-only: lists recent stories with no picture or a picture
+# the app can't load, and saves report.txt to the design-report-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/report.py", ".github/workflows/design-report.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - name: Make the report
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python design/report.py "$GITHUB_WORKSPACE/out"
+      - name: Save it to the design-report-out branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-report-out
+          git add -A
+          git -c user.name="design-report" -c user.email="actions@users.noreply.github.com" commit -qm "Picture report, run ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-report-out
