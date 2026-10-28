@@ -5,13 +5,50 @@
     "paper": "An elegant layered paper-cut illustration, many layers of bright coloured paper with soft depth shadows between them, cheerful light colour palette, clean light background, premium magazine cover art. Scene: {scene}. No text, no letters, no numbers, no logos, no watermark, no faces."
   },
   "scenes": {
-    "ship": {"bg": "soft peach", "text": "a large cargo ship stacked with colourful shipping containers on calm turquoise water, one red container wrapped in heavy steel chains with a big gold padlock and a small paper ransom tag hanging from the lock"},
-    "plex": {"bg": "soft lavender", "text": "a sleek home media server box with a film reel on top, its lid cracked open, a tiny faceless miner with a pickaxe digging shiny gold coins out of it, four broken chain links lying beside it"},
-    "gate": {"bg": "pale mint", "text": "a small fortress gate shaped like a shield guarding a neat row of laptops, the gate slightly open, a faceless masked toy figure sneaking through holding a glowing keycard"}
+    "ship": {
+      "bg": "soft peach",
+      "text": "a large cargo ship stacked with colourful shipping containers on calm turquoise water, one red container wrapped in heavy steel chains with a big gold padlock and a small paper ransom tag hanging from the lock"
+    },
+    "plex": {
+      "bg": "soft lavender",
+      "text": "a sleek home media server box with a film reel on top, its lid cracked open, a tiny faceless miner with a pickaxe digging shiny gold coins out of it, four broken chain links lying beside it"
+    },
+    "gate": {
+      "bg": "pale mint",
+      "text": "a small toy castle gate shaped like a shield guarding a neat row of plain unbranded laptops with blank lids, the gate slightly open, a faceless masked toy figure sneaking through holding a glowing keycard"
+    },
+    "cottage": {
+      "bg": "soft sky blue",
+      "text": "a charming French countryside holiday cottage with blue shutters, its front door wide open, a stream of tiny blank ID cards and envelopes flying out of the window"
+    },
+    "hook": {
+      "bg": "soft butter yellow",
+      "text": "a plain unbranded laptop with a blank screen, a big shiny fishing hook dangling a golden key in front of it, a small toy network router beside it"
+    }
   },
   "jobs": [
-    {"scene": "ship", "style": "world"}, {"scene": "ship", "style": "object"}, {"scene": "ship", "style": "paper"},
-    {"scene": "plex", "style": "world"}, {"scene": "plex", "style": "object"}, {"scene": "plex", "style": "paper"},
-    {"scene": "gate", "style": "world"}, {"scene": "gate", "style": "object"}, {"scene": "gate", "style": "paper"}
+    {
+      "scene": "gate",
+      "style": "object",
+      "tag": "-2"
+    },
+    {
+      "scene": "gate",
+      "style": "object",
+      "tag": "-3"
+    },
+    {
+      "scene": "cottage",
+      "style": "object"
+    },
+    {
+      "scene": "hook",
+      "style": "object"
+    },
+    {
+      "scene": "ship",
+      "style": "object",
+      "tag": "-2"
+    }
   ]
 }
