@@ -1,0 +1,36 @@
+name: Backup picture library
+# Only on the design-samples branch. Makes 20 ready-made pictures per category on the free AI Horde service
+# and uploads them to Supabase Storage (covers/library/). The news pipeline uses them only when every picture
+# service fails. Contact sheets go to the design-library-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/library.py", ".github/workflows/design-library.yml"]
+permissions:
+  contents: write
+jobs:
+  library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - name: Make and upload the pictures
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PARALLEL: "4"
+        run: python design/library.py "$GITHUB_WORKSPACE/out"
+      - name: Save contact sheets to the design-library-out branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-library-out
+          git add -A
+          git -c user.name="design-library" -c user.email="actions@users.noreply.github.com" commit -qm "Library, run ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-library-out
