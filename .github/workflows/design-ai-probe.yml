@@ -1,0 +1,31 @@
+name: Design check (free AI models)
+# Only on the design-samples branch. Read-only: lists the free AI models each service offers and tries
+# one tiny call per model. Saves model names and results (never keys) to the design-ai-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/ai_probe.py", ".github/workflows/design-ai-probe.yml"]
+permissions:
+  contents: write
+  models: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python design/ai_probe.py "$GITHUB_WORKSPACE/out"
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-ai-out && git add -A
+          git -c user.name="design-ai" -c user.email="actions@users.noreply.github.com" commit -qm "AI probe ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-ai-out
