@@ -8,7 +8,7 @@ out = sys.argv[1]
 os.makedirs(out, exist_ok=True)
 API = "https://aihorde.net/api/v2"
 KEY = os.getenv("AI_HORDE_KEY", "").strip() or "0000000000"
-HEAD = {"apikey": KEY, "Client-Agent": "CyberSid:1.0:cybershortapp.github.io", "Content-Type": "application/json"}
+HEAD = {"apikey": KEY, "Client-Agent": "CyberSid:1.0:cybershortapp.github.io", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "CyberSid/1.0 (+https://cybershortapp.github.io/cybershorts/)"}
 log = []
 
 def call(method, path, body=None):
