@@ -1,0 +1,24 @@
+name: Design logs (read a run's log)
+# Only on the design-samples branch: saves the log of one news run to the design-logs-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: [".github/workflows/design-logs.yml"]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir out && cd out
+          gh api repos/${{ github.repository }}/actions/jobs/123127020740/logs > log.txt || echo "could not read" > log.txt
+          grep -n -i -B3 -A25 "Traceback" log.txt | head -150 > traceback.txt || true
+          tail -120 log.txt > tail.txt
+          git init -q && git checkout -q -b design-logs-out && git add -A
+          git -c user.name="design-logs" -c user.email="actions@users.noreply.github.com" commit -qm "logs 123127020740"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-logs-out
