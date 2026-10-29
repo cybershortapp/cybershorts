@@ -1,0 +1,31 @@
+name: Design data (games and decks)
+# Only on the design-samples branch. Read-only: saves the latest trending decks and one game per style
+# to the design-extras-out branch, for design work.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/extras_dump.py", ".github/workflows/design-extras.yml"]
+permissions:
+  contents: write
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python design/extras_dump.py "$GITHUB_WORKSPACE/out"
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-extras-out && git add -A
+          git -c user.name="design-extras" -c user.email="actions@users.noreply.github.com" commit -qm "extras ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-extras-out
