@@ -1,0 +1,23 @@
+name: Design mock pictures
+# Only on the design-samples branch: makes pictures for design mockups on AI Horde (free), saved to design-mock-out.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/mock_images.py", ".github/workflows/design-mock.yml"]
+permissions:
+  contents: write
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install -q pillow && python design/mock_images.py "$GITHUB_WORKSPACE/out"
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-mock-out && git add -A
+          git -c user.name="design-mock" -c user.email="actions@users.noreply.github.com" commit -qm "mock ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-mock-out
