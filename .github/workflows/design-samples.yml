@@ -2,10 +2,9 @@ name: Design samples (picture styles)
 # Only runs on the design-samples branch. Makes a few sample pictures in new art styles with the
 # free Cloudflare picture model, and saves them to the design-samples-out branch for review.
 # It does not touch the app, the database or the news pipeline.
+# Only by hand now (it uses the free Cloudflare picture allowance), never on a push.
 on:
-  push:
-    branches: [design-samples]
-    paths: ["design/**", ".github/workflows/design-samples.yml"]
+  workflow_dispatch:
 
 permissions:
   contents: write
