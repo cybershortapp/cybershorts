@@ -74,7 +74,7 @@ export function PlayHub({ backRef }: { backRef: MutableRefObject<() => boolean> 
               resetKey={open.id}
               fallback={() => <Text style={[styles.empty, { padding: 24, textAlign: 'center' }]}>Sorry, this game didn't load. Try another one.</Text>}
             >
-              <GameCard key={open.id} game={open} headline={open.headline} width={Math.min(box.w - 16, 520)} height={box.h - 52} active foot="Finish to earn XP" />
+              <GameCard key={open.id} game={open} headline={open.headline} image={open.image} width={Math.min(box.w - 16, 520)} height={box.h - 52} active foot="Finish to earn XP" onDone={close} doneLabel="Back to all games" />
             </ErrorBoundary>
           </View>
         )}

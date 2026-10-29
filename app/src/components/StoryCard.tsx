@@ -12,10 +12,11 @@ import { REPORT_REASONS, type ReportReason } from '../lib/types';
 import { useCardLayout } from '../lib/layout';
 import { timeAgo } from '../lib/time';
 import type { Story } from '../lib/types';
-import { F, type Palette, severityOf, storyTint, tabColour, useCardStyle, useTheme } from '../theme';
+import { deepen, F, type Palette, severityOf, storyTint, useCardStyle, useTheme } from '../theme';
 import { AttackChain } from './AttackChain';
 import { STYLE_BG, StyledCard } from './CardStyles';
 import { Cover } from './Cover';
+import { FocusFace } from './FocusCard';
 import { Justified } from './Justified';
 import { Sheet, SheetRow } from './Sheet';
 
@@ -37,7 +38,9 @@ type Props = {
 function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caughtUp, onNext, onChainOpen }: Props) {
   const C = useTheme();
   const cardStyle = useCardStyle();
-  const styled = cardStyle !== 'standard';
+  // Focus (the default) and Standard are drawn here; the other styles live in CardStyles
+  const focus = cardStyle === 'focus';
+  const styled = !focus && cardStyle !== 'standard';
   const styles = useMemo(() => makeStyles(C), [C]);
   const L = useCardLayout(height);
   // phones with bigger text (Settings > Display) make every line taller, so count lines at the real height
@@ -354,12 +357,35 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
     ? { bg: STYLE_BG[cardStyle as keyof typeof STYLE_BG], look: cardStyle === 'newspaper' || cardStyle === 'ronin' ? 'light' : 'dark' }
     : { bg: vivid ? tint : undefined };
 
-  // the reader's card style (Standard, Magazine, Newspaper or Terminal); all of them can open the attack chain
-  const cardFace = styled ? (
+  const focusFace = (
+    <FocusFace
+      story={story}
+      width={cardWidth}
+      height={height - 16}
+      active={active}
+      saved={saved}
+      showImage={showImage}
+      showSeverity={showSeverity}
+      meta={historyCard ? historyDate(story.id, story.published_at) : `${story.source} · ${timeAgo(story.published_at)}`}
+      caughtUp={caughtUp}
+      onImageError={() => setImageFailed(true)}
+      onOpen={openArticle}
+      onSave={() => onToggleSave(story.id)}
+      onShare={share}
+      onReport={() => { setReportState('idle'); setSheet('report'); }}
+      onReadMore={() => setSheet('summary')}
+      onChain={hasChain ? showChain : undefined}
+      chainBlink={pulse}
+      scale={scale}
+    />
+  );
+
+  // the reader's card style (Focus, Standard, Magazine, Newspaper, Terminal or Ronin); all of them can open the attack chain
+  const cardFace = focus ? focusFace : styled ? (
     <View style={{ width: cardWidth, flex: 1 }}>
       <StyledCard
         story={story}
-        kind={cardStyle as Exclude<typeof cardStyle, 'standard'>}
+        kind={cardStyle as Exclude<typeof cardStyle, 'standard' | 'focus'>}
         width={cardWidth}
         height={height - 16}
         saved={saved}
@@ -384,8 +410,10 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
         style={[
           styles.card,
           { width: cardWidth, borderRadius: L.isTablet ? 28 : 24 },
-          vivid && !styled && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
-          C.mode === 'aurora' && !styled && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          vivid && !styled && !focus && { backgroundColor: tint, borderColor: 'rgba(255,255,255,0.2)' },
+          C.mode === 'aurora' && !styled && !focus && { backgroundColor: 'rgba(255,255,255,0.08)' },
+          // Focus sits straight on the page, like a magazine page: no frame around it
+          focus && { backgroundColor: 'transparent', borderWidth: 0 },
           styled && { backgroundColor: STYLE_BG[cardStyle as keyof typeof STYLE_BG], borderColor: cardStyle === 'newspaper' || cardStyle === 'ronin' ? '#D9D0BB' : '#22262E' },
         ]}
       >
@@ -395,7 +423,7 @@ function StoryCardBase({ story, height, active, saved, onToggleSave, isNew, caug
             <MaterialCommunityIcons name="link-variant" size={26 * scale} color={C.onBrand} />
           </View>
         )}
-        <Animated.View style={{ flex: 1, backgroundColor: styled ? STYLE_BG[cardStyle as keyof typeof STYLE_BG] : vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
+        <Animated.View style={{ flex: 1, backgroundColor: styled ? STYLE_BG[cardStyle as keyof typeof STYLE_BG] : focus ? (C.mode === 'aurora' ? 'transparent' : vivid ? deepen(tint) : C.bg) : vivid ? tint : C.card, transform: [{ translateX: nudge }] }}>
           {hasChain ? (
             <ScrollView
               ref={pager}

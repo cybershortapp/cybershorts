@@ -13,7 +13,7 @@ import { type CardStyle, F, FS } from '../theme';
 
 type Props = {
   story: Story;
-  kind: Exclude<CardStyle, 'standard'>;
+  kind: Exclude<CardStyle, 'standard' | 'focus'>;
   width: number;
   height: number;
   saved: boolean;

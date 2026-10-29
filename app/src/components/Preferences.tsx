@@ -479,6 +479,7 @@ export function ThemePreview({ theme }: { theme: ThemeChoice }) {
 }
 
 export const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
+  focus: { name: 'Focus', about: 'Big picture, key facts marked, a tip to act on' },
   standard: { name: 'Standard', about: 'Picture on top, story below' },
   magazine: { name: 'Magazine', about: 'A full cover; scroll to read the article' },
   newspaper: { name: 'Newspaper', about: 'A front page with a classic serif look' },
@@ -488,6 +489,22 @@ export const STYLE_INFO: Record<CardStyle, { name: string; about: string }> = {
 
 /** A small drawing of each card style. */
 export function StylePreview({ kind }: { kind: CardStyle }) {
+  if (kind === 'focus') {
+    return (
+      <View style={[prev.box, { backgroundColor: '#F6F5F2', padding: 6 }]}>
+        <View style={{ height: 42, borderRadius: 8, backgroundColor: '#FFC9A8' }} />
+        <View style={{ marginTop: 6, width: '80%', height: 7, borderRadius: 3, backgroundColor: '#14161F' }} />
+        <View style={{ marginTop: 5, flexDirection: 'row', gap: 3 }}>
+          <View style={{ width: '30%', height: 4, borderRadius: 2, backgroundColor: '#C9CBD2' }} />
+          <View style={{ width: '24%', height: 4, borderRadius: 2, backgroundColor: '#FFD64D' }} />
+          <View style={{ width: '28%', height: 4, borderRadius: 2, backgroundColor: '#C9CBD2' }} />
+        </View>
+        <View style={{ position: 'absolute', left: 6, right: 6, bottom: 6, height: 16, borderRadius: 6, backgroundColor: '#FFF3C9', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }}>
+          <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: '#FFD84D' }} />
+        </View>
+      </View>
+    );
+  }
   if (kind === 'magazine') {
     return (
       <View style={[prev.box, { backgroundColor: '#000' }]}>

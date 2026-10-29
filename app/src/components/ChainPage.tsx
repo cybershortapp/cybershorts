@@ -217,7 +217,7 @@ export function ChainPage({ story, s, dark, onBack, renderGroup }: Props) {
           {box.h > 0 && (
             <View style={{ alignItems: 'center' }}>
               <ErrorBoundary resetKey={game.g.id} fallback={() => <Text style={{ color: P.muted, fontFamily: F.body, fontSize: 13, padding: 24, textAlign: 'center' }}>Sorry, this game didn't load.</Text>}>
-                <GameCard game={game.g} headline={game.headline} width={box.w - 16} height={box.h - 60} active foot="Finish to earn XP" />
+                <GameCard game={game.g} headline={game.headline} image={game.own ? story.image_url : null} width={box.w - 16} height={box.h - 60} active foot="Finish to earn XP" onDone={() => setGameOpen(false)} doneLabel="Back to the attack chain" />
               </ErrorBoundary>
             </View>
           )}

@@ -10,8 +10,8 @@ import { BADGES, recordResult } from '../lib/progress';
 import { F } from '../theme';
 
 /**
- * The four "real life" games (release 1.0.4): a help desk phone call, your phone under a sign-in
- * prompt attack, a burglar at your digital home, and a scammer's look at an overshared profile.
+ * The "real life" games (release 1.0.4): a help desk phone call, your phone under a sign-in
+ * prompt attack, and a scammer's look at an overshared profile. (The digital home game is in GamesVisual.)
  * The words come from the server (written from the story); the look and rules live here.
  * Each one shows how to play first, and reports its result for XP and badges.
  */
@@ -364,192 +364,6 @@ function Wall({ children }: { children: React.ReactNode }) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// 3. Lock up your digital home: a burglar tries each way into your digital life; tap the lock that stops him.
-// ------------------------------------------------------------------------------------------------
-const SPOTS = {
-  router: { name: 'Wi-Fi router', icon: 'router-wireless', x: 150, y: 46, w: 44, h: 36 },
-  email: { name: 'Email', icon: 'email-outline', x: 95, y: 112, w: 54, h: 46 },
-  phone: { name: 'Phone', icon: 'cellphone', x: 205, y: 112, w: 54, h: 46 },
-  social: { name: 'Social media', icon: 'chat-outline', x: 95, y: 196, w: 54, h: 46 },
-  bank: { name: 'Bank', icon: 'bank-outline', x: 205, y: 200, w: 48, h: 72 },
-} as const;
-type SpotId = keyof typeof SPOTS;
-const LOCKS = [
-  { icon: 'key-variant', name: 'Unique passwords', sub: 'a password manager' },
-  { icon: 'cellphone-key', name: '2-step sign-in', sub: 'a code on your phone' },
-  { icon: 'update', name: 'Auto updates', sub: 'fixes old bugs' },
-  { icon: 'router-wireless-settings', name: 'New router password', sub: 'not the sticker one' },
-] as const;
-const FIX: Record<string, number> = { reused: 0, stolen: 1, old_bug: 2, default: 3 };
-const LIMIT = 8;
-export function Home({ game, active }: Props) {
-  const d: { rounds: { spot: SpotId; kind: keyof typeof FIX; say: string; fail: string }[] } = game.data;
-  const rounds = (d?.rounds ?? []).filter((x) => SPOTS[x.spot] && x.kind in FIX && x.say);
-  const [phase, setPhase] = useState<'intro' | 'play' | 'end'>('intro');
-  const [r, setR] = useState(0);
-  const [res, setRes] = useState<('locked' | 'broken' | null)[]>([]);
-  const [t, setT] = useState(0);
-  const [penalty, setPenalty] = useState(0);
-  const [wrong, setWrong] = useState(-1);
-  const [score, setScore] = useState(0);
-  const [reward, setReward] = useState<{ xp: number; badge: string | null }>({ xp: 0, badge: null });
-  const [w, setW] = useState(0);
-  const walker = useRef(new Animated.ValueXY({ x: 30, y: 230 })).current;
-  const bob = useLoop(700, phase === 'play');
-  const now = res[r] ?? null;
-  useEffect(() => {
-    if (phase !== 'play' || !active) return;
-    const id = setInterval(() => setT((x) => x + 0.1), 100);
-    return () => clearInterval(id);
-  }, [phase, active]);
-  // time's up, or move on after a result
-  useEffect(() => {
-    if (phase !== 'play') return;
-    if (now === null && t + penalty >= LIMIT) {
-      setRes((a) => a.map((x, k) => (k === r ? 'broken' : x)));
-      buzz.wrong();
-      setT(0);
-    } else if (now !== null && t >= 1.8) {
-      if (r + 1 >= rounds.length) {
-        const locked = res.filter((x) => x === 'locked').length;
-        const out = recordResult({ game: 'home', won: locked >= 3, xp: Math.round(score / 2), badge: locked === rounds.length ? 'home' : undefined });
-        setReward({ xp: out.xp, badge: out.newBadge });
-        setPhase('end');
-      } else {
-        setR(r + 1);
-        setT(0);
-        setPenalty(0);
-        setWrong(-1);
-      }
-    }
-  }, [t]); // eslint-disable-line react-hooks/exhaustive-deps
-  const round = rounds[Math.min(r, rounds.length - 1)];
-  const spot = round ? SPOTS[round.spot] : SPOTS.email;
-  const k = w ? w / 300 : 1;
-  useEffect(() => {
-    if (phase !== 'play') return;
-    const side = spot.x > 150 ? 1 : -1;
-    const target = round?.spot === 'router' ? { x: 210, y: 30 } : { x: spot.x + side * 52 - 18, y: spot.y - 16 };
-    Animated.timing(walker, { toValue: { x: target.x * k, y: target.y * k }, duration: 700, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start();
-  }, [r, phase, k]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (rounds.length < 3) return null;
-  const start = () => {
-    setPhase('play');
-    setR(0);
-    setRes(rounds.map(() => null));
-    setT(0);
-    setPenalty(0);
-    setWrong(-1);
-    setScore(0);
-  };
-  const pick = (lock: number) => {
-    if (phase !== 'play' || now !== null) return;
-    if (lock === FIX[round.kind]) {
-      const left = Math.max(0, LIMIT - t - penalty);
-      setRes((a) => a.map((x, j) => (j === r ? 'locked' : x)));
-      setScore((x) => x + 60 + Math.round(left * 10));
-      buzz.right();
-      setT(0);
-    } else {
-      setPenalty((p) => p + 1.5);
-      setWrong(lock);
-      buzz.wrong();
-    }
-  };
-  const left = Math.max(0, LIMIT - t - penalty);
-  const locked = res.filter((x) => x === 'locked').length;
-  const houseH = 280 * k;
-  const stateOf = (id: SpotId) => {
-    const j = rounds.findIndex((x) => x.spot === id);
-    return j >= 0 ? res[j] ?? null : null;
-  };
-  return (
-    <View style={{ flexGrow: 1 }} onLayout={(e) => setW(Math.min(e.nativeEvent.layout.width - 24, 330))}>
-      {w > 0 && (
-        <View style={{ width: w, height: houseH, alignSelf: 'center' }}>
-          <Svg width={w} height={houseH} viewBox="0 0 300 280">
-            <Path d="M0 262 Q150 236 300 262 V280 H0 Z" fill="#14532D" />
-            <Path d="M14 74 L150 6 L286 74 Z" fill="#7C2D12" stroke="#431407" strokeWidth={3} strokeLinejoin="round" />
-            <Rect x={28} y={72} width={244} height={190} fill="#E7D7C1" stroke="#78350F" strokeWidth={3} />
-            <Circle cx={262} cy={20} r={10} fill="#FEF3C7" opacity={0.9} />
-            {phase === 'play' && now === null && (
-              <Circle cx={spot.x} cy={spot.y} r={38} fill="none" stroke="#EF4444" strokeWidth={4} strokeLinecap="round" strokeDasharray={`${(left / LIMIT) * 239} 239`} transform={`rotate(-90 ${spot.x} ${spot.y})`} />
-            )}
-          </Svg>
-          {(Object.keys(SPOTS) as SpotId[]).map((id) => {
-            const p = SPOTS[id], st = stateOf(id), target = phase === 'play' && round.spot === id && now === null;
-            return (
-              <View key={id} style={{ position: 'absolute', left: (p.x - p.w / 2) * k, top: (p.y - p.h / 2) * k, width: p.w * k, height: p.h * k }}>
-                <View style={[styles.window, { borderRadius: id === 'router' ? 20 * k : 5, borderColor: st === 'locked' ? '#4ADE80' : target ? '#EF4444' : '#78350F', backgroundColor: st === 'broken' ? '#7F1D1D' : '#FDE68A' }]}>
-                  <MaterialCommunityIcons name={p.icon} size={20 * k} color={st === 'broken' ? '#FCA5A5' : '#78350F'} />
-                </View>
-                {st === 'locked' && (
-                  <View style={styles.padlock}><MaterialCommunityIcons name="lock" size={13} color="#451A03" /></View>
-                )}
-                <Text style={{ position: 'absolute', top: p.h * k + 1, left: -20, right: -20, textAlign: 'center', color: '#3B1F0B', fontFamily: F.head, fontSize: 9 }}>{p.name}</Text>
-              </View>
-            );
-          })}
-          {phase === 'play' && (
-            <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, transform: walker.getTranslateTransform() }}>
-              <Animated.View style={{ transform: [{ translateY: bob.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -3, 0] }) }] }}>
-                <Svg width={36 * k} height={46 * k} viewBox="0 0 36 46">
-                  <Path d="M4 46 Q4 26 18 26 Q32 26 32 46 Z" fill="#111827" />
-                  <Path d="M7 20 Q7 2 18 2 Q29 2 29 20 Q29 28 18 28 Q7 28 7 20 Z" fill="#111827" />
-                  <Rect x={11} y={13} width={14} height={5} rx={2.5} fill="#FDE68A" />
-                </Svg>
-                {now === 'locked' && <Text style={{ position: 'absolute', top: -14, left: 6, fontSize: 14 }}>💫</Text>}
-              </Animated.View>
-            </Animated.View>
-          )}
-        </View>
-      )}
-      <View style={{ paddingHorizontal: 12 }}>
-        {phase === 'intro' && (
-          <Enter k="intro">
-            <Text style={{ color: '#FFFFFF', fontFamily: F.body, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 8 }}>
-              A burglar tries each way into your digital life. <Text style={{ fontFamily: F.head, color: '#FDE68A' }}>Read what he says, then tap the lock that stops him</Text> before the red timer runs out.
-            </Text>
-            <View style={{ alignItems: 'center', marginTop: 4 }}><Hand /></View>
-            <Pressable onPress={start} style={[styles.btn, { backgroundColor: '#FDE68A', marginTop: 6 }]} accessibilityRole="button">
-              <Text style={{ color: '#451A03', fontFamily: F.head, fontSize: 15 }}>Start the night</Text>
-            </Pressable>
-          </Enter>
-        )}
-        {phase === 'play' && (
-          <>
-            <Enter k={`${r}-${now}-${wrong}`} style={[styles.say, { borderColor: now === 'locked' ? '#4ADE80' : now === 'broken' || wrong >= 0 ? '#EF4444' : 'rgba(253,230,138,0.5)' }]}>
-              <Text style={{ color: now === 'locked' ? '#86EFAC' : now === 'broken' || wrong >= 0 ? '#FCA5A5' : '#FFFFFF', fontFamily: F.label, fontSize: 13.5, lineHeight: 18 }}>
-                {now === 'locked' ? "🔒 Locked! He can't get in that way." : now === 'broken' ? `💥 ${round.fail}` : wrong >= 0 ? "That lock won't stop this one. Quick, try another!" : `🦹 "${round.say}"`}
-              </Text>
-            </Enter>
-            <View style={styles.locks}>
-              {LOCKS.map((l, j) => {
-                const ok = now === 'locked' && j === FIX[round.kind];
-                return (
-                  <Pressable key={j} onPress={() => pick(j)} style={[styles.lock, { borderColor: ok ? '#4ADE80' : wrong === j ? '#EF4444' : 'rgba(255,255,255,0.22)', backgroundColor: ok ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.08)' }]} accessibilityRole="button">
-                    <MaterialCommunityIcons name={l.icon} size={22} color="#FDE68A" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: '#FFFFFF', fontFamily: F.head, fontSize: 12.5 }}>{l.name}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: F.body, fontSize: 10.5 }}>{l.sub}</Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        )}
-        {phase === 'end' && (
-          <Reward won={locked >= 3} xp={reward.xp} badge={reward.badge} ink="#FFFFFF" tone="#FDE68A" onAgain={start}
-            title={locked === rounds.length ? 'Digital fortress' : locked >= 3 ? `${locked} of ${rounds.length} locked` : 'Easy target'}
-            text="Now do the same at home: these four locks take about 20 minutes." />
-        )}
-      </View>
-    </View>
-  );
-}
-
-// ------------------------------------------------------------------------------------------------
 // 4. Overshare detective: you're the scammer. Tap what on this (made-up) profile would get you in.
 // ------------------------------------------------------------------------------------------------
 type Post = { emoji: string; caption: string; risky: boolean; what?: string; why?: string };
@@ -694,11 +508,6 @@ const styles = StyleSheet.create({
   deny: { height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
   approve: { height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' },
   x: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
-  window: { flex: 1, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
-  padlock: { position: 'absolute', right: -8, top: -9, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FCD34D', borderWidth: 2, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  say: { marginTop: 8, padding: 10, borderRadius: 14, borderWidth: 1.5, backgroundColor: 'rgba(17,24,39,0.9)' },
-  locks: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 8 },
-  lock: { width: '48.5%', flexDirection: 'row', alignItems: 'center', gap: 7, padding: 8, borderRadius: 14, borderWidth: 1.5 },
   bio: { marginTop: 8, padding: 8, borderRadius: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#CBD5E1', backgroundColor: '#FFFFFF' },
   foundBox: { borderColor: '#DC2626', borderStyle: 'solid', backgroundColor: 'rgba(220,38,38,0.05)' },
   stamp: { position: 'absolute', right: 8, top: 6, color: '#DC2626', borderWidth: 2, borderColor: '#DC2626', borderRadius: 6, paddingHorizontal: 6, fontFamily: F.head, fontSize: 11, letterSpacing: 1, backgroundColor: 'rgba(255,255,255,0.85)', transform: [{ rotate: '-8deg' }] },

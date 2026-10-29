@@ -92,14 +92,14 @@ export function markDeckSeen(id: string) {
 
 // ---- release 1.0.4 (second pass): games for everyone, tip and history at the right time ----
 
-/** Recent games for this region, newest first, each with the headline of the story it's about. */
-export type PoolGame = Game & { headline: string };
+/** Recent games for this region, newest first, each with the headline (and picture) of the story it's about. */
+export type PoolGame = Game & { headline: string; image?: string | null };
 export async function fetchGamePool(countries: string[]): Promise<PoolGame[]> {
   try {
     const since = new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString();
     const { data, error } = await supabase
       .from('games')
-      .select('id,story_id,style,data,created_at,stories!inner(headline,country)')
+      .select('id,story_id,style,data,created_at,stories!inner(headline,country,image_url)')
       .gte('created_at', since)
       .in('stories.country', countries)
       .order('created_at', { ascending: false })
@@ -107,7 +107,7 @@ export async function fetchGamePool(countries: string[]): Promise<PoolGame[]> {
     if (error || !Array.isArray(data)) return [];
     return (data as any[])
       .filter((g) => g && g.id && knownStyle(g.style) && g.data && g.stories)
-      .map((g) => ({ id: g.id, story_id: g.story_id, style: g.style, data: g.data, headline: g.stories.headline ?? '' }));
+      .map((g) => ({ id: g.id, story_id: g.story_id, style: g.style, data: g.data, headline: g.stories.headline ?? '', image: g.stories.image_url ?? null }));
   } catch {
     return [];
   }

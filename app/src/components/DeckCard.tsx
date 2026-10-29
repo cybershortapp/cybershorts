@@ -7,6 +7,7 @@ import { Animated, Pressable, ScrollView, type ScrollViewInstance, StyleSheet, T
 import type { Deck } from '../lib/extras';
 import { F } from '../theme';
 import { LookDeck, lookOf } from './DeckLooks';
+import { VisualDeck } from './DeckVisual';
 
 const ACCENTS = ['#FFB86B', '#7DD3FC', '#FF8A80', '#FDE68A', '#4ADE80', '#C9A8FF'];
 
@@ -33,6 +34,9 @@ function SlidePicture({ uri, active }: { uri: string | null; active: boolean }) 
  * Swipe sideways (or tap Next) through the slides; swipe up to go back to the news.
  */
 export function DeckCard(props: { deck: Deck; width: number; height: number; onDone?: () => void }) {
+  // 1.0.6: every deck is drawn as visual stories (cover, numbers, steps, timeline, checklist, quick check).
+  // The older looks stay here for a deck with no slides the visual deck can use.
+  if (props.deck.slides.length >= 2) return <VisualDeck {...props} />;
   const look = lookOf(props.deck);
   if (look) return <LookDeck {...props} look={look} />;
   return <ClassicDeck {...props} />;

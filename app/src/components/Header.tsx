@@ -16,6 +16,7 @@ type Props = {
   filter: Filter;
   onFilterChange: (f: Filter) => void;
   counter: string;
+  progress?: number; // 0..1, how far through the loaded stories (Focus cards show it as a thin line)
   searching: boolean;
   query: string;
   onSearchOpen: () => void;
@@ -30,7 +31,7 @@ const TAB_ICON: Partial<Record<Filter, IconName>> = {
   Saved: 'bookmark',
 };
 
-export function Header({ view, onSaved, onPrefs, onPlay, hasPrefs, filter, onFilterChange, counter, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {
+export function Header({ view, onSaved, onPrefs, onPlay, hasPrefs, filter, onFilterChange, counter, progress, searching, query, onSearchOpen, onSearchClose, onQueryChange }: Props) {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const { width } = useWindowDimensions();
@@ -125,6 +126,12 @@ export function Header({ view, onSaved, onPrefs, onPlay, hasPrefs, filter, onFil
           })}
         </ScrollView>
       )}
+      {view === 'feed' && !searching && progress != null && (
+        // a visible finish line keeps people going (and shows how far they've read)
+        <View style={[styles.progress, { backgroundColor: C.dark || C.glass ? 'rgba(255,255,255,0.14)' : '#E6E3DC' }]}>
+          <View style={{ width: `${Math.round(Math.min(1, Math.max(0.02, progress)) * 100)}%`, height: '100%', borderRadius: 2, backgroundColor: C.glass ? '#FFFFFF' : C.text }} />
+        </View>
+      )}
     </View>
   );
 }
@@ -141,4 +148,5 @@ const makeStyles = (C: Palette) =>
     dot: { width: 7, height: 7, borderRadius: 4 },
     searchRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: C.chipBorder, backgroundColor: C.surface },
     searchInput: { flex: 1, paddingVertical: 8, fontFamily: F.medium },
+    progress: { height: 3, borderRadius: 2, overflow: 'hidden', marginTop: -2, marginBottom: 6 },
   });

@@ -1,0 +1,91 @@
+name: expo-go-preview
+
+# Publishes the app code on this branch so it can be opened in Expo Go on an iPhone (or Android),
+# for testing new designs before any APK or store build. It never touches the test app (preview channel)
+# or Play Store users (production channel): it publishes to its own update branch, "expo-go-preview",
+# which no build listens to. Only Expo Go can open it, from the QR code or link in the run summary.
+# Needs the EXPO_TOKEN repository secret (the same one app-update uses).
+on:
+  push:
+    branches: [design-focus-games-deck]
+    paths: ["app/**", ".github/workflows/expo-go-preview.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-go-preview
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Check the Expo token is set
+        working-directory: .
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN secret is missing. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      # the app's public settings (Supabase address and publishable key) from eas.json, the same as the test app
+      - name: Write app settings
+        run: |
+          jq -r '.build.preview.env | to_entries[] | "\(.key)=\(.value)"' eas.json > .env
+          cat .env >> "$GITHUB_ENV"
+          grep -q '^EXPO_PUBLIC_SUPABASE_URL=https://' .env && grep -q '^EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_' .env \
+            || { echo "::error::Supabase settings missing from eas.json"; exit 1; }
+      # Expo Go only opens updates made for its own SDK runtime ("exposdk:58.0.0"), not the app's version
+      # number. This change is made here only, for this run; app.json in the repo is unchanged.
+      - name: Use the Expo Go runtime for this run
+        run: |
+          jq '.expo.runtimeVersion = {"policy": "sdkVersion"}' app.json > app.tmp.json && mv app.tmp.json app.json
+          npx expo config --type public --json | jq -r '"SDK " + .sdkVersion'
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Build the update
+        run: npx expo export --platform all --output-dir dist
+      - name: Check the settings are inside the update
+        run: |
+          for p in android ios; do
+            f=$(ls dist/_expo/static/js/$p/*.hbc dist/_expo/static/js/$p/*.js 2>/dev/null | grep -v '\.map$' | head -1)
+            [ -n "$f" ] || { echo "::error::No $p bundle was built"; exit 1; }
+            grep -aq "$EXPO_PUBLIC_SUPABASE_URL" "$f" || { echo "::error::Supabase address is missing from the $p update. Not publishing."; exit 1; }
+          done
+      # its own update branch only: never --channel preview or production
+      - name: Publish for Expo Go
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          MESSAGE: ${{ github.event.head_commit.message || 'Expo Go preview' }}
+        run: |
+          npx eas-cli update --branch expo-go-preview --environment preview --skip-bundler --input-dir dist \
+            --message "$(echo "$MESSAGE" | head -n1 | cut -c1-80)" --non-interactive --json > update.json
+          P=$(jq -r '.expo.updates.url' app.json | sed 's|.*/||')
+          jq -r '.[] | "\(.platform) \(.runtimeVersion) group \(.group)"' update.json
+          for plat in ios android; do
+            G=$(jq -r --arg p "$plat" '[.[] | select(.platform == $p)][0].group' update.json)
+            echo "::notice title=Expo Go ($plat)::exp://u.expo.dev/${P}/group/${G}"
+            echo "::notice title=QR code ($plat)::https://qr.expo.dev/eas-update?projectId=${P}&groupId=${G}"
+            {
+              echo "### Expo Go on $plat"
+              echo ""
+              echo "![QR code](https://qr.expo.dev/eas-update?projectId=${P}&groupId=${G})"
+              echo ""
+              echo "Link: \`exp://u.expo.dev/${P}/group/${G}\`"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          done

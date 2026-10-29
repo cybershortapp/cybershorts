@@ -60,7 +60,7 @@ import { getRegion, regionCountries } from './src/lib/region';
 import { useSaved } from './src/lib/saved';
 import { configMissing, supabase } from './src/lib/supabase';
 import { storyFields, tintMissing, type Filter, type Story } from './src/lib/types';
-import { deepen, F, type Palette, storyTint, useTheme } from './src/theme';
+import { deepen, F, type Palette, storyTint, useCardStyle, useTheme } from './src/theme';
 
 const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are quick
 const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
@@ -96,6 +96,7 @@ function forYouFilter() {
 
 function Main() {
   const C = useTheme();
+  const cardStyle = useCardStyle();
   const styles = useMemo(() => makeStyles(C), [C]);
   const { savedIds, toggleSaved } = useSaved();
   const prefs = usePrefs();
@@ -538,7 +539,7 @@ function Main() {
                 item.kind === 'deck' ? (
                   <DeckCard deck={item.deck} width={w} height={h} onDone={() => goNext(i)} />
                 ) : (
-                  <GameCard game={item.game} headline={item.game.headline} width={w} height={h} active={index === i} />
+                  <GameCard game={item.game} headline={item.game.headline} image={item.game.image} width={w} height={h} active={index === i} onDone={() => goNext(i)} />
                 )
               }
             </ExtraPage>
@@ -565,7 +566,8 @@ function Main() {
   );
   const extraData = `${index}|${savedIds.length}|${savedIds[0] ?? ''}|${marker}|${firstOld}`;
 
-  const counter = feed.length ? `${String(index + 1).padStart(2, '0')} / ${String(feed.length).padStart(2, '0')}` : '';
+  const focusCards = cardStyle === 'focus';
+  const counter = !feed.length ? '' : focusCards ? `${index + 1} of ${feed.length}` : `${String(index + 1).padStart(2, '0')} / ${String(feed.length).padStart(2, '0')}`;
 
   let content;
   if (view === 'play') {
@@ -658,6 +660,7 @@ function Main() {
         filter={filter}
         onFilterChange={changeFilter}
         counter={counter}
+        progress={focusCards && feed.length > 1 && stories.length > 0 ? (index + 1) / feed.length : undefined}
         searching={searching}
         query={query}
         onQueryChange={setQuery}
