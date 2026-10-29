@@ -1,0 +1,51 @@
+name: Design diag (chains, games, deck)
+# Only on the design-samples branch. Read-only: how often stories get attack chains, what the app's
+# games and deck queries return, and the AI lines of the latest news runs. Saves to design-diag-out.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/diag.py", ".github/workflows/design-diag.yml"]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: mkdir -p "$GITHUB_WORKSPACE/out" && python ds/design/diag.py "$GITHUB_WORKSPACE/out"
+      - name: AI and chain lines from the latest news runs
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out"
+          ids=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/pipeline.yml/runs?per_page=6&status=completed" | jq -r '.workflow_runs[].id')
+          for r in $ids; do
+            j=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/runs/$r/jobs" | jq -r '.jobs[0].id')
+            curl -sSL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/jobs/$j/logs" -o "run-$r.txt"
+            echo "=== run $r" >> runs.txt
+            grep -E "AI: |AI used|attack chain|AI budget|LimitHit|\[warn\]|limit|402|429" "run-$r.txt" | cut -c 30- | head -40 >> runs.txt
+          done
+          rm -f run-*.txt
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-diag-out && git add -A
+          git -c user.name="design-diag" -c user.email="actions@users.noreply.github.com" commit -qm "diag ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-diag-out
