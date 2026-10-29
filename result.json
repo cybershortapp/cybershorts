@@ -1,0 +1,10 @@
+{
+ "made": 0,
+ "failed": [
+  "gate-object-2",
+  "gate-object-3",
+  "cottage-object",
+  "hook-object",
+  "ship-object-2"
+ ]
+}
