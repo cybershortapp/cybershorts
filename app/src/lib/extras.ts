@@ -15,7 +15,7 @@ export type DeckSlide = {
 export type Deck = { id: string; topic: string; title: string; slides: DeckSlide[]; story_ids: string[]; country: string };
 
 const SEEN_GAMES = 'games-seen';
-const GAMES_DAY = 'games-day';
+const GAMES_DAY = 'games-played-day'; // games played to the end today (the older 'games-day' counted every game scrolled past)
 const SEEN_DECKS = 'decks-seen';
 export const GAMES_PER_DAY = 3;
 export const GAME_GAP = 8; // at most one game every 8 cards
@@ -54,7 +54,11 @@ export async function fetchDeck(countries: string[]): Promise<Deck | null> {
 let seenGames = new Set<string>();
 let seenDecks = new Set<string>();
 let today = { date: '', count: 0 };
-const dayKey = () => new Date().toISOString().slice(0, 10);
+// the reader's own calendar day (not UTC), so "today" starts at their midnight
+const dayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 export const extrasReady = Promise.all([
   AsyncStorage.getItem(SEEN_GAMES).then((v) => { if (v) seenGames = new Set(JSON.parse(v)); }),
@@ -68,12 +72,20 @@ export function gamesLeftToday() {
   return today.date === dayKey() ? Math.max(0, GAMES_PER_DAY - today.count) : GAMES_PER_DAY;
 }
 
+/** A game was on screen: it won't be shown again. Scrolling past it doesn't use up today's games. */
 export function markGameSeen(id: string) {
   if (seenGames.has(id)) return;
   seenGames.add(id);
+  AsyncStorage.setItem(SEEN_GAMES, JSON.stringify([...seenGames].slice(-500))).catch(() => {});
+}
+
+/** A game from the feed was played to the end: that's what counts towards today's games. */
+const finishedNow = new Set<string>();
+export function markGameFinished(id: string) {
+  if (finishedNow.has(id)) return;
+  finishedNow.add(id);
   const d = dayKey();
   today = today.date === d ? { date: d, count: today.count + 1 } : { date: d, count: 1 };
-  AsyncStorage.setItem(SEEN_GAMES, JSON.stringify([...seenGames].slice(-500))).catch(() => {});
   AsyncStorage.setItem(GAMES_DAY, JSON.stringify(today)).catch(() => {});
 }
 

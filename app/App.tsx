@@ -52,7 +52,7 @@ import { Welcome, welcomeDone } from './src/components/Welcome';
 import { StoryCard } from './src/components/StoryCard';
 import { alertsAvailable, enableAlerts, onAlertTapped, refreshAlerts } from './src/lib/notifications';
 import { cleanStories } from './src/lib/clean';
-import { type Deck, deckSeen, extrasAllReady, fetchDailyCards, fetchDeck, fetchGamePool, GAME_GAP, gameSeen, gamesPlayedToday, gamesQuotaToday, markCardRead, markDeckSeen, markGameSeen, markPinnedSeen, pinnedSeen, type PoolGame } from './src/lib/extras';
+import { type Deck, extrasAllReady, fetchDailyCards, fetchDeck, fetchGamePool, GAME_GAP, gameSeen, gamesPlayedToday, gamesQuotaToday, markCardRead, markDeckSeen, markGameFinished, markGameSeen, markPinnedSeen, pinnedSeen, type PoolGame } from './src/lib/extras';
 import { useCardLayout } from './src/lib/layout';
 import { installCrashHandler } from './src/lib/crash';
 import { cleanTerm, getPrefs, prefsLoaded, usePrefs } from './src/lib/prefs';
@@ -68,6 +68,7 @@ const LOAD_MORE_AT = 8; // start fetching the next page this many cards before t
 const MAX_CARDS = 600; // about 3 weeks of news in one sitting; keeps memory use low
 const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
 const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
+const FIRST_GAME = 5; // the first game comes after the 5th story (the trending deck is after the 3rd)
 
 /** One page of the feed: a story, a trending deck, or a short game about the story before it. */
 type FeedItem =
@@ -415,9 +416,10 @@ function Main() {
   // The feed, built from the stories:
   // - after 9am, today's cyber tip comes after the 2nd card and today's history card after the 4th,
   //   until they've been read once today (before 9am they aren't out yet)
-  // - the trending deck after the 6th card (All tab), until it's been seen
-  // - games, whatever the news: the first after card 4, then one every 8 cards. Everyone gets at least
-  //   3 a day; readers who read a lot get one more per 20 cards, up to 6. Never a game already played,
+  // - the trending deck after the 3rd story (All and For you), every time, for as long as it's trending
+  // - games, whatever the news: the first after the 5th story, then one every 8 cards. Everyone can play
+  //   at least 3 a day; readers who read a lot get one more per 20 cards, up to 6. Only games actually
+  //   played count (scrolling past one doesn't use up the day). Never a game already shown,
   //   never the same kind twice in a row. A game keeps its spot once given.
   const feed = useMemo<FeedItem[]>(() => {
     const out: FeedItem[] = [];
@@ -440,11 +442,12 @@ function Main() {
       n++;
       if (n === 2 && pinTip) out.push({ kind: 'story', key: pinTip.id, story: pinTip });
       if (n === 4 && pinHistory) out.push({ kind: 'story', key: pinHistory.id, story: pinHistory });
-      if (n === 6 && extrasOn && filter === 'All' && deck && (placedDeck.current === deck.id || !deckSeen(deck.id))) {
+      // the trending deck: after the 3rd story, for as long as it's trending (it no longer disappears once seen)
+      if (n === 3 && extrasOn && deck) {
         placedDeck.current = deck.id;
         out.push({ kind: 'deck', key: `deck-${deck.id}`, deck });
       }
-      if (!extrasOn || !prefs.games || n < 4 || (n - 4) % GAME_GAP !== 0) continue;
+      if (!extrasOn || !prefs.games || n < FIRST_GAME || (n - FIRST_GAME) % GAME_GAP !== 0) continue;
       // a game spot: the game it already had, or a new one if today's allowance isn't used up
       let g = pool.find((x) => x.id === placedSlots.current[slot]);
       if (!g && left > 0) {
@@ -539,7 +542,7 @@ function Main() {
                 item.kind === 'deck' ? (
                   <DeckCard deck={item.deck} width={w} height={h} active={index === i} onDone={() => goNext(i)} />
                 ) : (
-                  <GameCard game={item.game} headline={item.game.headline} image={item.game.image} width={w} height={h} active={index === i} onDone={() => goNext(i)} />
+                  <GameCard game={item.game} headline={item.game.headline} image={item.game.image} width={w} height={h} active={index === i} onDone={() => goNext(i)} onPlayed={() => markGameFinished(item.game.id)} />
                 )
               }
             </ExtraPage>

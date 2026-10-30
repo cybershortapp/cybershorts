@@ -5,7 +5,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import type { Game } from '../lib/extras';
 import { buzz } from '../lib/buzz';
-import { recordResult } from '../lib/progress';
+import { recordResult, useProgress } from '../lib/progress';
 import { F } from '../theme';
 import { Fit } from './Fit';
 import { type Finish, GAME_SECONDS, type Hud, HudContext, INK, LIVES, TopBar, useHud, type WinInfo, WinScreen } from './GameKit';
@@ -79,10 +79,16 @@ function maxXp(g: Game) {
 }
 
 /** A game card: in the feed after its story, inside an attack chain, or in the Play section. */
-export function GameCard({ game, headline, width, height, active, foot, image, onDone, doneLabel }: {
+export function GameCard({ game, headline, width, height, active, foot, image, onDone, doneLabel, onPlayed }: {
   game: Game; headline: string; width: number; height: number; active: boolean; foot?: string;
-  image?: string | null; onDone?: () => void; doneLabel?: string;
+  image?: string | null; onDone?: () => void; doneLabel?: string; onPlayed?: () => void;
 }) {
+  // played to the end (every game records its result once): tell the feed, which counts today's games
+  const plays = useProgress().played[game.style]?.plays ?? 0;
+  const playsAtStart = useRef(plays);
+  useEffect(() => {
+    if (plays > playsAtStart.current) onPlayed?.();
+  }, [plays]); // eslint-disable-line react-hooks/exhaustive-deps
   const Body = {
     scam_or_legit: ScamSwipe, patch_or_panic: PatchOrPanic, red_flags: FlagMail, real_link: LinkCheck, order_steps: StepSlots,
     crack_meter: VaultCrack, hot_seat: HotSeat, approve: Approve, home: HouseLock, overshare: Overshare,
