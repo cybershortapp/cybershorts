@@ -66,7 +66,7 @@ const FIRST_PAGE = 20; // small first page so opening and pull-to-refresh are qu
 const PAGE_SIZE = 40; // then 40 at a time, loaded quietly as the reader nears the end
 const LOAD_MORE_AT = 8; // start fetching the next page this many cards before the end
 const MAX_CARDS = 600; // about 3 weeks of news in one sitting; keeps memory use low
-const REFRESH_AFTER_MS = 5 * 60 * 1000; // reload when the app is reopened after 5 minutes
+const REFRESH_AFTER_MS = 30 * 60 * 1000; // back after 30+ minutes away: start again from the newest
 const SEEN_KEY = 'seen-upto'; // newest story the reader has been shown, for the NEW tags
 const FIRST_GAME = 5; // the first game comes after the 5th story (the trending deck is after the 3rd)
 
@@ -370,11 +370,21 @@ function Main() {
   }, [welcome, view, searching, index]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  // back in the app after 5+ minutes: fresh stories, starting from the newest (works for every category)
+  // back in the app after being AWAY for 30+ minutes: fresh stories, starting from the newest.
+  // It used to compare with when the stories were loaded, so after 5 minutes of reading, anything that
+  // briefly pauses the app on an iPhone (Control Center, a notification, a system prompt, Face ID)
+  // threw the reader back to the first card. Now only real time in the background counts.
+  const awaySince = useRef<number | null>(null);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && Date.now() - lastLoaded.current > REFRESH_AFTER_MS) {
-        // away 5+ minutes: every tab starts fresh, newest first
+      if (state === 'background') {
+        if (awaySince.current === null) awaySince.current = Date.now();
+        return;
+      }
+      if (state !== 'active') return;
+      const away = awaySince.current;
+      awaySince.current = null;
+      if (away !== null && Date.now() - away > REFRESH_AFTER_MS) {
         tabMemory.current.clear();
         load({ markSeen: true }).then(toTop);
       }
@@ -481,6 +491,18 @@ function Main() {
     if (it.kind === 'story' && (it.story.source === 'CyberSid Tips' || it.story.source === 'CyberSid History')) markPinnedSeen(it.story.id);
   }, [index, feed]);
 
+  // back from Games or Preferences: make sure the same card is on screen (even if the list was rebuilt)
+  useEffect(() => {
+    if (view !== 'feed' || !resumeKey.current) return;
+    const key = resumeKey.current;
+    resumeKey.current = null;
+    const i = feedRef.current.findIndex((it) => it.key === key);
+    if (i >= 0 && i !== indexRef.current) {
+      setIndex(i);
+      setTimeout(() => safeScrollTo(i), 0);
+    }
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // jump to the story picked in the brief once the feed is on screen
   useEffect(() => {
     if (view !== 'feed' || !pendingJump.current || pageHeight === 0 || filter !== 'All') return;
@@ -576,9 +598,23 @@ function Main() {
   // (it used to be swapped out, so coming back always started again from the first card)
   const prefsAtOpen = useRef('');
   const prefsSig = [...prefs.products, '|', ...prefs.terms].join(',');
+  // the card on screen when Games or Preferences opened: coming back always lands on it again
+  const resumeKey = useRef<string | null>(null);
+  const leaveFeed = (to: 'play' | 'prefs') => {
+    if (view === 'feed') resumeKey.current = feedRef.current[indexRef.current]?.key ?? null;
+    setView(to);
+  };
   const openPrefs = () => {
     prefsAtOpen.current = prefsSig;
-    setView('prefs');
+    leaveFeed('prefs');
+  };
+  const closePrefs = () => {
+    setView('feed');
+    // only new products or keywords change the news: then show them in For you; otherwise stay put
+    if (prefsSig !== prefsAtOpen.current && prefs.products.length + prefs.terms.length && filter !== 'For you') {
+      resumeKey.current = null;
+      changeFilter('For you');
+    }
   };
   let overlay = null;
   if (view === 'play') {
@@ -588,11 +624,7 @@ function Main() {
     overlay = (
       <Preferences
         onShowWelcome={() => setWelcome(true)}
-        onDone={() => {
-          setView('feed');
-          // only new products or keywords change the news: then show them in For you; otherwise stay put
-          if (prefsSig !== prefsAtOpen.current && prefs.products.length + prefs.terms.length && filter !== 'For you') changeFilter('For you');
-        }}
+        onDone={closePrefs}
       />
     );
   }
@@ -673,14 +705,15 @@ function Main() {
           if (filter === 'Saved') changeFilter(prefs.products.length + prefs.terms.length ? 'For you' : 'All');
           else changeFilter('Saved');
         }}
-        onPrefs={openPrefs}
+        onPrefs={() => (view === 'prefs' ? closePrefs() : openPrefs())}
         onPlay={() => {
           if (searching) {
             setSearching(false);
             tabMemory.current.delete('Search');
             changeFilter(beforeSearch.current);
           }
-          setView(view === 'play' ? 'feed' : 'play');
+          if (view === 'play') setView('feed');
+          else leaveFeed('play');
         }}
         hasPrefs={prefs.products.length + prefs.terms.length > 0}
         filter={filter}
