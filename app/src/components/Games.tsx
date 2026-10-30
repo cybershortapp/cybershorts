@@ -46,6 +46,9 @@ const TITLES: Record<Style, string> = {
  * How each game looks. `kit` games use the shared top bar (timer, hearts, rounds) and win screen;
  * the three story games (help desk, approve, overshare) keep their own flow.
  */
+/** Quick-judgement games keep the 30-second ring: beat it for a speed bonus. The others have no clock. */
+const TIMED = new Set<Style>(['scam_or_legit', 'real_link']);
+export const SPEED_BONUS = 20;
 const LOOK: Record<Style, { bg: [string, string]; ink: string; sub: string; chip: string; kicker: string; kit: boolean; hearts: boolean }> = {
   scam_or_legit: { bg: ['#FFF3E8', '#FFE3EC'], ink: INK, sub: 'rgba(21,23,43,0.6)', chip: 'rgba(255,255,255,0.8)', kicker: '#E8590C', kit: true, hearts: true },
   real_link: { bg: ['#EAF2FF', '#F3ECFF'], ink: INK, sub: 'rgba(21,23,43,0.6)', chip: 'rgba(255,255,255,0.8)', kicker: '#6A3DF0', kit: true, hearts: true },
@@ -97,20 +100,25 @@ export function GameCard({ game, headline, width, height, active, foot, image, o
   const startedAt = useRef(0);
   const over = useRef(false);
 
-  // the 30-second ring counts down while the game is on screen (only a nudge: you can still finish after)
+  const timed = TIMED.has(game.style);
+  // time taken is shown on the win screen for every game
   useEffect(() => {
-    if (!active || win || !look?.kit) return;
-    if (!startedAt.current) startedAt.current = Date.now();
+    if (active && !win && !startedAt.current) startedAt.current = Date.now();
+  }, [active, win, run]);
+  // the 30-second ring, only on the quick games: finish before it runs out for a speed bonus
+  useEffect(() => {
+    if (!active || win || !timed) return;
     const id = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
-  }, [active, win, run, look?.kit]);
+  }, [active, win, run, timed]);
 
   const finish = useCallback((f: Finish) => {
     if (over.current) return;
     over.current = true;
-    const res = recordResult({ game: game.style, won: f.won, xp: f.xp, badge: f.won ? f.badge : undefined });
+    const bonus = TIMED.has(game.style) && f.won && secs > 0 ? SPEED_BONUS : 0;
+    const res = recordResult({ game: game.style, won: f.won, xp: f.xp + bonus, badge: f.won ? f.badge : undefined });
     const took = startedAt.current ? Math.max(1, Math.round((Date.now() - startedAt.current) / 1000)) : GAME_SECONDS - secs;
-    setWin({ ...f, name: NAMES[game.style], gotXp: res.xp, newBadge: res.newBadge, perfect: f.won && f.score === f.total && livesRef.current === LIVES, secs: took });
+    setWin({ ...f, name: NAMES[game.style], gotXp: res.xp, newBadge: res.newBadge, perfect: f.won && f.score === f.total && livesRef.current === LIVES, secs: took, bonus });
   }, [game.style, secs]);
   const finishRef = useRef(finish);
   finishRef.current = finish;
@@ -144,7 +152,7 @@ export function GameCard({ game, headline, width, height, active, foot, image, o
 
   if (!Body || !look) return null;
   const title = game.style === 'real_link' ? linkTitle(game.data?.ask) : game.style === 'red_flags' ? `Tap the ${(game.data?.lines ?? []).filter((l: { flag?: boolean }) => l?.flag).length || 4} red flags` : TITLES[game.style];
-  const hint = foot ?? (look.kit && secs === 0 && !win ? "Time's up, but you can still finish" : 'Swipe up to skip · Turn games off in Settings');
+  const hint = timed && secs === 0 && !win ? "Time's up: no speed bonus, but you can still finish" : foot ?? (timed ? `Beat the clock for +${SPEED_BONUS} XP · Swipe up to skip` : 'No rush · Swipe up to skip');
   // short phones: a smaller heading, so the game itself gets the room
   const compact = height < 640;
   return (
@@ -152,10 +160,10 @@ export function GameCard({ game, headline, width, height, active, foot, image, o
       <LinearGradient colors={look.bg} start={{ x: 0, y: 0 }} end={{ x: 0.35, y: 1 }} style={StyleSheet.absoluteFill} />
       <View style={[styles.head, compact && { paddingTop: 12, paddingBottom: 6 }]}>
         {look.kit ? (
-          <TopBar seconds={secs} lives={lives} done={prog.done} total={prog.total} xp={maxXp(game)} ink={look.ink} chip={look.chip} hearts={look.hearts} />
+          <TopBar seconds={timed ? secs : null} lives={lives} done={prog.done} total={prog.total} xp={maxXp(game) + (timed ? SPEED_BONUS : 0)} ink={look.ink} chip={look.chip} hearts={look.hearts} />
         ) : null}
         <Text style={[styles.kicker, { color: look.kicker, marginTop: look.kit ? (compact ? 8 : 12) : 0 }]}>30-SECOND GAME</Text>
-        <Text style={[styles.about, { color: look.sub }]} numberOfLines={1}>About: {headline}</Text>
+        <Text style={[styles.about, { color: look.sub }]} numberOfLines={2}>About: {headline}</Text>
         <Text style={[styles.title, { color: look.ink }, compact && { fontSize: 21, lineHeight: 25, marginTop: 4 }]} numberOfLines={3}>{title}</Text>
       </View>
       <Fit min={0.6}>
@@ -308,7 +316,7 @@ function PatchOrPanic({ game, active }: GameProps) {
 const styles = StyleSheet.create({
   head: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 10 },
   kicker: { fontFamily: F.brand, fontSize: 11, letterSpacing: 1.4 },
-  about: { fontFamily: F.medium, fontSize: 12, marginTop: 3 },
+  about: { fontFamily: F.medium, fontSize: 12, lineHeight: 16, marginTop: 3 },
   title: { fontFamily: F.brand, fontSize: 26, lineHeight: 30, letterSpacing: -0.7, marginTop: 6 },
   foot: { textAlign: 'center', fontFamily: F.medium, fontSize: 11.5, paddingTop: 6, paddingBottom: 12 },
   fuseTrack: { height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },

@@ -630,6 +630,9 @@ function Main() {
     content = (
       <FlatList
         ref={listRef}
+        // exactly as tall as one card: a list a fraction of a pixel taller than its cards pages by its own
+        // height, so after a few dozen swipes the cards drifted and the next picture showed at the bottom
+        style={{ flexGrow: 0, height: pageHeight }}
         data={feed}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}

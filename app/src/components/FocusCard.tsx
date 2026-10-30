@@ -351,16 +351,17 @@ export function FocusFace(p: Props) {
 
       {/* 4. the tip: the only coloured box, with a tick */}
       {!!tip && (
-        <View style={[styles.tip, !doable && { paddingVertical: 10 }, { backgroundColor: tipDone && doable ? (C.dark || C.glass ? 'rgba(52,199,89,0.18)' : '#DDF5E4') : K.tipBg, borderColor: tipDone && doable ? 'rgba(22,163,74,0.35)' : K.tipBorder }]}>
+        <View style={[styles.tip, { backgroundColor: tipDone && doable ? (C.dark || C.glass ? 'rgba(52,199,89,0.18)' : '#DDF5E4') : K.tipBg, borderColor: tipDone && doable ? 'rgba(22,163,74,0.35)' : K.tipBorder }]}>
           <View style={[styles.bulb, { backgroundColor: tipDone && doable ? '#22C55E' : '#FFD84D' }]}>
-            <MaterialCommunityIcons name={!doable ? 'information-variant' : tipDone ? 'check-bold' : 'lightbulb-on-outline'} size={18} color={tipDone && doable ? '#FFFFFF' : '#5A4300'} />
+            <MaterialCommunityIcons name={!doable ? 'information-variant' : tipDone ? 'check-bold' : 'lightbulb-on-outline'} size={15} color={tipDone && doable ? '#FFFFFF' : '#5A4300'} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.tipLabel, { color: tipDone ? (C.dark || C.glass ? '#86EFAC' : '#15803D') : K.tipLabel }]}>{!doable ? 'WHY IT MATTERS' : tipDone ? 'TIP DONE' : 'YOUR TIP'}</Text>
-            <Text style={{ color: K.tipInk, fontFamily: F.label, fontSize: 13.5 * Math.min(scale, 1.2), lineHeight: 18.5 * Math.min(scale, 1.2) }} numberOfLines={short ? 2 : 3}>
-              {tip}
+          {/* the label sits in the same line as the tip, so the box takes less room from the story */}
+          <Text style={{ flex: 1, color: K.tipInk, fontFamily: F.label, fontSize: 13.5 * Math.min(scale, 1.2), lineHeight: 18.5 * Math.min(scale, 1.2) }} numberOfLines={short ? 2 : 3}>
+            <Text style={{ fontFamily: F.brand, color: tipDone && doable ? (C.dark || C.glass ? '#86EFAC' : '#15803D') : K.tipLabel }}>
+              {!doable ? 'Why it matters: ' : tipDone ? 'Done: ' : 'Tip: '}
             </Text>
-          </View>
+            {tip}
+          </Text>
           {doable && (
           <Animated.View style={{ transform: [{ scale: pop }] }}>
             <Pressable
@@ -371,7 +372,7 @@ export function FocusFace(p: Props) {
               accessibilityState={{ checked: tipDone }}
               accessibilityLabel={tipDone ? 'Tip done. Tap to undo' : 'Mark the tip as done'}
             >
-              <MaterialCommunityIcons name="check" size={18} color={tipDone ? '#FFFFFF' : K.tickInk} />
+              <MaterialCommunityIcons name="check" size={16} color={tipDone ? '#FFFFFF' : K.tickInk} />
             </Pressable>
           </Animated.View>
           )}
@@ -445,14 +446,14 @@ const styles = StyleSheet.create({
   links: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 16, rowGap: 4, marginTop: 4 },
   more: { fontFamily: F.head, textDecorationLine: 'underline' },
   action: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 1 },
+  // compact: small icon and tick, the label in the text line, so the story above gets more lines
   tip: {
-    flexDirection: 'row', alignItems: 'center', gap: 11, marginHorizontal: 6, marginTop: 10,
-    paddingVertical: 11, paddingLeft: 12, paddingRight: 10, borderRadius: 18, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'center', gap: 9, marginHorizontal: 4, marginTop: 8,
+    paddingVertical: 8, paddingLeft: 9, paddingRight: 8, borderRadius: 16, borderWidth: 1,
   },
-  bulb: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  tipLabel: { fontFamily: F.brand, fontSize: 10.5, letterSpacing: 1.1, marginBottom: 1 },
+  bulb: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   tick: {
-    width: 38, height: 38, borderRadius: 19, borderWidth: 1.5, borderColor: 'rgba(90,67,0,0.25)',
+    width: 32, height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(90,67,0,0.25)',
     backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center',
   },
   bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 2, paddingRight: 6, paddingTop: 8, paddingBottom: 6 },

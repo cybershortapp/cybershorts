@@ -205,7 +205,7 @@ function Badge({ won }: { won: boolean }) {
   );
 }
 
-export type WinInfo = Finish & { name: string; gotXp: number; newBadge: string | null; perfect: boolean; secs: number };
+export type WinInfo = Finish & { name: string; gotXp: number; newBadge: string | null; perfect: boolean; secs: number; bonus?: number };
 
 /** The win (or "good try") moment: what you scored, your XP, streak and level, and where to go next. */
 export function WinScreen({ info, width, height, onAgain, onDone, doneLabel }: { info: WinInfo; width: number; height: number; onAgain: () => void; onDone?: () => void; doneLabel?: string }) {
@@ -220,7 +220,7 @@ export function WinScreen({ info, width, height, onAgain, onDone, doneLabel }: {
     (info.won ? buzz.right : buzz.wrong)();
   }, [info.won]);
   const title = !info.won ? (info.score === 0 ? 'Out of hearts' : 'Good try') : info.perfect ? 'Perfect!' : 'Nice work!';
-  const sub = info.won ? `Done in ${info.secs} seconds` : 'Have another go: they are sneaky.';
+  const sub = info.won ? `Done in ${info.secs} seconds${info.bonus ? ` · speed bonus +${info.bonus} XP` : ''}` : 'Have another go: they are sneaky.';
   const share = () =>
     Share.share({ message: `I just earned the ${BADGES[info.newBadge!]?.name ?? ''} badge on CyberSid by spotting today's cyber tricks. Can you beat it?` }).catch(() => {});
   const tiles = [
