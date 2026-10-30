@@ -92,3 +92,10 @@ snap["daily"] = (app.table("stories").select(FIELDS).in_("source", ["CyberSid Ti
 json.dump(snap, open(os.path.join(sys.argv[1], "app_snapshot.json"), "w"), ensure_ascii=False)
 p(f"\n== Snapshot for the app test: {len(snap['stories'])} stories, {len(snap['games'])} games, decks {[(d['title'], d['created_at'][:16], d['expires_at'][:16]) for d in snap['decks']]}, daily {len(snap['daily'])}")
 p("games by day: " + str(dict(Counter(g['created_at'][:10] for g in snap['games']))))
+
+# ---- which countries the live decks' stories come from ----
+for dk in db.table("decks").select("id,title,country,story_ids,created_at").order("created_at", desc=True).limit(4).execute().data:
+    sts = db.table("stories").select("id,country,headline,source").in_("id", dk["story_ids"]).execute().data
+    p(f"\n== Deck '{dk['title']}' ({dk['created_at'][:16]}) saved as country {dk['country']}: story countries {dict(Counter(s['country'] for s in sts))}")
+    for s in sts:
+        p(f"   {s['country']:<5} {s['source'][:22]:<22} {s['headline'][:80]}")
