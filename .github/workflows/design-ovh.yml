@@ -1,0 +1,24 @@
+name: Design OVH probe
+# Only on the design-samples branch. Read-only: the ai-ovh branch's OVHcloud models on our news prompt, no key.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/ovh_probe.py", ".github/workflows/design-ovh.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ai-ovh
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - run: python ds/design/ovh_probe.py 2>&1 | tail -30 | tee probe.txt; echo "::notice::$(grep -E '^(OK|FAIL|RUN)' probe.txt | tr '\n' '#')"
