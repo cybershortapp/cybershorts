@@ -71,3 +71,24 @@ for region, countries in (("GB", ["INTL", "GB"]), ("INTL", ["INTL", "XX"])):
         p(f"== App deck query, region {region}: FAILED {str(ex)[:300]}")
 all_games = db.table("games").select("style,created_at").gte("created_at", (now - timedelta(days=2)).isoformat()).execute().data
 p(f"\n== Games made in the last 2 days: {len(all_games)} {dict(Counter(x['style'] for x in all_games))}")
+
+
+# ---- the exact answers the app gets right now (GB), saved for an app test ----
+from datetime import date
+countries = ["INTL", "GB"]
+FIELDS = ("id,source,url,headline,technical,why_it_matters,severity,action,cves,attack_chain,also_reported,incident,"
+          "actor_group,category,image_url,published_at,created_at,products,zero_day,tint")
+snap = {}
+snap["stories"] = (app.table("stories").select(FIELDS).in_("country", countries).order("published_at", desc=True)
+                   .order("created_at", desc=True).range(0, 39).execute().data)
+snap["games"] = (app.table("games").select("id,story_id,style,data,created_at,stories!inner(headline,country,image_url)")
+                 .gte("created_at", (now - timedelta(days=4)).isoformat()).in_("stories.country", countries)
+                 .order("created_at", desc=True).limit(60).execute().data)
+snap["decks"] = (app.table("decks").select("id,topic,title,slides,story_ids,country,created_at,expires_at").gt("expires_at", now.isoformat())
+                 .in_("country", countries).order("created_at", desc=True).limit(3).execute().data)
+midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+snap["daily"] = (app.table("stories").select(FIELDS).in_("source", ["CyberSid Tips", "CyberSid History"]).in_("country", countries)
+                 .gte("created_at", midnight.isoformat()).order("created_at", desc=True).limit(6).execute().data)
+json.dump(snap, open(os.path.join(sys.argv[1], "app_snapshot.json"), "w"), ensure_ascii=False)
+p(f"\n== Snapshot for the app test: {len(snap['stories'])} stories, {len(snap['games'])} games, decks {[(d['title'], d['created_at'][:16], d['expires_at'][:16]) for d in snap['decks']]}, daily {len(snap['daily'])}")
+p("games by day: " + str(dict(Counter(g['created_at'][:10] for g in snap['games']))))
