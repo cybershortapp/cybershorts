@@ -33,7 +33,7 @@ function SlidePicture({ uri, active }: { uri: string | null; active: boolean }) 
  * A trending deck: a few full-card slides about a group or topic in the news right now.
  * Swipe sideways (or tap Next) through the slides; swipe up to go back to the news.
  */
-export function DeckCard(props: { deck: Deck; width: number; height: number; onDone?: () => void }) {
+export function DeckCard(props: { deck: Deck; width: number; height: number; onDone?: () => void; active?: boolean }) {
   // 1.0.6: every deck is drawn as visual stories (cover, numbers, steps, timeline, checklist, quick check).
   // The older looks stay here for a deck with no slides the visual deck can use.
   if (props.deck.slides.length >= 2) return <VisualDeck {...props} />;

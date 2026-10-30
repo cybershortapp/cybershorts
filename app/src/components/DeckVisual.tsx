@@ -73,7 +73,7 @@ export function statsOf(s: DeckSlide): Stat[] {
 /** The first points of the "stay safe" slide, for the timeline's last step ("Your move"). */
 const firstSafe = (deck: Deck) => deck.slides.find((s, k) => kindOf(s, k) === 'safe')?.points[0];
 
-export function VisualDeck({ deck, width, height, onDone }: { deck: Deck; width: number; height: number; onDone?: () => void }) {
+export function VisualDeck({ deck, width, height, onDone, active = true }: { deck: Deck; width: number; height: number; onDone?: () => void; active?: boolean }) {
   const P = useMemo(() => paletteOf(deck.id), [deck.id]);
   const n = deck.slides.length;
   const [i, setI] = useState(0);
@@ -98,6 +98,22 @@ export function VisualDeck({ deck, width, height, onDone }: { deck: Deck; width:
       }),
     [n], // eslint-disable-line react-hooks/exhaustive-deps
   );
+  // the first time the deck is on screen it slides a little to the left and back, showing there's more
+  // to the side (so people swipe sideways here, not up to the next news card)
+  const nudge = useRef(new Animated.Value(0)).current;
+  const nudged = useRef(false);
+  useEffect(() => {
+    if (!active || nudged.current) return;
+    nudged.current = true;
+    const a = Animated.sequence([
+      Animated.delay(900),
+      Animated.timing(nudge, { toValue: -Math.round(width * 0.16), duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.delay(260),
+      Animated.spring(nudge, { toValue: 0, friction: 6, tension: 60, useNativeDriver: true }),
+    ]);
+    a.start();
+    return () => a.stop();
+  }, [active, nudge, width]);
   const s = deck.slides[i];
   const kind = kindOf(s, i);
   const last = i === n - 1;
@@ -111,6 +127,11 @@ export function VisualDeck({ deck, width, height, onDone }: { deck: Deck; width:
       style={{ width, height, borderRadius: 24, overflow: 'hidden', backgroundColor: P.bg }}
       {...pan.panHandlers}
     >
+      {/* shown for a moment behind the slide when it nudges left */}
+      <View style={[styles.peek, { width: Math.round(width * 0.2), backgroundColor: P.accent }]}>
+        <MaterialCommunityIcons name="chevron-double-left" size={26} color="#FFFFFF" />
+      </View>
+      <Animated.View style={{ flex: 1, backgroundColor: P.bg, transform: [{ translateX: nudge }] }}>
       {/* tap the left third to go back, anywhere else for the next slide */}
       <Pressable
         style={{ flex: 1 }}
@@ -144,8 +165,10 @@ export function VisualDeck({ deck, width, height, onDone }: { deck: Deck; width:
                   <MaterialCommunityIcons name="export-variant" size={20} color={INK} />
                 </Pressable>
               </View>
+            ) : i === 0 ? (
+              <SwipeHint P={P} />
             ) : (
-              <Text style={styles.foot}>{i === 0 ? 'Tap or swipe for the next slide' : 'Tap for the next slide'}</Text>
+              <Text style={styles.foot}>Swipe or tap for the next slide · {i + 1} of {n}</Text>
             )}
           </View>
         </View>
@@ -169,7 +192,34 @@ export function VisualDeck({ deck, width, height, onDone }: { deck: Deck; width:
           </View>
         </View>
       </Pressable>
+      </Animated.View>
     </View>
+  );
+}
+
+/** A flashing pill with a moving hand: this card scrolls sideways. */
+function SwipeHint({ P }: { P: Pal }) {
+  const flash = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const a = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flash, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(flash, { toValue: 0, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    a.start();
+    return () => a.stop();
+  }, [flash]);
+  return (
+    <Animated.View style={[styles.hint, { backgroundColor: P.accent, transform: [{ scale: flash.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] }]}>
+      <Animated.View style={{ transform: [{ translateX: flash.interpolate({ inputRange: [0, 1], outputRange: [6, -8] }) }] }}>
+        <MaterialCommunityIcons name="gesture-swipe-left" size={20} color="#FFFFFF" />
+      </Animated.View>
+      <Text style={{ color: '#FFFFFF', fontFamily: F.brand, fontSize: 13.5 }}>Swipe left to read this trend</Text>
+      <Animated.View style={{ opacity: flash.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }}>
+        <MaterialCommunityIcons name="chevron-double-left" size={18} color="#FFFFFF" />
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -507,6 +557,8 @@ const styles = StyleSheet.create({
   tf: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 46, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)' },
   bottom: { paddingHorizontal: 14, paddingBottom: 14, paddingTop: 8 },
   foot: { color: 'rgba(21,23,43,0.45)', fontFamily: F.medium, fontSize: 11.5, textAlign: 'center', marginTop: 10 },
+  hint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'center', marginTop: 10, paddingHorizontal: 16, height: 40, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  peek: { position: 'absolute', right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   face: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   bubble: { flexShrink: 1, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 16 },
   doneBtn: { flex: 1, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },

@@ -537,7 +537,7 @@ function Main() {
             <ExtraPage height={pageHeight}>
               {(w, h) =>
                 item.kind === 'deck' ? (
-                  <DeckCard deck={item.deck} width={w} height={h} onDone={() => goNext(i)} />
+                  <DeckCard deck={item.deck} width={w} height={h} active={index === i} onDone={() => goNext(i)} />
                 ) : (
                   <GameCard game={item.game} headline={item.game.headline} image={item.game.image} width={w} height={h} active={index === i} onDone={() => goNext(i)} />
                 )
@@ -569,11 +569,33 @@ function Main() {
   const focusCards = cardStyle === 'focus';
   const counter = !feed.length ? '' : focusCards ? `${index + 1} of ${feed.length}` : `${String(index + 1).padStart(2, '0')} / ${String(feed.length).padStart(2, '0')}`;
 
-  let content;
+  // Play and Preferences open on top of the news, which stays exactly where the reader left it
+  // (it used to be swapped out, so coming back always started again from the first card)
+  const prefsAtOpen = useRef('');
+  const prefsSig = [...prefs.products, '|', ...prefs.terms].join(',');
+  const openPrefs = () => {
+    prefsAtOpen.current = prefsSig;
+    setView('prefs');
+  };
+  let overlay = null;
   if (view === 'play') {
     // the games work offline too, so the Play section opens even when the news can't load
-    content = <PlayHub backRef={playBack} />;
-  } else if (loading && stories.length === 0) {
+    overlay = <PlayHub backRef={playBack} />;
+  } else if (view === 'prefs') {
+    overlay = (
+      <Preferences
+        onShowWelcome={() => setWelcome(true)}
+        onDone={() => {
+          setView('feed');
+          // only new products or keywords change the news: then show them in For you; otherwise stay put
+          if (prefsSig !== prefsAtOpen.current && prefs.products.length + prefs.terms.length && filter !== 'For you') changeFilter('For you');
+        }}
+      />
+    );
+  }
+
+  let content;
+  if (loading && stories.length === 0) {
     content = <ActivityIndicator style={styles.center} color={C.brand} />;
   } else if (error) {
     content = (
@@ -584,8 +606,6 @@ function Main() {
         </Pressable>
       </View>
     );
-  } else if (view === 'prefs') {
-    content = <Preferences onShowWelcome={() => setWelcome(true)} onDone={() => { setView('feed'); tabMemory.current.delete('For you'); if (prefs.products.length + prefs.terms.length) changeFilter('For you'); }} />;
   } else if (stories.length === 0) {
     const noPrefs = filter === 'For you' && prefs.products.length + prefs.terms.length === 0;
     content = (
@@ -600,7 +620,7 @@ function Main() {
               : EMPTY_TEXT[filter] ?? `No ${filter === 'All' ? '' : filter + ' '}stories right now. Stay tuned.`}
         </Text>
         {noPrefs && (
-          <Pressable onPress={() => setView('prefs')} style={[styles.retry, { backgroundColor: C.brand, borderColor: C.brand }]}>
+          <Pressable onPress={openPrefs} style={[styles.retry, { backgroundColor: C.brand, borderColor: C.brand }]}>
             <Text style={{ color: C.onBrand, fontFamily: F.label }}>Choose my products</Text>
           </Pressable>
         )}
@@ -647,7 +667,7 @@ function Main() {
           if (filter === 'Saved') changeFilter(prefs.products.length + prefs.terms.length ? 'For you' : 'All');
           else changeFilter('Saved');
         }}
-        onPrefs={() => setView('prefs')}
+        onPrefs={openPrefs}
         onPlay={() => {
           if (searching) {
             setSearching(false);
@@ -688,14 +708,20 @@ function Main() {
       )}
       {C.mode === 'vivid' && <ScreenColour colour={screenColour} />}
       {header}
-      <View style={styles.feed} onLayout={(e) => setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
-        {content}
-        {view === 'feed' && index >= 2 && !chainOpen && stories.length > 0 && !loading && (
-          <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
-            <MaterialCommunityIcons name="arrow-up" size={16} color={C.onBrand} />
-            <Text style={styles.latestText}>Latest</Text>
-          </Pressable>
-        )}
+      {/* the header is shorter on Play and Preferences: only the news view sets the card height,
+          so the news underneath keeps its size and its place */}
+      <View style={styles.feed} onLayout={(e) => view === 'feed' && setPageHeight(Math.floor(e.nativeEvent.layout.height))}>
+        <View style={{ flex: 1, opacity: overlay ? 0 : 1 }} pointerEvents={overlay ? 'none' : 'auto'} importantForAccessibility={overlay ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={!!overlay}>
+          {content}
+          {/* not on a game or the trending deck: they have their own controls up there */}
+          {view === 'feed' && index >= 2 && !chainOpen && stories.length > 0 && !loading && feed[index]?.kind === 'story' && (
+            <Pressable onPress={goLatest} style={styles.latest} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to the latest stories">
+              <MaterialCommunityIcons name="arrow-up" size={15} color={C.glass || C.dark ? '#FFFFFF' : '#14161F'} />
+              <Text style={[styles.latestText, { color: C.glass || C.dark ? '#FFFFFF' : '#14161F' }]}>Latest</Text>
+            </Pressable>
+          )}
+        </View>
+        {overlay && <View style={StyleSheet.absoluteFill}>{overlay}</View>}
       </View>
     </SafeAreaView>
   );
@@ -820,10 +846,12 @@ const makeStyles = (C: Palette) =>
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   message: { fontSize: 15, textAlign: 'center', lineHeight: 22, color: C.muted, fontFamily: F.body },
   retry: { marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  // see-through "frosted glass", so the picture underneath still shows
   latest: {
     position: 'absolute', top: 10, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: C.brand,
-    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 6,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: C.glass || C.dark ? 'rgba(20,22,31,0.38)' : 'rgba(255,255,255,0.55)',
+    borderWidth: 1, borderColor: C.glass || C.dark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.75)',
   },
-  latestText: { color: C.onBrand, fontFamily: F.label, fontSize: 13.5 },
+  latestText: { fontFamily: F.label, fontSize: 13 },
 });
