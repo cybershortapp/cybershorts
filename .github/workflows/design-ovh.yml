@@ -9,7 +9,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
         with:
@@ -21,4 +21,6 @@ jobs:
         with:
           python-version: "3.14"
       - run: pip install -q -r pipeline/requirements.txt
-      - run: python ds/design/ovh_probe.py 2>&1 | tail -30 | tee probe.txt; echo "::notice::$(grep -E '^(OK|FAIL|RUN)' probe.txt | tr '\n' '#')"
+      - env:
+          CANDIDATES: "Mistral-Small-3.2-24B-Instruct-2506,gpt-oss-20b,Mistral-Nemo-Instruct-2407,Qwen3.6-27B,gpt-oss-120b,Qwen3.5-9B,Mistral-Small-3.2-24B-Instruct-2506"
+        run: python ds/design/ovh_probe.py 2>&1 | tail -30 | tee probe.txt; echo "::notice::$(grep -E '^(OK|FAIL|RUN)' probe.txt | tr '\n' '#')"
