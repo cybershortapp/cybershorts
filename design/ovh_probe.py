@@ -4,7 +4,7 @@ import os, sys, time
 ROOT = os.path.abspath("pipeline")
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
-for k in [k for k in os.environ if k.endswith("_API_KEY")]:
+for k in [k for k in os.environ if k.endswith("_API_KEY") and k != "MISTRAL_API_KEY"]:
     del os.environ[k]
 import functools
 import ai as A
@@ -18,13 +18,16 @@ TEXT = ("Investigators say the attack on the hospital began with a phishing emai
         "deleted. Over two days they copied about 400 GB of patient records to a cloud storage account, and finally "
         "launched the ransomware, encrypting 1,200 machines and forcing ambulances to be diverted. The gang has "
         "posted a sample of the stolen data and is demanding $4 million. The hospital says it has not paid.")
-os.environ["AI_PROVIDER"] = "ovh"
-for model in os.environ["CANDIDATES"].split(","):
-    ai = A.AI(); ai.chain = [("ovh", model)]
+os.environ["AI_PROVIDER"] = "ovh,mistral"
+ai = A.AI()
+print("OK   chain: " + ai.describe())
+t0 = time.time()
+for i in range(6):
     t = time.time()
     try:
         s = P.summarise_ai(ai, TITLE, TEXT)
         chain = P.clean_chain(s.get("chain"), f"{TITLE} {TEXT}") if s.get("chain") else None
-        print(f"OK   {model}: {time.time()-t:.1f}s | {s.get('category')}/{s.get('severity')} | chain {len(chain or [])} | {s.get('headline','')[:55]}")
+        print(f"RUN  story {i+1}: {time.time()-t:.1f}s chain {len(chain or [])} | used {ai.used}")
     except Exception as ex:
-        print(f"FAIL {model}: {time.time()-t:.1f}s | {str(ex)[:140]}")
+        print(f"RUN  story {i+1}: failed ({time.time()-t:.1f}s) {str(ex)[:80]}")
+print(f"RUN  total {time.time()-t0:.0f}s")

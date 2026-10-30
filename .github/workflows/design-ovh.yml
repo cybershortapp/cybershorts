@@ -22,5 +22,5 @@ jobs:
           python-version: "3.14"
       - run: pip install -q -r pipeline/requirements.txt
       - env:
-          CANDIDATES: "Mistral-Small-3.2-24B-Instruct-2506,gpt-oss-20b,Mistral-Nemo-Instruct-2407,Qwen3.6-27B,gpt-oss-120b,Qwen3.5-9B,Mistral-Small-3.2-24B-Instruct-2506"
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
         run: python ds/design/ovh_probe.py 2>&1 | tail -30 | tee probe.txt; echo "::notice::$(grep -E '^(OK|FAIL|RUN)' probe.txt | tr '\n' '#')"
