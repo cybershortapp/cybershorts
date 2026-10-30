@@ -16,9 +16,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir out && cd out
-          curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/jobs/124019367884/logs" -o log.txt -w "%{http_code}" > code.txt 2> err.txt || true
+          curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/actions/jobs/124254685482/logs" -o log.txt -w "%{http_code}" > code.txt 2> err.txt || true
           grep -n -i -B3 -A25 "Traceback" log.txt | head -150 > traceback.txt || true
           tail -120 log.txt > tail.txt
           git init -q && git checkout -q -b design-logs-out && git add -A
-          git -c user.name="design-logs" -c user.email="actions@users.noreply.github.com" commit -qm "logs 124019367884"
+          git -c user.name="design-logs" -c user.email="actions@users.noreply.github.com" commit -qm "logs 124254685482"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-logs-out
