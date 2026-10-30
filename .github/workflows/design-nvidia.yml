@@ -1,0 +1,25 @@
+name: Design NVIDIA probe
+# Only on the design-samples branch. Read-only: one tiny request per NVIDIA model, to see why they fail.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/nvidia_probe.py", ".github/workflows/design-nvidia.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+        run: python ds/design/nvidia_probe.py | tee probe.txt; while read -r l; do echo "::notice::$l"; done < probe.txt
