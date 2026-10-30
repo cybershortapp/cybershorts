@@ -39,10 +39,14 @@ NVIDIA_MODELS = [m.strip() for m in os.getenv("NVIDIA_MODELS", "minimaxai/minima
 def is_lite(model):
     """The smaller Gemini models and Gemma: big free limits, but weaker (they rarely write attack chains)."""
     return "lite" in model or model.startswith("gemma")
-# OVHcloud AI Endpoints with no key (checked 30 Oct 2026: gpt-oss-120b answered in under 2 seconds)
+# OVHcloud AI Endpoints with no key. Checked 30 Oct 2026 with our news prompt: these two answered with good JSON
+# and a full attack chain in 7 to 10 seconds. (gpt-oss and Qwen took over 40 seconds or gave no answer, Llama 3.3
+# 70B took 40 seconds with a short chain.)
 OVH_MODELS = [m.strip() for m in os.getenv(
-    "OVH_MODELS", "gpt-oss-120b,Meta-Llama-3_3-70B-Instruct,Qwen3.5-397B-A17B,Mistral-Small-3.2-24B-Instruct-2506").split(",") if m.strip()]
-MISTRAL_MODELS = [m.strip() for m in os.getenv("MISTRAL_MODELS", "mistral-small-latest").split(",") if m.strip()]
+    "OVH_MODELS", "Mistral-Small-3.2-24B-Instruct-2506,Mistral-Nemo-Instruct-2407").split(",") if m.strip()]
+# Mistral's own free mode (checked 30 Oct 2026): Small and Medium say "rate limit" from the first request and Large
+# isn't included, but these two answer with full attack chains (ministral-14b in about 7 seconds)
+MISTRAL_MODELS = [m.strip() for m in os.getenv("MISTRAL_MODELS", "ministral-14b-latest,open-mistral-nemo").split(",") if m.strip()]
 
 # OpenAI-style providers: (web address, key name in .env, models)
 OPENAI_STYLE = {
@@ -240,7 +244,7 @@ class AI:
                 raise
             body.pop("response_format")   # some models don't support JSON mode; the prompt still asks for JSON
             data = _post(url, headers, body)
-        return data["choices"][0]["message"]["content"]
+        return data["choices"][0]["message"].get("content") or ""   # thinking models can run out before answering
 
     def _claude(self, model, system, user, max_tokens):
         msg = self.anthropic.messages.create(model=model, max_tokens=max_tokens, system=system,
