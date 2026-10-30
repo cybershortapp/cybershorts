@@ -1,11 +1,16 @@
 """AI providers for the pipeline. Free by default.
 
-AI_PROVIDER   order to try, comma separated. Default "gemini,groq,mistral,cerebras" (free plans).
-              Any provider without a key in .env is skipped automatically.
+AI_PROVIDER   order to try, comma separated. Default "gemini,nvidia,gemini-lite,groq,mistral,cerebras" (free plans).
+              "gemini" is the full-size Gemini models, "gemini-lite" the lite and Gemma ones. NVIDIA sits in
+              between: when the strong Gemini models run out for the day, a strong NVIDIA model answers
+              before the lite ones (the lite models rarely write attack chains).
+              Any provider without a key in .env is skipped automatically (no NVIDIA_API_KEY: no NVIDIA).
               Use "claude" (paid) if you ever want Claude instead, or "gemini,groq,claude" as a last resort.
 GEMINI_MODELS models to try in order (free tier). Change here if Google renames them.
               Each Gemini and Gemma model has its OWN free daily limit, so a longer list means more free calls a day.
 GROQ_MODELS   models to try in order (free tier). Each has its own limit too.
+NVIDIA_MODELS models on NVIDIA's free developer API (build.nvidia.com, about 40 requests a minute for the
+              whole account). Free key starting "nvapi-", saved as the NVIDIA_API_KEY secret.
 If a model hits its free limit (or is retired, or the account needs payment), the next one is used
 automatically for the rest of the run.
 """
@@ -22,6 +27,13 @@ GEMINI_MODELS = [m.strip() for m in os.getenv(
                      "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemma-4-26b-a4b-it,gemma-4-31b-it").split(",") if m.strip()]
 GROQ_MODELS = [m.strip() for m in os.getenv("GROQ_MODELS", "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b").split(",") if m.strip()]
 CEREBRAS_MODELS = [m.strip() for m in os.getenv("CEREBRAS_MODELS", "gpt-oss-120b").split(",") if m.strip()]
+# Llama 3.3 70B first: fast and reliable with JSON; gpt-oss-120b next (a model NVIDIA doesn't offer is skipped)
+NVIDIA_MODELS = [m.strip() for m in os.getenv("NVIDIA_MODELS", "meta/llama-3.3-70b-instruct,openai/gpt-oss-120b").split(",") if m.strip()]
+
+
+def is_lite(model):
+    """The smaller Gemini models and Gemma: big free limits, but weaker (they rarely write attack chains)."""
+    return "lite" in model or model.startswith("gemma")
 MISTRAL_MODELS = [m.strip() for m in os.getenv("MISTRAL_MODELS", "mistral-small-latest").split(",") if m.strip()]
 
 # OpenAI-style providers: (web address, key name in .env, models)
@@ -29,6 +41,7 @@ OPENAI_STYLE = {
     "groq": ("https://api.groq.com/openai/v1/chat/completions", "GROQ_API_KEY", GROQ_MODELS),
     "cerebras": ("https://api.cerebras.ai/v1/chat/completions", "CEREBRAS_API_KEY", CEREBRAS_MODELS),
     "mistral": ("https://api.mistral.ai/v1/chat/completions", "MISTRAL_API_KEY", MISTRAL_MODELS),
+    "nvidia": ("https://integrate.api.nvidia.com/v1/chat/completions", "NVIDIA_API_KEY", NVIDIA_MODELS),
 }
 CLAUDE_MODEL = os.getenv("AI_MODEL", "claude-haiku-4-5-20251001")
 
@@ -38,6 +51,7 @@ GAP_SECONDS = {
     "cerebras": float(os.getenv("CEREBRAS_GAP", "12.5")),   # free plan: 5 requests a minute
     "groq": float(os.getenv("GROQ_GAP", "2.5")),
     "mistral": float(os.getenv("MISTRAL_GAP", "2")),
+    "nvidia": float(os.getenv("NVIDIA_GAP", "2")),   # free plan: about 40 requests a minute, whole account
     "claude": 0.3,
 }
 
@@ -75,11 +89,15 @@ def extract_json(text):
 
 class AI:
     def __init__(self):
-        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,groq,mistral,cerebras").lower().split(",") if p.strip()]
+        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,nvidia,gemini-lite,groq,mistral,cerebras").lower().split(",") if p.strip()]
+        # an older setting with just "gemini" keeps all Gemini models together, as before
+        split = "gemini-lite" in order
         self.chain = []
         for p in order:
             if p == "gemini" and os.getenv("GEMINI_API_KEY"):
-                self.chain += [("gemini", m) for m in GEMINI_MODELS]
+                self.chain += [("gemini", m) for m in GEMINI_MODELS if not (split and is_lite(m))]
+            elif p == "gemini-lite" and os.getenv("GEMINI_API_KEY"):
+                self.chain += [("gemini", m) for m in GEMINI_MODELS if is_lite(m)]
             elif p in OPENAI_STYLE and os.getenv(OPENAI_STYLE[p][1]):
                 self.chain += [(p, m) for m in OPENAI_STYLE[p][2]]
             elif p == "claude" and os.getenv("ANTHROPIC_API_KEY"):
