@@ -1,0 +1,15 @@
+name: Design free AI probe
+# Only on the design-samples branch. Read-only: checks free text AIs that need no key (AI Horde, OVHcloud, LLM7).
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/free_probe.py", ".github/workflows/design-free.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 design/free_probe.py 2>&1 | tail -30 | tee probe.txt; echo "::notice::$(grep -E '^(HORDE|OVH|LLM7)' probe.txt | tr '\n' '#')"
