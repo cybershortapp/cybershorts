@@ -2,8 +2,9 @@
 For each candidate: the real news prompt (pipeline.summarise_ai) on one test article that describes attack
 steps. Prints time taken, whether the JSON was usable and how many chain steps came back. Never prints the key."""
 import os, sys, time
-sys.path.insert(0, "pipeline")
-os.chdir("pipeline")
+ROOT = os.path.abspath("pipeline")
+sys.path.insert(0, ROOT)
+os.chdir(ROOT)
 import ai as A
 import pipeline as P
 
