@@ -27,8 +27,10 @@ GEMINI_MODELS = [m.strip() for m in os.getenv(
                      "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemma-4-26b-a4b-it,gemma-4-31b-it").split(",") if m.strip()]
 GROQ_MODELS = [m.strip() for m in os.getenv("GROQ_MODELS", "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b").split(",") if m.strip()]
 CEREBRAS_MODELS = [m.strip() for m in os.getenv("CEREBRAS_MODELS", "gpt-oss-120b").split(",") if m.strip()]
-# Llama 3.3 70B first: fast and reliable with JSON; gpt-oss-120b next (a model NVIDIA doesn't offer is skipped)
-NVIDIA_MODELS = [m.strip() for m in os.getenv("NVIDIA_MODELS", "meta/llama-3.3-70b-instruct,openai/gpt-oss-120b").split(",") if m.strip()]
+# checked 30 Oct 2026 on the free API with our news prompt and an attack article: these two answered with good
+# JSON and a full attack chain in about 20 seconds. (Llama 3.3 70B and gpt-oss-120b were retired; DeepSeek, GLM,
+# Gemma and Mistral Large took over 40 seconds; Nemotron Super/Ultra and Kimi aren't on the free plan.)
+NVIDIA_MODELS = [m.strip() for m in os.getenv("NVIDIA_MODELS", "minimaxai/minimax-m3.1-flash,openai/gpt-oss-20b").split(",") if m.strip()]
 
 
 def is_lite(model):
@@ -70,7 +72,7 @@ def _post(url, headers, body, timeout=40):
             return json.load(r)
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "ignore")[:300]
-        if e.code in (429, 404, 403, 503, 401, 402):   # 402: the account now needs payment
+        if e.code in (429, 404, 410, 403, 503, 401, 402):   # 402: the account now needs payment; 410: model retired
             raise LimitHit(f"HTTP {e.code}: {detail}")
         raise RuntimeError(f"HTTP {e.code}: {detail}")
 
@@ -158,7 +160,8 @@ class AI:
                     print(f"[busy]  {provider}:{model} busy, using the next model for this story")
                     continue
                 reason = ("free limit reached" if "429" in str(ex) else
-                          "needs payment" if "HTTP 402" in str(ex) else "not available")
+                          "needs payment" if "HTTP 402" in str(ex) else
+                          "retired" if "HTTP 410" in str(ex) else "not available")
                 print(f"[limit] {provider}:{model} {reason}, using the next model for the rest of this run")
                 self.dead.add((provider, model))
             except Exception as ex:
