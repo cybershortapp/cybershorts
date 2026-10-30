@@ -1,0 +1,22 @@
+name: Design picture check
+# Only on the design-samples branch. Read-only: why a story has no picture.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/pic_check.py", ".github/workflows/design-pic.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q supabase
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python design/pic_check.py; echo "::notice::$(cat pic.txt)"
