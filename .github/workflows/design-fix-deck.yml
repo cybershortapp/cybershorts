@@ -1,0 +1,22 @@
+name: Design one-off (WhatsApp deck to India)
+# Only on the design-samples branch. Sets the country of one trending deck (see design/fix_deck.py).
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/fix_deck.py", ".github/workflows/design-fix-deck.yml"]
+permissions:
+  contents: read
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q supabase
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python design/fix_deck.py | tee out.txt; while read -r l; do echo "::notice::$l"; done < out.txt
