@@ -26,3 +26,4 @@ for x in rows:
 print("\n".join(out))
 open("pic.txt", "w").write("#".join(out))
 # 19:26
+# 19:39
