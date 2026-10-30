@@ -1188,17 +1188,22 @@ def main():
             else:
                 failed_ids.add(sid)
         covers_note = f"{covers_made} made ({maker.used})" + (f", problems: {' | '.join(dict.fromkeys(maker.errors))[:300]}" if maker.errors else "")
-        # ---- 3a. worst case: the picture services are out, so cards waiting for a picture get a ready-made one ----
-        # (only when the services failed or hit their limit, not when there simply wasn't time for every picture)
+        # ---- 3a. cards still waiting for a picture get a ready-made one from our library ----
+        # When the picture services are out, every waiting card gets one now. Otherwise only cards that have
+        # already waited 20+ minutes (a run went by without a picture), so a new card isn't shown blank for
+        # half an hour. A later run swaps the backup picture for its own AI picture (step 2c).
         services_out = bool(failed_ids) or not maker.available or allowed == 0 or maker.cf_dead
         waiting = [c[0] for c in need_cover if c[0] not in made_ids]
-        if services_out and waiting and os.getenv("LIBRARY", "true").lower() != "false":
+        if waiting and os.getenv("LIBRARY", "true").lower() != "false":
             try:
                 lib, used = Library(db), 0
-                lib_rows = db.table("stories").select("id,category,image_url").in_("id", waiting[:40]).execute().data
+                lib_rows = db.table("stories").select("id,category,image_url,created_at").in_("id", waiting[:40]).execute().data
+                waited = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat()
                 for r in lib_rows:
                     if r.get("image_url"):
                         continue   # has a picture already (a news picture, or a backup one from an earlier run)
+                    if not services_out and (r.get("created_at") or "") > waited:
+                        continue   # new this run and the services are working: its own picture comes next run
                     url = lib.pick(r.get("category"))
                     if not url:
                         break
@@ -1206,7 +1211,7 @@ def main():
                     used += 1
                 if used:
                     covers_note += f" | {used} backup pictures"
-                    print(f"[pic] {used} cards got a backup picture (picture services out)")
+                    print(f"[pic] {used} cards got a backup picture ({'picture services out' if services_out else 'waited too long'})")
             except Exception as ex:
                 print(f"[warn] backup pictures: {str(ex)[:80]}")
         try:

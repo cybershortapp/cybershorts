@@ -51,8 +51,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: app/package-lock.json
       - run: npm ci
       # the app's public settings (Supabase address and publishable key) come from eas.json, same as the builds.
       # They are put straight into the environment, so they are baked into the update whatever EAS does with .env files.

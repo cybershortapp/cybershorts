@@ -20,8 +20,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: app/package-lock.json
       - run: npm ci
       - name: Latest store builds
         env:
