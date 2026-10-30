@@ -1,0 +1,363 @@
+﻿2026-10-30T19:00:07.1604197Z Current runner version: '2.338.0'
+2026-10-30T19:00:07.1622947Z ##[group]Runner Image Provisioner
+2026-10-30T19:00:07.1623579Z Hosted Compute Agent
+2026-10-30T19:00:07.1624072Z Version: 20261021.618
+2026-10-30T19:00:07.1624541Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T19:00:07.1625363Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T19:00:07.1625861Z Worker ID: {3df90fd5-a6da-4201-9437-ac00f262c51b}
+2026-10-30T19:00:07.1626688Z Region: centralus
+2026-10-30T19:00:07.1627271Z Cloud: Azure
+2026-10-30T19:00:07.1627801Z ##[endgroup]
+2026-10-30T19:00:07.1629073Z ##[group]Operating System
+2026-10-30T19:00:07.1629727Z Ubuntu
+2026-10-30T19:00:07.1630315Z 26.04.1
+2026-10-30T19:00:07.1630817Z LTS
+2026-10-30T19:00:07.1631490Z ##[endgroup]
+2026-10-30T19:00:07.1632029Z ##[group]Runner Image
+2026-10-30T19:00:07.1634467Z Image: ubuntu-26.04
+2026-10-30T19:00:07.1635023Z Version: 20261025.179.1
+2026-10-30T19:00:07.1636436Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261025.179/images/ubuntu/Ubuntu2604-Readme.md
+2026-10-30T19:00:07.1637907Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261025.179
+2026-10-30T19:00:07.1638824Z ##[endgroup]
+2026-10-30T19:00:07.1639970Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T19:00:07.1642037Z Actions: write
+2026-10-30T19:00:07.1642701Z Contents: read
+2026-10-30T19:00:07.1643246Z Metadata: read
+2026-10-30T19:00:07.1643863Z ##[endgroup]
+2026-10-30T19:00:07.1645696Z Secret source: Actions
+2026-10-30T19:00:07.1646812Z Cache mode: write
+2026-10-30T19:00:07.1647519Z Prepare workflow directory
+2026-10-30T19:00:07.1927655Z Prepare all required actions
+2026-10-30T19:00:07.1959501Z Getting action download info
+2026-10-30T19:00:07.3984994Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-10-30T19:00:07.4661804Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-10-30T19:00:07.6074578Z Complete job name: run
+2026-10-30T19:00:07.6633865Z ##[group]Run actions/checkout@v5
+2026-10-30T19:00:07.6634590Z with:
+2026-10-30T19:00:07.6634880Z   repository: cybershortapp/cybershorts
+2026-10-30T19:00:07.6637283Z   token: ***
+2026-10-30T19:00:07.6637555Z   ssh-strict: true
+2026-10-30T19:00:07.6637831Z   ssh-user: git
+2026-10-30T19:00:07.6638112Z   persist-credentials: true
+2026-10-30T19:00:07.6638420Z   clean: true
+2026-10-30T19:00:07.6638705Z   sparse-checkout-cone-mode: true
+2026-10-30T19:00:07.6639022Z   fetch-depth: 1
+2026-10-30T19:00:07.6639293Z   fetch-tags: false
+2026-10-30T19:00:07.6639572Z   show-progress: true
+2026-10-30T19:00:07.6639852Z   lfs: false
+2026-10-30T19:00:07.6640113Z   submodules: false
+2026-10-30T19:00:07.6640398Z   set-safe-directory: true
+2026-10-30T19:00:07.6640719Z   allow-unsafe-pr-checkout: false
+2026-10-30T19:00:07.6641150Z ##[endgroup]
+2026-10-30T19:00:07.8515784Z Syncing repository: cybershortapp/cybershorts
+2026-10-30T19:00:07.8517908Z ##[group]Getting Git version info
+2026-10-30T19:00:07.8518485Z Working directory is '/home/runner/work/cybershorts/cybershorts'
+2026-10-30T19:00:07.8519178Z [command]/usr/bin/git version
+2026-10-30T19:00:07.8524077Z git version 2.56.0
+2026-10-30T19:00:07.8536997Z ##[endgroup]
+2026-10-30T19:00:07.8548064Z Temporarily overriding HOME='/home/runner/work/_temp/d7f6631a-284a-47d9-ba0e-faf4b304dc41' before making global git config changes
+2026-10-30T19:00:07.8549490Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T19:00:07.8551402Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cybershorts/cybershorts
+2026-10-30T19:00:07.8607488Z Deleting the contents of '/home/runner/work/cybershorts/cybershorts'
+2026-10-30T19:00:07.8610709Z ##[group]Initializing the repository
+2026-10-30T19:00:07.8615029Z [command]/usr/bin/git init /home/runner/work/cybershorts/cybershorts
+2026-10-30T19:00:07.8696052Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T19:00:07.8697308Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T19:00:07.8698481Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T19:00:07.8699192Z hint: call:
+2026-10-30T19:00:07.8699959Z hint:
+2026-10-30T19:00:07.8700469Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T19:00:07.8701056Z hint:
+2026-10-30T19:00:07.8701641Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T19:00:07.8702576Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T19:00:07.8703285Z hint:
+2026-10-30T19:00:07.8703761Z hint: 	git branch -m <name>
+2026-10-30T19:00:07.8704228Z hint:
+2026-10-30T19:00:07.8704821Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T19:00:07.8705825Z Initialized empty Git repository in /home/runner/work/cybershorts/cybershorts/.git/
+2026-10-30T19:00:07.8713017Z [command]/usr/bin/git remote add origin https://github.com/cybershortapp/cybershorts
+2026-10-30T19:00:07.8777944Z ##[endgroup]
+2026-10-30T19:00:07.8778735Z ##[group]Disabling automatic garbage collection
+2026-10-30T19:00:07.8781371Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T19:00:07.8812267Z ##[endgroup]
+2026-10-30T19:00:07.8812996Z ##[group]Setting up auth
+2026-10-30T19:00:07.8818986Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T19:00:07.8848157Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T19:00:07.9223530Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T19:00:07.9251054Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T19:00:07.9468229Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T19:00:07.9496396Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T19:00:07.9713056Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T19:00:07.9747186Z ##[endgroup]
+2026-10-30T19:00:07.9747990Z ##[group]Fetching the repository
+2026-10-30T19:00:07.9754844Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +30a043176bf4f462ed9e0b7961217560fc21952d:refs/remotes/origin/main
+2026-10-30T19:00:08.5124775Z From https://github.com/cybershortapp/cybershorts
+2026-10-30T19:00:08.5125499Z  * [new ref]         30a043176bf4f462ed9e0b7961217560fc21952d -> origin/main
+2026-10-30T19:00:08.5127942Z ##[endgroup]
+2026-10-30T19:00:08.5128750Z ##[group]Determining the checkout info
+2026-10-30T19:00:08.5130014Z ##[endgroup]
+2026-10-30T19:00:08.5134248Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T19:00:08.5174077Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T19:00:08.5197632Z ##[group]Checking out the ref
+2026-10-30T19:00:08.5200109Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-30T19:00:08.5327330Z Switched to a new branch 'main'
+2026-10-30T19:00:08.5331366Z branch 'main' set up to track 'origin/main'.
+2026-10-30T19:00:08.5336543Z ##[endgroup]
+2026-10-30T19:00:08.5368644Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T19:00:08.5391008Z 30a043176bf4f462ed9e0b7961217560fc21952d
+2026-10-30T19:00:08.5660321Z ##[group]Run actions/setup-python@v6
+2026-10-30T19:00:08.5660714Z with:
+2026-10-30T19:00:08.5660990Z   python-version: 3.14
+2026-10-30T19:00:08.5661291Z   cache: pip
+2026-10-30T19:00:08.5661625Z   cache-dependency-path: pipeline/requirements.txt
+2026-10-30T19:00:08.5662028Z   check-latest: false
+2026-10-30T19:00:08.5664562Z   token: ***
+2026-10-30T19:00:08.5664852Z   update-environment: true
+2026-10-30T19:00:08.5665182Z   allow-prereleases: false
+2026-10-30T19:00:08.5665501Z   freethreaded: false
+2026-10-30T19:00:08.5665800Z ##[endgroup]
+2026-10-30T19:00:08.6492491Z ##[group]Installed versions
+2026-10-30T19:00:08.6565744Z Successfully set up CPython (3.14.9)
+2026-10-30T19:00:08.6566945Z ##[endgroup]
+2026-10-30T19:00:08.6838466Z [command]/opt/hostedtoolcache/Python/3.14.9/x64/bin/pip cache dir
+2026-10-30T19:00:10.3124200Z /home/runner/.cache/pip
+2026-10-30T19:00:10.4779526Z Cache hit for: setup-python-Linux-x64-26.04-Ubuntu-python-3.14.9-pip-5eeed61c5f92e178b8960578c1726e5e0ab28e04e5e0287916214a8f68383776
+2026-10-30T19:00:11.6747206Z Received 0 of 24940941 (0.0%), 0.0 MBs/sec
+2026-10-30T19:00:12.6759718Z Received 0 of 24940941 (0.0%), 0.0 MBs/sec
+2026-10-30T19:00:13.6770501Z Received 0 of 24940941 (0.0%), 0.0 MBs/sec
+2026-10-30T19:00:14.6783316Z Received 0 of 24940941 (0.0%), 0.0 MBs/sec
+2026-10-30T19:00:15.6795941Z Received 0 of 24940941 (0.0%), 0.0 MBs/sec
+2026-10-30T19:00:16.6808338Z Received 4194304 of 24940941 (16.8%), 0.7 MBs/sec
+2026-10-30T19:00:17.6818785Z Received 4194304 of 24940941 (16.8%), 0.6 MBs/sec
+2026-10-30T19:00:18.6831465Z Received 4194304 of 24940941 (16.8%), 0.5 MBs/sec
+2026-10-30T19:00:19.6842739Z Received 4194304 of 24940941 (16.8%), 0.4 MBs/sec
+2026-10-30T19:00:20.6855041Z Received 4194304 of 24940941 (16.8%), 0.4 MBs/sec
+2026-10-30T19:00:21.6880177Z Received 4194304 of 24940941 (16.8%), 0.4 MBs/sec
+2026-10-30T19:00:22.6879999Z Received 4194304 of 24940941 (16.8%), 0.3 MBs/sec
+2026-10-30T19:00:23.6891232Z Received 4194304 of 24940941 (16.8%), 0.3 MBs/sec
+2026-10-30T19:00:24.6903032Z Received 4194304 of 24940941 (16.8%), 0.3 MBs/sec
+2026-10-30T19:00:25.6911359Z Received 4194304 of 24940941 (16.8%), 0.3 MBs/sec
+2026-10-30T19:00:26.6923135Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:27.6934410Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:28.6946874Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:29.6958445Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:30.6971901Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:31.6982985Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:32.6995095Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:33.6996481Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:34.7008633Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:35.7019553Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:36.7031446Z Received 4194304 of 24940941 (16.8%), 0.2 MBs/sec
+2026-10-30T19:00:37.7042730Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:38.7054676Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:39.7065968Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:40.7077459Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:41.7088716Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:42.7104780Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:43.7115353Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:44.7127016Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:45.7127896Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:46.7139274Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:46.8793727Z Received 4194304 of 24940941 (16.8%), 0.1 MBs/sec
+2026-10-30T19:00:46.8808613Z ##[warning]Failed to restore: Egress is over the account limit.
+RequestId:9f51f0b3-301e-0077-5ba0-681d29000000
+Time:2026-10-30T19:00:46.8628317Z
+2026-10-30T19:00:46.8813154Z pip cache is not found
+2026-10-30T19:10:10.6915375Z ##[group]Run pip install -r requirements.txt
+2026-10-30T19:10:10.6915686Z [36;1mpip install -r requirements.txt[0m
+2026-10-30T19:10:10.6945110Z shell: /usr/bin/bash -e {0}
+2026-10-30T19:10:10.6945288Z env:
+2026-10-30T19:10:10.6945477Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:10.6945958Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.9/x64/lib/pkgconfig
+2026-10-30T19:10:10.6946319Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:10.6946562Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:10.6946798Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:10.6947037Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.9/x64/lib
+2026-10-30T19:10:10.6947242Z ##[endgroup]
+2026-10-30T19:10:11.7783784Z Collecting feedparser>=6.0.11 (from -r requirements.txt (line 1))
+2026-10-30T19:10:11.9103427Z   Downloading feedparser-6.0.14-py3-none-any.whl.metadata (2.7 kB)
+2026-10-30T19:10:11.9609877Z Collecting anthropic>=0.40.0 (from -r requirements.txt (line 2))
+2026-10-30T19:10:11.9735744Z   Downloading anthropic-2.3.0-py3-none-any.whl.metadata (6.0 kB)
+2026-10-30T19:10:12.0002292Z Collecting supabase>=2.9.0 (from -r requirements.txt (line 3))
+2026-10-30T19:10:12.0128956Z   Downloading supabase-2.33.0-py3-none-any.whl.metadata (4.7 kB)
+2026-10-30T19:10:12.0456715Z Collecting python-dotenv>=1.0.1 (from -r requirements.txt (line 4))
+2026-10-30T19:10:12.0584378Z   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-10-30T19:10:12.1920847Z Collecting pillow>=11.0 (from -r requirements.txt (line 5))
+2026-10-30T19:10:12.2051625Z   Downloading pillow-13.0.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-10-30T19:10:12.2278837Z Collecting tzdata>=2024.1 (from -r requirements.txt (line 6))
+2026-10-30T19:10:12.2403803Z   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-10-30T19:10:12.2602385Z Collecting feedparser-sgmllib<3,>=2 (from feedparser>=6.0.11->-r requirements.txt (line 1))
+2026-10-30T19:10:12.2728471Z   Downloading feedparser_sgmllib-2.1.0-py3-none-any.whl.metadata (926 bytes)
+2026-10-30T19:10:12.2975547Z Collecting anyio<5,>=4.1.0 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.3102377Z   Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+2026-10-30T19:10:12.3305159Z Collecting docstring-parser<1,>=0.15 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.3433250Z   Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+2026-10-30T19:10:12.3640232Z Collecting httpx2<3,>=2.0.0 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.3765268Z   Downloading httpx2-2.16.0-py3-none-any.whl.metadata (10 kB)
+2026-10-30T19:10:12.4338486Z Collecting jiter<1,>=0.4.0 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.4470919Z   Downloading jiter-0.18.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+2026-10-30T19:10:12.4709406Z Collecting opentelemetry-api<2,>=1.1.0 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.4834960Z   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-10-30T19:10:12.5509116Z Collecting pydantic<3,>=1.10.0 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.5635068Z   Downloading pydantic-2.14.2-py3-none-any.whl.metadata (137 kB)
+2026-10-30T19:10:12.6010189Z Collecting sniffio<2,>=1 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.6134743Z   Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+2026-10-30T19:10:12.6360023Z Collecting typing-extensions<5,>=4.14 (from anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.6485371Z   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-10-30T19:10:12.6773767Z Collecting idna>=2.8 (from anyio<5,>=4.1.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.6902951Z   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-10-30T19:10:12.7128530Z Collecting httpcore2==2.16.0 (from httpx2<3,>=2.0.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.7254409Z   Downloading httpcore2-2.16.0-py3-none-any.whl.metadata (27 kB)
+2026-10-30T19:10:12.7474088Z Collecting truststore>=0.10 (from httpx2<3,>=2.0.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.7598362Z   Downloading truststore-0.10.5-py3-none-any.whl.metadata (4.5 kB)
+2026-10-30T19:10:12.7799589Z Collecting h11>=0.16 (from httpcore2==2.16.0->httpx2<3,>=2.0.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.7941572Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-10-30T19:10:12.8133694Z Collecting annotated-types>=0.6.0 (from pydantic<3,>=1.10.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:12.8258623Z   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-10-30T19:10:13.1734938Z Collecting pydantic-core==2.50.2 (from pydantic<3,>=1.10.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:13.1866933Z   Downloading pydantic_core-2.50.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.5 kB)
+2026-10-30T19:10:13.2077128Z Collecting typing-inspection>=0.4.4 (from pydantic<3,>=1.10.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+2026-10-30T19:10:13.2202170Z   Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+2026-10-30T19:10:13.2429838Z Collecting realtime==2.33.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.2557769Z   Downloading realtime-2.33.0-py3-none-any.whl.metadata (9.9 kB)
+2026-10-30T19:10:13.2785484Z Collecting supabase-functions==2.33.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.2911078Z   Downloading supabase_functions-2.33.0-py3-none-any.whl.metadata (2.4 kB)
+2026-10-30T19:10:13.3134587Z Collecting storage3==2.33.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.3259943Z   Downloading storage3-2.33.0-py3-none-any.whl.metadata (2.2 kB)
+2026-10-30T19:10:13.3479299Z Collecting supabase-auth==2.33.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.3606307Z   Downloading supabase_auth-2.33.0-py3-none-any.whl.metadata (6.4 kB)
+2026-10-30T19:10:13.3827406Z Collecting postgrest==2.33.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.3953330Z   Downloading postgrest-2.33.0-py3-none-any.whl.metadata (3.4 kB)
+2026-10-30T19:10:13.4199820Z Collecting httpx<0.29,>=0.26 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.4328621Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-10-30T19:10:13.5877571Z Collecting yarl>=1.22.0 (from supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.6006554Z   Downloading yarl-1.25.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+2026-10-30T19:10:13.6278426Z Collecting deprecation>=2.1.0 (from postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.6403079Z   Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+2026-10-30T19:10:13.7161156Z Collecting websockets<16,>=11 (from realtime==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.7288965Z   Downloading websockets-15.0.1-py3-none-any.whl.metadata (6.8 kB)
+2026-10-30T19:10:13.7519657Z Collecting pyjwt>=2.12.0 (from pyjwt[crypto]>=2.12.0->supabase-auth==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.7646894Z   Downloading pyjwt-2.15.1-py3-none-any.whl.metadata (3.5 kB)
+2026-10-30T19:10:13.7852622Z Collecting strenum>=0.4.15 (from supabase-functions==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.7978281Z   Downloading StrEnum-0.4.15-py3-none-any.whl.metadata (5.3 kB)
+2026-10-30T19:10:13.8226676Z Collecting certifi (from httpx<0.29,>=0.26->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.8351761Z   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-10-30T19:10:13.8572404Z Collecting httpcore==1.* (from httpx<0.29,>=0.26->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.8698993Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-10-30T19:10:13.8935659Z Collecting h2<5,>=3 (from httpx[http2]<0.29,>=0.26->postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.9061670Z   Downloading h2-4.4.1-py3-none-any.whl.metadata (3.8 kB)
+2026-10-30T19:10:13.9263961Z Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]<0.29,>=0.26->postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.9389657Z   Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+2026-10-30T19:10:13.9585621Z Collecting hpack<5,>=4.2 (from h2<5,>=3->httpx[http2]<0.29,>=0.26->postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:13.9710885Z   Downloading hpack-4.2.0-py3-none-any.whl.metadata (3.3 kB)
+2026-10-30T19:10:13.9955228Z Collecting packaging (from deprecation>=2.1.0->postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.0080885Z   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+2026-10-30T19:10:14.1154755Z Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.12.0->supabase-auth==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.1283932Z   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-10-30T19:10:14.1892390Z Collecting cffi>=2.0.0 (from cryptography>=3.4.0->pyjwt[crypto]>=2.12.0->supabase-auth==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.2018999Z   Downloading cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-10-30T19:10:14.2225587Z Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->pyjwt[crypto]>=2.12.0->supabase-auth==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.2350928Z   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-10-30T19:10:14.3722469Z Collecting multidict>=4.0 (from yarl>=1.22.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.3852272Z   Downloading multidict-7.2.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+2026-10-30T19:10:14.4319030Z Collecting propcache>=0.2.1 (from yarl>=1.22.0->supabase>=2.9.0->-r requirements.txt (line 3))
+2026-10-30T19:10:14.4452495Z   Downloading propcache-0.5.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+2026-10-30T19:10:14.4628189Z Downloading feedparser-6.0.14-py3-none-any.whl (80 kB)
+2026-10-30T19:10:14.4782893Z Downloading feedparser_sgmllib-2.1.0-py3-none-any.whl (11 kB)
+2026-10-30T19:10:14.4924080Z Downloading anthropic-2.3.0-py3-none-any.whl (2.2 MB)
+2026-10-30T19:10:14.5380377Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 59.9 MB/s  0:00:00
+2026-10-30T19:10:14.5509019Z Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+2026-10-30T19:10:14.5652895Z Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+2026-10-30T19:10:14.5797505Z Downloading httpx2-2.16.0-py3-none-any.whl (97 kB)
+2026-10-30T19:10:14.5939698Z Downloading httpcore2-2.16.0-py3-none-any.whl (85 kB)
+2026-10-30T19:10:14.6093640Z Downloading jiter-0.18.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (338 kB)
+2026-10-30T19:10:14.6242468Z Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-10-30T19:10:14.6385653Z Downloading pydantic-2.14.2-py3-none-any.whl (490 kB)
+2026-10-30T19:10:14.6536027Z Downloading pydantic_core-2.50.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.2 MB)
+2026-10-30T19:10:14.6683005Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 155.2 MB/s  0:00:00
+2026-10-30T19:10:14.6809227Z Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+2026-10-30T19:10:14.6951901Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-10-30T19:10:14.7092181Z Downloading supabase-2.33.0-py3-none-any.whl (16 kB)
+2026-10-30T19:10:14.7230516Z Downloading postgrest-2.33.0-py3-none-any.whl (23 kB)
+2026-10-30T19:10:14.7377448Z Downloading realtime-2.33.0-py3-none-any.whl (24 kB)
+2026-10-30T19:10:14.7514889Z Downloading storage3-2.33.0-py3-none-any.whl (28 kB)
+2026-10-30T19:10:14.7654415Z Downloading supabase_auth-2.33.0-py3-none-any.whl (48 kB)
+2026-10-30T19:10:14.7793444Z Downloading supabase_functions-2.33.0-py3-none-any.whl (9.3 kB)
+2026-10-30T19:10:14.7931418Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-10-30T19:10:14.8073394Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-10-30T19:10:14.8214757Z Downloading h2-4.4.1-py3-none-any.whl (62 kB)
+2026-10-30T19:10:14.8356349Z Downloading hpack-4.2.0-py3-none-any.whl (34 kB)
+2026-10-30T19:10:14.8496325Z Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
+2026-10-30T19:10:14.8636941Z Downloading websockets-15.0.1-py3-none-any.whl (169 kB)
+2026-10-30T19:10:14.8778770Z Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-10-30T19:10:14.8919835Z Downloading pillow-13.0.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-10-30T19:10:14.9402285Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 148.5 MB/s  0:00:00
+2026-10-30T19:10:14.9532837Z Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-10-30T19:10:14.9678869Z Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-10-30T19:10:14.9820218Z Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+2026-10-30T19:10:14.9962436Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-10-30T19:10:15.0104924Z Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-10-30T19:10:15.0246972Z Downloading pyjwt-2.15.1-py3-none-any.whl (33 kB)
+2026-10-30T19:10:15.0388532Z Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-10-30T19:10:15.0691743Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 157.2 MB/s  0:00:00
+2026-10-30T19:10:15.0819374Z Downloading cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-10-30T19:10:15.0962153Z Downloading StrEnum-0.4.15-py3-none-any.whl (8.9 kB)
+2026-10-30T19:10:15.1101565Z Downloading truststore-0.10.5-py3-none-any.whl (19 kB)
+2026-10-30T19:10:15.1241069Z Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+2026-10-30T19:10:15.1381488Z Downloading yarl-1.25.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
+2026-10-30T19:10:15.1525317Z Downloading multidict-7.2.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (506 kB)
+2026-10-30T19:10:15.1676554Z Downloading propcache-0.5.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (232 kB)
+2026-10-30T19:10:15.1821684Z Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-10-30T19:10:15.1964425Z Downloading packaging-26.3-py3-none-any.whl (129 kB)
+2026-10-30T19:10:15.2107589Z Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-10-30T19:10:15.4616543Z Installing collected packages: strenum, websockets, tzdata, typing-extensions, truststore, sniffio, python-dotenv, pyjwt, pycparser, propcache, pillow, packaging, multidict, jiter, idna, hyperframe, hpack, h11, feedparser-sgmllib, docstring-parser, certifi, annotated-types, yarl, typing-inspection, pydantic-core, opentelemetry-api, httpcore2, httpcore, h2, feedparser, deprecation, cffi, anyio, pydantic, httpx2, httpx, cryptography, realtime, anthropic, supabase-functions, supabase-auth, storage3, postgrest, supabase
+2026-10-30T19:10:18.2942936Z 
+2026-10-30T19:10:18.2969035Z Successfully installed annotated-types-0.8.0 anthropic-2.3.0 anyio-4.15.1 certifi-2026.10.23 cffi-2.1.1 cryptography-50.0.2 deprecation-2.1.0 docstring-parser-0.18.0 feedparser-6.0.14 feedparser-sgmllib-2.1.0 h11-0.16.0 h2-4.4.1 hpack-4.2.0 httpcore-1.0.9 httpcore2-2.16.0 httpx-0.28.1 httpx2-2.16.0 hyperframe-6.1.0 idna-3.20 jiter-0.18.0 multidict-7.2.1 opentelemetry-api-1.45.2 packaging-26.3 pillow-13.0.0 postgrest-2.33.0 propcache-0.5.4 pycparser-3.12 pydantic-2.14.2 pydantic-core-2.50.2 pyjwt-2.15.1 python-dotenv-1.2.4 realtime-2.33.0 sniffio-1.3.1 storage3-2.33.0 strenum-0.4.15 supabase-2.33.0 supabase-auth-2.33.0 supabase-functions-2.33.0 truststore-0.10.5 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.6 websockets-15.0.1 yarl-1.25.1
+2026-10-30T19:10:18.4254449Z ##[group]Run python pipeline.py
+2026-10-30T19:10:18.4254668Z [36;1mpython pipeline.py[0m
+2026-10-30T19:10:18.4280684Z shell: /usr/bin/bash -e {0}
+2026-10-30T19:10:18.4280849Z env:
+2026-10-30T19:10:18.4281032Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:18.4281300Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.9/x64/lib/pkgconfig
+2026-10-30T19:10:18.4281566Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:18.4281801Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:18.4282035Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.9/x64
+2026-10-30T19:10:18.4282269Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.9/x64/lib
+2026-10-30T19:10:18.4282777Z   SUPABASE_URL: ***
+2026-10-30T19:10:18.4282989Z   SUPABASE_SERVICE_KEY: ***
+2026-10-30T19:10:18.4283217Z   GEMINI_API_KEY: ***
+2026-10-30T19:10:18.4283436Z   GROQ_API_KEY: ***
+2026-10-30T19:10:18.4283671Z   AI_PROVIDER: gemini,nvidia,gemini-lite,groq,mistral,cerebras
+2026-10-30T19:10:18.4283993Z   NVIDIA_API_KEY: ***
+2026-10-30T19:10:18.4284207Z   CEREBRAS_API_KEY: ***
+2026-10-30T19:10:18.4284353Z   MISTRAL_API_KEY: 
+2026-10-30T19:10:18.4284522Z   CF_ACCOUNT_ID: ***
+2026-10-30T19:10:18.4284735Z   CF_API_TOKEN: ***
+2026-10-30T19:10:18.4284870Z   AI_HORDE_KEY: 
+2026-10-30T19:10:18.4285012Z   POLLINATIONS_TOKEN: 
+2026-10-30T19:10:18.4285182Z   SMTP_USER: ***
+2026-10-30T19:10:18.4285331Z   SMTP_PASS: ***
+2026-10-30T19:10:18.4285465Z   COVERS: true
+2026-10-30T19:10:18.4285601Z   COVERS_PER_RUN: 12
+2026-10-30T19:10:18.4285740Z   TEST_MODE: false
+2026-10-30T19:10:18.4285878Z   USE_AI: true
+2026-10-30T19:10:18.4286007Z   MAX_AI_CALLS: 40
+2026-10-30T19:10:18.4286261Z   DAILY_AI_CAP: 2000
+2026-10-30T19:10:18.4286457Z ##[endgroup]
+2026-10-30T19:12:49.9519453Z ##[error]The operation was canceled.
+2026-10-30T19:12:49.9594617Z Post job cleanup.
+2026-10-30T19:12:50.0144992Z [command]/usr/bin/git version
+2026-10-30T19:12:50.0177656Z git version 2.56.0
+2026-10-30T19:12:50.0201166Z Temporarily overriding HOME='/home/runner/work/_temp/84de2173-60f4-41db-ba24-b913ef4614e9' before making global git config changes
+2026-10-30T19:12:50.0202028Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T19:12:50.0204601Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cybershorts/cybershorts
+2026-10-30T19:12:50.0236499Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T19:12:50.0264991Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T19:12:50.0517071Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T19:12:50.0529581Z http.https://github.com/.extraheader
+2026-10-30T19:12:50.0538755Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-30T19:12:50.0577664Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T19:12:50.0839130Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T19:12:50.0869318Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T19:12:50.1241242Z Cleaning up orphan processes
+2026-10-30T19:12:50.1426157Z Terminate orphan process: pid (2445) (python)
