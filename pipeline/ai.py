@@ -1,6 +1,6 @@
 """AI providers for the pipeline. Free by default.
 
-AI_PROVIDER   order to try, comma separated. Default "gemini,nvidia,gemini-lite,groq,mistral,cerebras" (free plans).
+AI_PROVIDER   order to try, comma separated. Default "gemini,nvidia,ovh,gemini-lite,groq,mistral,cerebras" (free plans).
               "gemini" is the full-size Gemini models, "gemini-lite" the lite and Gemma ones. NVIDIA sits in
               between: when the strong Gemini models run out for the day, a strong NVIDIA model answers
               before the lite ones (the lite models rarely write attack chains).
@@ -11,6 +11,9 @@ GEMINI_MODELS models to try in order (free tier). Change here if Google renames 
 GROQ_MODELS   models to try in order (free tier). Each has its own limit too.
 NVIDIA_MODELS models on NVIDIA's free developer API (build.nvidia.com, about 40 requests a minute for the
               whole account). Free key starting "nvapi-", saved as the NVIDIA_API_KEY secret.
+OVH_MODELS    models on OVHcloud AI Endpoints (France). Needs no key: anyone may make 2 requests a minute per model,
+              so the models take turns and a model that is resting is skipped, never waited for.
+              An optional OVH_AI_ENDPOINTS_ACCESS_TOKEN raises the limits (that one is paid per use).
 If a model hits its free limit (or is retired, or the account needs payment), the next one is used
 automatically for the rest of the run.
 """
@@ -36,6 +39,9 @@ NVIDIA_MODELS = [m.strip() for m in os.getenv("NVIDIA_MODELS", "minimaxai/minima
 def is_lite(model):
     """The smaller Gemini models and Gemma: big free limits, but weaker (they rarely write attack chains)."""
     return "lite" in model or model.startswith("gemma")
+# OVHcloud AI Endpoints with no key (checked 30 Oct 2026: gpt-oss-120b answered in under 2 seconds)
+OVH_MODELS = [m.strip() for m in os.getenv(
+    "OVH_MODELS", "gpt-oss-120b,Meta-Llama-3_3-70B-Instruct,Qwen3.5-397B-A17B,Mistral-Small-3.2-24B-Instruct-2506").split(",") if m.strip()]
 MISTRAL_MODELS = [m.strip() for m in os.getenv("MISTRAL_MODELS", "mistral-small-latest").split(",") if m.strip()]
 
 # OpenAI-style providers: (web address, key name in .env, models)
@@ -44,7 +50,13 @@ OPENAI_STYLE = {
     "cerebras": ("https://api.cerebras.ai/v1/chat/completions", "CEREBRAS_API_KEY", CEREBRAS_MODELS),
     "mistral": ("https://api.mistral.ai/v1/chat/completions", "MISTRAL_API_KEY", MISTRAL_MODELS),
     "nvidia": ("https://integrate.api.nvidia.com/v1/chat/completions", "NVIDIA_API_KEY", NVIDIA_MODELS),
+    "ovh": ("https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions", "OVH_AI_ENDPOINTS_ACCESS_TOKEN", OVH_MODELS),
 }
+# providers that work without a key (the key only raises their limits)
+NO_KEY_NEEDED = {"ovh"}
+# providers whose models each have a small per-minute limit: the models take turns, one that is resting
+# (or just said "too many requests") is skipped for this story instead of waited for
+TAKE_TURNS = {"ovh"}
 CLAUDE_MODEL = os.getenv("AI_MODEL", "claude-haiku-4-5-20251001")
 
 # pause between calls so we stay inside free per-minute limits
@@ -54,6 +66,7 @@ GAP_SECONDS = {
     "groq": float(os.getenv("GROQ_GAP", "2.5")),
     "mistral": float(os.getenv("MISTRAL_GAP", "2")),
     "nvidia": float(os.getenv("NVIDIA_GAP", "2")),   # free plan: about 40 requests a minute, whole account
+    "ovh": float(os.getenv("OVH_GAP", "31")),        # no key: 2 requests a minute per model
     "claude": 0.3,
 }
 
@@ -91,7 +104,7 @@ def extract_json(text):
 
 class AI:
     def __init__(self):
-        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,nvidia,gemini-lite,groq,mistral,cerebras").lower().split(",") if p.strip()]
+        order = [p.strip() for p in os.getenv("AI_PROVIDER", "gemini,nvidia,ovh,gemini-lite,groq,mistral,cerebras").lower().split(",") if p.strip()]
         # an older setting with just "gemini" keeps all Gemini models together, as before
         split = "gemini-lite" in order
         self.chain = []
@@ -100,7 +113,7 @@ class AI:
                 self.chain += [("gemini", m) for m in GEMINI_MODELS if not (split and is_lite(m))]
             elif p == "gemini-lite" and os.getenv("GEMINI_API_KEY"):
                 self.chain += [("gemini", m) for m in GEMINI_MODELS if is_lite(m)]
-            elif p in OPENAI_STYLE and os.getenv(OPENAI_STYLE[p][1]):
+            elif p in OPENAI_STYLE and (os.getenv(OPENAI_STYLE[p][1]) or p in NO_KEY_NEEDED):
                 self.chain += [(p, m) for m in OPENAI_STYLE[p][2]]
             elif p == "claude" and os.getenv("ANTHROPIC_API_KEY"):
                 self.chain.append(("claude", CLAUDE_MODEL))
@@ -110,6 +123,14 @@ class AI:
         self.last = {}
         self._anthropic = None
         self.used = {}
+        self.strikes = {}
+
+    def _turns(self):
+        """The chain for one story. Models that take turns go least recently used first, in the same place."""
+        rest = {}
+        for p in TAKE_TURNS:
+            rest[p] = iter(sorted((c for c in self.chain if c[0] == p), key=lambda c: self.last.get(c, 0)))
+        return [next(rest[c[0]]) if c[0] in rest else c for c in self.chain]
 
     @property
     def can_research(self):
@@ -128,7 +149,7 @@ class AI:
 
     def _wait(self, provider, model=""):
         # Gemini and Groq count their per-minute limits per model, so moving on to the next model needs no pause
-        key = (provider, model) if provider in ("gemini", "groq") else provider
+        key = (provider, model) if provider in ("gemini", "groq") or provider in TAKE_TURNS else provider
         gap = GAP_SECONDS.get(provider, 1)
         since = time.time() - self.last.get(key, 0)
         if since < gap:
@@ -138,9 +159,11 @@ class AI:
     def json(self, system, user, max_tokens=800):
         """Ask for a JSON reply. Tries each provider/model in order until one works."""
         errors = []
-        for provider, model in self.chain:
+        for provider, model in self._turns():
             if (provider, model) in self.dead:
                 continue
+            if provider in TAKE_TURNS and time.time() - self.last.get((provider, model), 0) < GAP_SECONDS[provider]:
+                continue   # this model is resting: try the next one instead of waiting
             self._wait(provider, model)
             try:
                 try:
@@ -159,6 +182,12 @@ class AI:
                     # busy right now: use the next model for this story only, try this one again next time
                     print(f"[busy]  {provider}:{model} busy, using the next model for this story")
                     continue
+                if provider in TAKE_TURNS and "HTTP 429" in str(ex):
+                    # per-minute limit: rest this model and try it again later, unless it keeps saying no
+                    self.strikes[(provider, model)] = self.strikes.get((provider, model), 0) + 1
+                    if self.strikes[(provider, model)] < 3:
+                        print(f"[rest]  {provider}:{model} too many requests, resting it for a minute")
+                        continue
                 reason = ("free limit reached" if "429" in str(ex) else
                           "needs payment" if "HTTP 402" in str(ex) else
                           "retired" if "HTTP 410" in str(ex) else "not available")
@@ -202,7 +231,8 @@ class AI:
         body = {"model": model, "temperature": 0.2, "max_tokens": max(max_tokens, 1500),
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "response_format": {"type": "json_object"}}
-        headers = {"Authorization": f"Bearer {os.environ[key_name]}"}
+        key = os.getenv(key_name)
+        headers = {"Authorization": f"Bearer {key}"} if key else {}
         try:
             data = _post(url, headers, body)
         except RuntimeError as ex:
