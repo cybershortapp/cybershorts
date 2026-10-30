@@ -25,3 +25,4 @@ for x in rows:
         p(f"  NO PICTURE {x['created_at'][11:16]} {x['source'][:28]:<28} {x['headline'][:60]}")
 print("\n".join(out))
 open("pic.txt", "w").write("#".join(out))
+# 19:26
