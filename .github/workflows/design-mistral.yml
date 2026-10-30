@@ -1,0 +1,26 @@
+name: Design Mistral probe
+# Only on the design-samples branch. Read-only: one test request to check the Mistral key works.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/mistral_probe.py", ".github/workflows/design-mistral.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: python ds/design/mistral_probe.py 2>&1 | tail -20 | tee probe.txt; echo "::notice::$(grep -E '^(key|OK|FAIL)' probe.txt | tr '\n' '#')"
