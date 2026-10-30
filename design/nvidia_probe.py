@@ -1,38 +1,32 @@
-"""Read-only: why NVIDIA answers fail in the news run. Calls NVIDIA's free API with a tiny prompt per model
-and prints the exact error (never the key). Also checks the model names exist."""
-import json, os, sys, time, urllib.request, urllib.error
+"""Read-only: which NVIDIA free models work for our news summaries and attack chains.
+For each candidate: the real news prompt (pipeline.summarise_ai) on one test article that describes attack
+steps. Prints time taken, whether the JSON was usable and how many chain steps came back. Never prints the key."""
+import os, sys, time
 sys.path.insert(0, "pipeline")
+os.chdir("pipeline")
 import ai as A
+import pipeline as P
 
-key = os.environ.get("NVIDIA_API_KEY", "")
-print("key set:", bool(key), "starts with nvapi-:", key.startswith("nvapi-"))
-try:
-    req = urllib.request.Request("https://integrate.api.nvidia.com/v1/models", headers={"Authorization": f"Bearer {key}", "User-Agent": "CyberSid/1.0"})
-    ids = [m["id"] for m in json.load(urllib.request.urlopen(req, timeout=30))["data"]]
-    print("models listed:", len(ids))
-    for want in A.NVIDIA_MODELS:
-        print("  ", want, "->", "listed" if want in ids else "NOT LISTED")
-    print("ALL: " + ", ".join(sorted(ids)))
-except Exception as ex:
-    print("model list failed:", str(ex)[:300])
-
-ai = A.AI.__new__(A.AI)
-ai.last = {}
-system = "Reply with ONLY a JSON object."
-user = 'Return {"ok": true, "word": "hello"}'
-CANDIDATES = [m for m in os.getenv("CANDIDATES", "").split(",") if m] or A.NVIDIA_MODELS
+TITLE = "Ransomware gang breaches regional hospital through phishing email and old VPN flaw"
+TEXT = ("Investigators say the attack on the hospital began with a phishing email sent to an accounts worker, "
+        "which carried a booby-trapped invoice. Opening it installed a loader that gave the criminals remote access. "
+        "They then used an unpatched flaw in the hospital's VPN appliance to get a second way in, dumped staff "
+        "passwords from a domain controller with Mimikatz and moved across the network to backup servers, which they "
+        "deleted. Over two days they copied about 400 GB of patient records to a cloud storage account, and finally "
+        "launched the ransomware, encrypting 1,200 machines and forcing ambulances to be diverted. The gang has "
+        "posted a sample of the stolen data and is demanding $4 million. The hospital says it has not paid.")
+CANDIDATES = [m for m in os.getenv("CANDIDATES", "").split(",") if m]
+url, key_name, _ = A.OPENAI_STYLE["nvidia"]
 for model in CANDIDATES:
-    for attempt in ("json mode",):
-        url, key_name, _ = A.OPENAI_STYLE["nvidia"]
-        body = {"model": model, "temperature": 0.2, "max_tokens": 1500,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
-        if attempt == "json mode":
-            body["response_format"] = {"type": "json_object"}
-        t = time.time()
-        try:
-            data = A._post(url, {"Authorization": f"Bearer {key}"}, body, timeout=60)
-            msg = data["choices"][0]["message"]
-            print(f"[{model} | {attempt}] OK in {time.time()-t:.1f}s content={str(msg.get('content'))[:160]!r} reasoning={'yes' if msg.get('reasoning_content') or msg.get('reasoning') else 'no'}")
-        except Exception as ex:
-            print(f"[{model} | {attempt}] FAILED in {time.time()-t:.1f}s: {type(ex).__name__}: {str(ex)[:400]}")
-        time.sleep(2)
+    A.OPENAI_STYLE["nvidia"] = (url, key_name, [model])
+    os.environ["AI_PROVIDER"] = "nvidia"
+    ai = A.AI()
+    ai.chain = [("nvidia", model)]
+    t = time.time()
+    try:
+        s = P.summarise_ai(ai, TITLE, TEXT)
+        chain = P.clean_chain(s.get("chain"), f"{TITLE} {TEXT}") if s.get("chain") else None
+        print(f"OK   {model}: {time.time()-t:.1f}s | {s.get('category')}/{s.get('severity')} | chain steps: {len(chain or [])} | headline: {s.get('headline','')[:70]}")
+    except Exception as ex:
+        print(f"FAIL {model}: {time.time()-t:.1f}s | {type(ex).__name__}: {str(ex)[:220]}")
+    time.sleep(2)

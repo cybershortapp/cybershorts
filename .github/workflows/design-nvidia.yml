@@ -9,7 +9,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
         with:
@@ -20,7 +20,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
       - env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          CANDIDATES: ""
+          CANDIDATES: "deepseek-ai/deepseek-v4.1-flash,nvidia/nemotron-3-super-120b-a12b,z-ai/glm-5.3-flash,minimaxai/minimax-m3.1-flash,moonshotai/kimi-k2.6,mistralai/mistral-large-4-1t-a52b,google/gemma-4-31b-it,nvidia/llama-3.1-nemotron-ultra-253b-v1,openai/gpt-oss-20b"
         run: python ds/design/nvidia_probe.py | tee probe.txt; while read -r l; do echo "::notice::$l"; done < probe.txt
