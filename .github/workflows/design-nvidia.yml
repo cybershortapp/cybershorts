@@ -22,4 +22,5 @@ jobs:
           python-version: "3.14"
       - env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          CANDIDATES: ""
         run: python ds/design/nvidia_probe.py | tee probe.txt; while read -r l; do echo "::notice::$l"; done < probe.txt

@@ -12,7 +12,7 @@ try:
     print("models listed:", len(ids))
     for want in A.NVIDIA_MODELS:
         print("  ", want, "->", "listed" if want in ids else "NOT LISTED")
-    print("  similar:", [i for i in ids if "llama-3.3" in i or "gpt-oss" in i or "llama-4" in i][:12])
+    print("ALL: " + ", ".join(sorted(ids)))
 except Exception as ex:
     print("model list failed:", str(ex)[:300])
 
@@ -20,8 +20,9 @@ ai = A.AI.__new__(A.AI)
 ai.last = {}
 system = "Reply with ONLY a JSON object."
 user = 'Return {"ok": true, "word": "hello"}'
-for model in A.NVIDIA_MODELS:
-    for attempt in ("json mode", "no json mode"):
+CANDIDATES = [m for m in os.getenv("CANDIDATES", "").split(",") if m] or A.NVIDIA_MODELS
+for model in CANDIDATES:
+    for attempt in ("json mode",):
         url, key_name, _ = A.OPENAI_STYLE["nvidia"]
         body = {"model": model, "temperature": 0.2, "max_tokens": 1500,
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
