@@ -99,3 +99,12 @@ for dk in db.table("decks").select("id,title,country,story_ids,created_at").orde
     p(f"\n== Deck '{dk['title']}' ({dk['created_at'][:16]}) saved as country {dk['country']}: story countries {dict(Counter(s['country'] for s in sts))}")
     for s in sts:
         p(f"   {s['country']:<5} {s['source'][:22]:<22} {s['headline'][:80]}")
+
+# ---- app problems reported by phones in the last 14 days ----
+errs = db.table("app_errors").select("message,fatal,app_version,device,created_at").gte("created_at", (now - timedelta(days=14)).isoformat()).order("created_at", desc=True).limit(500).execute().data
+p(f"\n== App problems reported in the last 14 days: {len(errs)}")
+by = defaultdict(list)
+for e in errs:
+    by[e["message"][:90]].append(e)
+for m, es in sorted(by.items(), key=lambda x: -len(x[1])):
+    p(f"  {len(es):>3}x  last {es[0]['created_at'][:16]}  versions {sorted({x['app_version'] for x in es})}  fatal {any(x['fatal'] for x in es)}  | {m}")
