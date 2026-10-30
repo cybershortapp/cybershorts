@@ -12,7 +12,8 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    # the news step stops itself after about 11 minutes; this is only the hard stop if something hangs
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: pipeline
@@ -32,8 +33,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-          cache: pip
-          cache-dependency-path: pipeline/requirements.txt
       - run: pip install -r requirements.txt
       - run: python pipeline.py
         env:
