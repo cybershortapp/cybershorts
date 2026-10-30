@@ -463,12 +463,18 @@ def make_trending(db, ai, budget, deadline):
     if look == "comic" and sum(1 for s in slides if s["say"]) < len(slides) - 1:
         look = "case"   # a comic needs its speech bubbles
     slides[0]["style"] = look
-    countries = {r.get("country") or "INTL" for r in picked}
+    # the deck goes to the readers whose news it is: if most of its stories are from one country
+    # (India or the UK), only that country sees it. Before, one worldwide story among five Indian
+    # ones made it "worldwide", so UK readers got an India WhatsApp-scam deck.
+    from collections import Counter
+    counts = Counter((r.get("country") or "INTL") for r in picked)
+    local = [(c, n) for c, n in counts.most_common() if c not in ("INTL", "XX")]
+    country = local[0][0] if local and local[0][1] * 2 > len(picked) else "INTL"
     deck = {
         "id": hashlib.sha1(f"{topic}|{now.date()}".encode()).hexdigest()[:20],
         "topic": topic, "title": _short(slides[0]["title"] or name, 60), "slides": slides,
         "story_ids": [r["id"] for r in picked],
-        "country": countries.pop() if len(countries) == 1 else "INTL",
+        "country": country,
         "expires_at": (now + timedelta(days=3)).isoformat(),
     }
     db.table("decks").upsert(deck).execute()
