@@ -364,8 +364,11 @@ function Timeline({ deck, k, P, small }: { deck: Deck; k: number; P: Pal; small:
     a.start();
     return () => a.stop();
   }, [pulse]);
-  const list = [...events.map(({ x, j }) => ({ when: x.when, title: x.title, text: j === k ? x.text : '', now: false })), ...(move ? [{ when: 'NOW', title: `Your move: ${move.replace(/\.$/, '')}`, text: '', now: true }] : [])];
-  if (!list.length) list.push({ when: s.when || 'NOW', title: s.title, text: s.text, now: true });
+  // what this slide itself says: its text, or its points when it has no text (they used to be dropped,
+  // leaving the slide's own event as a copy of the title with nothing under it)
+  const own = (x: (typeof deck.slides)[number]) => x.text?.trim() || (x.points ?? []).filter(Boolean).slice(0, 3).map((p) => `• ${p}`).join('\n');
+  const list = [...events.map(({ x, j }) => ({ when: x.when, title: j === k && own(x) ? '' : x.title, text: j === k ? own(x) : '', now: false })), ...(move ? [{ when: 'NOW', title: `Your move: ${move.replace(/\.$/, '')}`, text: '', now: true }] : [])];
+  if (!list.length) list.push({ when: s.when || 'NOW', title: own(s) ? '' : s.title, text: own(s), now: true });
   return (
     <View>
       <Text style={styles.title} numberOfLines={3}>{s.title}</Text>
@@ -384,8 +387,8 @@ function Timeline({ deck, k, P, small }: { deck: Deck; k: number; P: Pal; small:
             </View>
             <View style={[styles.event, e.now && { borderColor: 'rgba(22,163,74,0.35)' }]}>
               <Text style={{ color: e.now ? '#16A34A' : P.accent, fontFamily: F.brand, fontSize: 10.5, letterSpacing: 1 }}>{(e.when || '').toUpperCase()}</Text>
-              <Text style={{ color: INK, fontFamily: F.brand, fontSize: 14.5, lineHeight: 19, marginTop: 2 }} numberOfLines={2}>{e.title}</Text>
-              {!!e.text && <Text style={{ color: '#4A4D5A', fontFamily: F.body, fontSize: 12.5, lineHeight: 17, marginTop: 3 }} numberOfLines={small ? 2 : 3}>{e.text}</Text>}
+              {!!e.title && <Text style={{ color: INK, fontFamily: F.brand, fontSize: 14.5, lineHeight: 19, marginTop: 2 }} numberOfLines={2}>{e.title}</Text>}
+              {!!e.text && <Text style={{ color: e.title ? '#4A4D5A' : INK, fontFamily: e.title ? F.body : F.label, fontSize: e.title ? 12.5 : 13.5, lineHeight: e.title ? 17 : 19, marginTop: e.title ? 3 : 2 }} numberOfLines={small ? 4 : 6}>{e.text}</Text>}
             </View>
           </View>
         ))}
