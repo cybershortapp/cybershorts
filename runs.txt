@@ -1,0 +1,99 @@
+=== run 41232075496
+Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+  Downloading pyjwt-2.15.1-py3-none-any.whl.metadata (3.5 kB)
+  Downloading multidict-7.2.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+shell: /usr/bin/bash -e {0}
+  USE_AI: true
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (286 used today, daily cap 2000)
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+NCSC                              15    0      0    14    1     0     0  OK
+Infosecurity Magazine             15    0      0    15    0     0     0  OK
+CrowdStrike                        6    0      0     6    0     0     0  OK
+AI used: gemini:gemini-3.8-flash x1, gemini:gemini-3-flash-preview x2, nvidia:minimaxai/minimax-m3.1-flash x7
+##[notice]2 new, 8 merged, 831 already seen, 37 too old, 23 not news, 0 failed | 10 AI calls | sources 89/89 | new from: UK news: ransomware, World news: hackers | tip: none due | history: none due | pictures: off | copies: 2 copied | colours: 2 coloured, 0 unreadable | chain explainers: 1 written | games: 1 made (overshare) | deck: none due (one a day) | alerts: 126 alerts to 63 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 257s, AI used: gemini:gemini-3.8-flash x1, gemini:gemini-3-flash-preview x2, nvidia:minimaxai/minimax-m3.1-flash x7 | feed top: 1.0h ago (BleepingComputer: Northflank breach exposes customer AI API keys) ; 4.9h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 5.0h ago (Microsoft Security Response Center: Microsoft fixes 3 high severity Chromium flaws in )
+=== run 41229701708
+  Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting feedparser-sgmllib<3,>=2 (from feedparser>=6.0.11->-r requirements.txt (line 1))
+Collecting certifi (from httpx<0.29,>=0.26->supabase>=2.9.0->-r requirements.txt (line 3))
+shell: /usr/bin/bash -e {0}
+  USE_AI: true
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (281 used today, daily cap 2000)
+[limit] gemini:gemini-3.8-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+Cloudflare Security                6    0      0     6    0     0     0  OK
+Sekoia                             6    0      0     6    0     0     0  OK
+AI used: nvidia:minimaxai/minimax-m3.1-flash x5
+##[notice]1 new, 3 merged, 736 already seen, 36 too old, 8 not news, 0 failed | 5 AI calls | sources 79/89 | new from: BleepingComputer | tip: none due | history: none due | pictures: off | copies: 1 copied | colours: 1 coloured, 0 unreadable | chain explainers: 0 written | games: none due (10 made so far today, next one later) | deck: none due (one a day) | alerts: 63 alerts to 63 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 90s, AI used: nvidia:minimaxai/minimax-m3.1-flash x5 | feed top: 0.5h ago (BleepingComputer: Northflank breach exposes customer AI API keys) ; 4.4h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 4.5h ago (Microsoft Security Response Center: Microsoft fixes 3 high severity Chromium flaws in )
+=== run 41227211665
+Temporarily overriding HOME='/home/runner/work/_temp/684d5757-654e-4bb4-9a60-e89ec4294358' before making global git config changes
+Collecting python-dotenv>=1.0.1 (from -r requirements.txt (line 4))
+Collecting truststore>=0.10 (from httpx2<3,>=2.0.0->anthropic>=0.40.0->-r requirements.txt (line 2))
+Downloading h2-4.4.1-py3-none-any.whl (62 kB)
+  TEST_MODE: false
+  USE_AI: true
+  MAX_AI_CALLS: 40
+  DAILY_AI_CAP: 2000
+##[endgroup]
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (271 used today, daily cap 2000)
+[limit] gemini:gemini-3.8-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+AI used: gemini:gemini-3-flash-preview x2, nvidia:minimaxai/minimax-m3.1-flash x4, ovh:Mistral-Small-3.2-24B-Instruct-2506 x1, ovh:Mistral-Nemo-Instruct-2407 x1, gemini:gemini-3.5-flash-lite x2
+##[notice]1 new, 5 merged, 705 already seen, 35 too old, 3 not news, 0 failed | 10 AI calls | sources 76/89 | new from: Microsoft Security Response Center | tip: none due | history: none due | pictures: 1 made ({'cloudflare': 1}) | copies: none needed | colours: 1 coloured, 0 unreadable | chain explainers: 0 written | games: none due (10 made so far today, next one later) | deck: none due (one a day) | alerts: 63 alerts to 63 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 220s, AI used: gemini:gemini-3-flash-preview x2, nvidia:minimaxai/minimax-m3.1-flash x4, ovh:Mistral-Small-3.2-24B-Instruct-2506 x1, ovh:Mistral-Nemo-Instruct-2407 x1, gemini:gemini-3.5-flash-lite x2 | feed top: 3.9h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 4.0h ago (Microsoft Security Response Center: Microsoft fixes 3 high severity Chromium flaws in ) ; 6.0h ago (Cisco Talos: VOLTA infostealer uses AI to prioritise victims fo)
+=== run 41225235061
+Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+  USE_AI: true
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (269 used today, daily cap 2000)
+[limit] gemini:gemini-3.8-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+AI used: nvidia:minimaxai/minimax-m3.1-flash x2
+##[notice]0 new, 3 merged, 848 already seen, 36 too old, 5 not news, 0 failed | 2 AI calls | sources 88/89 | new from: none | tip: none due | history: none due | pictures: off | copies: none needed | colours: 0 coloured, 0 unreadable | chain explainers: 0 written | games: none due (10 made so far today, next one later) | deck: none due (one a day) | alerts: 0 alerts to 0 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 68s, AI used: nvidia:minimaxai/minimax-m3.1-flash x2 | feed top: 3.5h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 5.6h ago (Cisco Talos: VOLTA infostealer uses AI to prioritise victims fo) ; 8.4h ago (Rediff.com: Delhi Police dismantle cyber fraud ring targeting )
+=== run 41224811665
+  USE_AI: true
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (261 used today, daily cap 2000)
+[limit] gemini:gemini-3.8-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[limit] nvidia:minimaxai/minimax-m3.1-flash free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+Sekoia                             6    0      0     6    0     0     0  OK
+AI used: nvidia:minimaxai/minimax-m3.1-flash x4, ovh:Mistral-Small-3.2-24B-Instruct-2506 x1, ovh:Mistral-Nemo-Instruct-2407 x1, gemini:gemini-3.5-flash-lite x2
+##[notice]1 new, 3 merged, 844 already seen, 36 too old, 19 not news, 0 failed | 8 AI calls | sources 89/89 | new from: World news: cyberattacks | tip: none due | history: none due | pictures: off | copies: 1 copied | colours: 1 coloured, 0 unreadable | chain explainers: 0 written | games: none due (10 made so far today, next one later) | deck: none due (one a day) | alerts: 0 alerts to 0 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 171s, AI used: nvidia:minimaxai/minimax-m3.1-flash x4, ovh:Mistral-Small-3.2-24B-Instruct-2506 x1, ovh:Mistral-Nemo-Instruct-2407 x1, gemini:gemini-3.5-flash-lite x2 | feed top: 3.4h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 5.5h ago (Cisco Talos: VOLTA infostealer uses AI to prioritise victims fo) ; 8.3h ago (Rediff.com: Delhi Police dismantle cyber fraud ring targeting )
+=== run 41222340532
+  Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting deprecation>=2.1.0 (from postgrest==2.33.0->supabase>=2.9.0->-r requirements.txt (line 3))
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 356.6 MB/s  0:00:00
+  SMTP_USER: ***
+  USE_AI: true
+AI: gemini:gemini-3.8-flash -> gemini:gemini-3.7-flash -> gemini:gemini-3.6-flash -> gemini:gemini-3.5-flash -> gemini:gemini-3-flash-preview -> nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407 -> gemini:gemini-3.5-flash-lite -> gemini:gemini-3.1-flash-lite -> gemini:gemma-4-26b-a4b-it -> gemini:gemma-4-31b-it -> groq:openai/gpt-oss-120b -> groq:qwen/qwen3.8-27b -> groq:openai/gpt-oss-20b -> mistral:ministral-14b-latest -> mistral:open-mistral-nemo -> cerebras:gpt-oss-120b | chain research: off (free mode)
+AI budget this run: 40 calls (242 used today, daily cap 2000)
+[limit] gemini:gemini-3.8-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.7-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.6-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3.5-flash free limit reached, using the next model for the rest of this run
+[limit] gemini:gemini-3-flash-preview free limit reached, using the next model for the rest of this run
+[warn] digest to one subscriber failed: Connection unexpectedly closed
+AI used: gemini:gemini-3.6-flash x1, gemini:gemini-3-flash-preview x1, ovh:Mistral-Small-3.2-24B-Instruct-2506 x5, ovh:Mistral-Nemo-Instruct-2407 x3, gemini:gemini-3.5-flash-lite x9
+##[notice]4 new, 8 merged, 814 already seen, 36 too old, 29 not news, 0 failed | 19 AI calls | sources 88/89 | new from: UK news: fraud and phishing, UK news: cyber security, World news: data breaches, India news: cyber fraud | tip: none due | history: none due | pictures: 1 made ({'cloudflare': 1}) | copies: 3 copied | colours: 4 coloured, 0 unreadable | chain explainers: 0 written | games: 1 made (home) | deck: none due (one a day) | alerts: 0 alerts to 0 of 63 phones (GB 29, IN 26, INTL 8) | email: 0 confirmations, 0 digests | stopped early: False | took 375s, AI used: gemini:gemini-3.6-flash x1, gemini:gemini-3-flash-preview x1, ovh:Mistral-Small-3.2-24B-Instruct-2506 x5, ovh:Mistral-Nemo-Instruct-2407 x3, gemini:gemini-3.5-flash-lite x9 | feed top: 2.9h ago (BleepingComputer: Reddit to require logins to restrict content scrap) ; 5.0h ago (Cisco Talos: VOLTA infostealer uses AI to prioritise victims fo) ; 7.8h ago (Rediff.com: Delhi Police dismantle cyber fraud ring targeting )

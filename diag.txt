@@ -1,0 +1,105 @@
+== Attack chains, stories added in the last 7 days (987) ==
+2026-10-31: 56 stories, 16 with a chain, 10 serious ransomware/breach stories
+2026-10-30: 168 stories, 22 with a chain, 35 serious ransomware/breach stories
+2026-10-29: 154 stories, 6 with a chain, 34 serious ransomware/breach stories
+2026-10-28: 170 stories, 21 with a chain, 31 serious ransomware/breach stories
+2026-10-27: 179 stories, 32 with a chain, 39 serious ransomware/breach stories
+2026-10-26: 173 stories, 20 with a chain, 30 serious ransomware/breach stories
+2026-10-25: 70 stories, 3 with a chain, 10 serious ransomware/breach stories
+2026-10-24: 17 stories, 0 with a chain, 8 serious ransomware/breach stories
+
+Newest stories with a chain:
+  2026-10-31T19:02  Scams           High     3 steps  Romance scam defendants pleaded guilty to $9m wire fraud
+  2026-10-31T16:03  Scams           High     3 steps  CEO Fraud Scams Target Finance Teams
+  2026-10-31T13:02  Scams           High     3 steps  ED arrests associate in Korvio Coin Ponzi fraud
+  2026-10-31T12:02  Ransomware      High     4 steps  VOLTA infostealer uses AI to prioritise victims for monetisation
+  2026-10-31T10:31  Breaches        High     3 steps  Blossom Health breach exposes medical and insurance data
+  2026-10-31T10:02  Scams           High     3 steps  130 Malaysians Detained in Pakistan Cyber Scam Raid
+  2026-10-31T10:01  Scams           Medium   4 steps  TikTok Pro fake app scams target Android and iPhone users
+  2026-10-31T09:35  Scams           High     3 steps  Patna Police Arrest Cybercrime Syndicate Over 1.2 Crore Scam
+
+Last 12 hours, serious ransomware/breach stories (could have had a chain):
+  19:03  chain=no   note               Saga University ransomware incident may expose 80,000 records
+  18:31  chain=no   BleepingComputer   Northflank breach exposes customer AI API keys
+  12:59  chain=no   whalesbook         Unifinz Capital reports Rs 15 crore cyber fraud
+  12:02  chain=yes  Cisco Talos        VOLTA infostealer uses AI to prioritise victims for monetisation
+  10:31  chain=yes  almeidalawgroup.co Blossom Health breach exposes medical and insurance data
+
+== News runs, last 24 hours: 53 runs, 53 ok, 82 stories added, 418 AI calls, 0 chain research ==
+  2026-10-31T19:00 added 2 merged 8 failed 0 ai 10 research 0 ok True
+  2026-10-31T18:30 added 1 merged 3 failed 0 ai 5 research 0 ok True
+  2026-10-31T18:00 added 1 merged 5 failed 0 ai 10 research 0 ok True
+  2026-10-31T17:35 added 0 merged 3 failed 0 ai 2 research 0 ok True
+  2026-10-31T17:30 added 1 merged 3 failed 0 ai 8 research 0 ok True
+  2026-10-31T17:00 added 4 merged 8 failed 0 ai 19 research 0 ok True
+  2026-10-31T16:30 added 1 merged 3 failed 0 ai 6 research 0 ok True
+  2026-10-31T16:00 added 2 merged 1 failed 1 ai 7 research 0 ok True
+  2026-10-31T15:30 added 1 merged 3 failed 0 ai 5 research 0 ok True
+  2026-10-31T15:00 added 0 merged 3 failed 0 ai 3 research 0 ok True
+
+== App games query, region GB: 30 games == styles {'overshare': 1, 'home': 15, 'scam_or_legit': 4, 'approve': 1, 'real_link': 2, 'red_flags': 4, 'hot_seat': 1, 'crack_meter': 2}
+  2026-10-31T19:04 overshare       INTL Romance scam defendants pleaded guilty to $9m wire fraud
+  2026-10-31T17:06 home            INTL NPC Investigates Data Breach of Overseas Employment Systems
+  2026-10-31T15:02 home            INTL Floin AG reportedly offline after alleged cyberattack
+  2026-10-31T09:03 scam_or_legit   GB Young Australian loses bank balance in minutes to convincing
+  2026-10-31T03:02 approve         INTL Chainalysis breach exposes customer details via offensive ag
+  2026-10-31T01:01 real_link       GB Wisconsin DHS warns of phishing scam
+== App deck query, region GB: [('Mercenary Spyware Targets Apple Users Worldwide', 6)]
+
+== App games query, region INTL: 19 games == styles {'overshare': 1, 'home': 14, 'approve': 1, 'crack_meter': 2, 'scam_or_legit': 1}
+  2026-10-31T19:04 overshare       INTL Romance scam defendants pleaded guilty to $9m wire fraud
+  2026-10-31T17:06 home            INTL NPC Investigates Data Breach of Overseas Employment Systems
+  2026-10-31T15:02 home            INTL Floin AG reportedly offline after alleged cyberattack
+  2026-10-31T03:02 approve         INTL Chainalysis breach exposes customer details via offensive ag
+  2026-10-30T21:04 home            INTL FBI investigates cyberattack targeting Charles Booker's Sena
+  2026-10-30T19:38 home            INTL Berlin City Data Stolen, 5.8TB, 30 BTC Ransom Refused
+== App deck query, region INTL: [('Mercenary Spyware Targets Apple Users Worldwide', 6)]
+
+== Games made in the last 2 days: 24 {'overshare': 2, 'home': 9, 'scam_or_legit': 5, 'red_flags': 4, 'real_link': 2, 'approve': 1, 'hot_seat': 1}
+
+== Snapshot GB: 60 stories (0 without a picture, 0 library, 12 AI, 19 with a chain), 30 games {'overshare': 1, 'home': 15, 'scam_or_legit': 4, 'approve': 1, 'real_link': 2, 'red_flags': 4, 'hot_seat': 1, 'crack_meter': 2}, decks [('Mercenary Spyware Targets Apple Users Worldwide', 'INTL', '2026-10-31T16:03', '2026-11-03T16:03'), ('Is your Windows PC safe?', 'INTL', '2026-10-30T19:39', '2026-11-02T19:38'), ('The Bug Chain That Broke the Sandbox', 'INTL', '2026-10-29T03:03', '2026-11-01T03:03')], daily [('CyberSid History', 'Lapsus$ teen hacking group claims Okta and Microso', True, '2026-10-31T09:03'), ('CyberSid Tips', 'Delete accounts you no longer use', True, '2026-10-31T09:03')]
+   games by day: {'2026-10-31': 6, '2026-10-30': 8, '2026-10-29': 11, '2026-10-28': 4, '2026-10-27': 1}
+
+== Snapshot IN: 60 stories (0 without a picture, 0 library, 17 AI, 16 with a chain), 36 games {'overshare': 2, 'home': 15, 'scam_or_legit': 7, 'red_flags': 6, 'real_link': 3, 'approve': 1, 'crack_meter': 2}, decks [('Mercenary Spyware Targets Apple Users Worldwide', 'INTL', '2026-10-31T16:03', '2026-11-03T16:03'), ('Is your Windows PC safe?', 'INTL', '2026-10-30T19:39', '2026-11-02T19:38'), ('The New Wave of WhatsApp Scams', 'IN', '2026-10-29T23:33', '2026-11-01T23:33')], daily [('CyberSid History', 'Lapsus$ teen hacking group claims Okta and Microso', True, '2026-10-31T09:03'), ('CyberSid Tips', 'Delete accounts you no longer use', True, '2026-10-31T03:32')]
+   games by day: {'2026-10-31': 9, '2026-10-30': 9, '2026-10-29': 8, '2026-10-28': 9, '2026-10-27': 1}
+
+== Last 24 hours: 85 news stories, 0 without a picture, 0 on a library picture, 25 with a chain; serious ones 22, of those 7 with a chain
+   daily card: 2026-10-31T09:03 INTL CyberSid History picture=yes Lapsus$ teen hacking group claims Okta and Microsoft breache
+   daily card: 2026-10-31T09:03 XX CyberSid Tips picture=yes Five free security steps for small businesses
+   daily card: 2026-10-31T09:03 GB CyberSid Tips picture=yes Delete accounts you no longer use
+   daily card: 2026-10-31T03:32 IN CyberSid Tips picture=yes Delete accounts you no longer use
+
+== Deck 'Mercenary Spyware Targets Apple Users Worldwide' (2026-10-31T16:03) saved as country INTL: story countries {'INTL': 4, 'GB': 1, 'IN': 1}
+   INTL  ZDNET Security         Android 17 reaches 1% adoption as older versions persist
+   INTL  panews.io              Binance Attackers Launder $38.78M in TRX
+   INTL  Cisco Talos            VOLTA infostealer uses AI to prioritise victims for monetisation
+   GB    2-Spyware              TikTok Pro fake app scams target Android and iPhone users
+   IN    The420.in              PNB insider fraud: ₹35 crore allegedly stolen
+   INTL  CyberScoop             Apple warns of mercenary spyware infections in 99 countries
+
+== Deck 'Is your Windows PC safe?' (2026-10-30T19:39) saved as country INTL: story countries {'INTL': 6}
+   INTL  Cyber Security News    Malicious Open VSX Extension Gives Hackers Persistent Remote SSH Access
+   INTL  ESET WeLiveSecurity    Amatera infostealer: A growing threat in the MaaS ecosystem
+   INTL  Hackread               Fake GitHub repository targets AI agents with SolanaCry malware
+   INTL  Cyber Security News    Aur0ra ransomware exploits Cursor AI for domain admin takeover
+   INTL  SC Media               Valve Steam platform vulnerable to zero-click remote code execution
+   INTL  Microsoft Security     Teams help-desk scams escalate into AD CS certificate abuse
+
+== Deck 'The New Wave of WhatsApp Scams' (2026-10-29T23:33) saved as country IN: story countries {'INTL': 1, 'IN': 5}
+   INTL  Cyber Security News    Zero-click Android vulnerability causes persistent telephony service crashes
+   IN    Telangana Today        Surat police arrest five over nationwide wellness product scam
+   IN    The Print              Fake health camps used to harvest IDs for SIM card scams
+   IN    Outlook Money          State Bank of India data breach exposes nearly 4,000 customer records
+   IN    The Hindu              Kalaburagi police report ₹58 crore losses from cyber fraud
+   IN    News9Live              MR ROBOT Android Malware Targets Indian Banking Customers via Fake Apps
+
+== Deck 'The Bug Chain That Broke the Sandbox' (2026-10-29T03:03) saved as country INTL: story countries {'INTL': 5, 'GB': 1}
+   INTL  shattered.io           CSX confirms major operational outage not caused by cyberattack
+   INTL  Dark Reading           GhostAction supply chain campaign pivots to developer endpoints and cloud access
+   INTL  Tampa Bay Business & W China-linked attack forces ConnectWise cloud services shutdown
+   GB    2-Spyware              FedEx delivery SMS scam targets mobile users with phishing links
+   INTL  The Hacker News        Researcher details logic bug chain that escaped Microsoft Edge sandbox
+   INTL  The Record             noyb sues Scale AI over invasive worker surveillance
+
+== App problems reported in the last 14 days: 5
+    5x  last 2026-10-22T22:34  versions ['1.0.4']  fatal False  | screen: Attempting to run JS driven animation on animated node that has been moved to "nat
