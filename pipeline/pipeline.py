@@ -254,14 +254,12 @@ CHAIN_PROMPT = f"""You read a cyber attack news article and list how the attack 
 Reply with ONLY a JSON object:
 {{"chain": [ {{"stage": one MITRE ATT&CK tactic name, "detail": "max 15 words, what the attackers did", "technique": "T-number only if written in the text, else empty"}} ]}}
 Rules:
-- Only list steps when the article itself describes at least 3 separate steps of how the attackers got in and what they did next, in order.
-- The steps must be different stages of the attack (for example Initial Access, then Credential Access, then Exfiltration).
+- List the attackers' own actions in this attack, in order: how they got in, what they did inside, what they took or broke.
+  Leave out what the victim or investigators did afterwards (taking systems offline, investigating, notifying people).
+- Fill the chain when the article describes at least 3 such steps that really happened, at different stages.
 - Use only these stage names: {", ".join(TACTICS)}.
-- Only what the attackers did in this one attack. Never the victim's or defenders' response (disconnecting systems,
-  investigating, notifying people, patching) and never what attackers could do with a flaw if no real attack is described.
-- A yearly report or summary of many different attacks is not a chain: return "chain": [].
-- Never guess or add steps the article does not describe. A breach notice that only says data was taken is not a chain: return "chain": [].
-- If unsure, return "chain": []."""
+- A report counting many separate attacks is not one attack: return "chain": [].
+- Never guess or add steps the article does not describe. If the article only says data was taken, return "chain": []."""
 
 
 def chain_catchup(db, ai, budget, deadline):
