@@ -12,6 +12,6 @@ sleep 8
 adb shell pidof app.cybersid.news > "$OUT/pid.txt" 2>&1 || echo "app not running" >> "$OUT/pid.txt"
 adb exec-out screencap -p > "$OUT/z-final.png" || true
 kill $LOG 2>/dev/null
-grep -nE "FATAL EXCEPTION|AndroidRuntime|E/ReactNativeJS|F/libc|F/DEBUG|SIGSEGV|SIGABRT|Abort message|backtrace|#0[0-9] pc|EXGL|expo\.modules\.gl|GLThread|ExpoGL|Exception|Process: app.cybersid" "$OUT/logcat.txt" | head -150 > "$OUT/crash.txt" || true
+grep -nE "cybersid|ReactNativeJS|FATAL EXCEPTION|AndroidRuntime|E/ReactNativeJS|F/libc|F/DEBUG|SIGSEGV|SIGABRT|Abort message|backtrace|#0[0-9] pc|EXGL|expo\.modules\.gl|GLThread|ExpoGL|Exception|Process: app.cybersid" "$OUT/logcat.txt" | head -150 > "$OUT/crash.txt" || true
 echo "== result: $(cat "$OUT/result.txt"), pid: $(cat "$OUT/pid.txt" | tr '\n' ' ')"
 head -60 "$OUT/crash.txt"
