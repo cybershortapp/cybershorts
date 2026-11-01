@@ -1,0 +1,6 @@
+2160:11-01 20:09:17.496 W/RcsClientLib( 4186): java.lang.IllegalStateException: JibeService Not Initialized
+2390:11-01 20:09:17.774 W/RcsClientLib( 4186): java.lang.IllegalStateException: JibeService Not Initialized
+2492:11-01 20:09:18.118 W/RcsClientLib( 4186): java.lang.IllegalStateException: JibeService Not Initialized
+2575:11-01 20:09:18.290 W/RcsClientLib( 4186): java.lang.IllegalStateException: JibeService Not Initialized
+3432:11-01 20:09:20.049 E/AmbientMusicServiceMana( 1655): Caused by: java.lang.IllegalStateException: No underlying SoundTriggerModule available
+6297:11-01 20:09:28.149 D/SettingsSliceProvider( 1046): java.lang.IllegalStateException: Invalid Slices key from path: wifi_calling

@@ -1,0 +1,1 @@
+11-01 20:09:31.956 I/Choreographer( 5229): Skipped 38 frames!  The application may be doing too much work on its main thread.

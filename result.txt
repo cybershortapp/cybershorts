@@ -1,0 +1,2 @@
+PASSED: still running after 23 screens, no crash
+skipped-frame warnings: 1, worst: Skipped 38
