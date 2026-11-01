@@ -11,7 +11,8 @@ import { AccessibilityInfo, Animated, Image as RNImage, Platform, StyleSheet } f
  * it's ready. Only on the card on screen.
  *
  * The depth map (white = near) is made on our server for each picture (pipeline/depth.py) and saved as
- * covers/depth/<picKey(picture address)>.jpg. No depth map yet, Reduce Motion on, or anything fails: the card
+ * covers/depth/<picKey(picture address)>.jpg, next to the picture (Supabase, or Cloudflare R2 once pictures move
+ * there). No depth map yet, Reduce Motion on, or anything fails: the card
  * simply keeps its normal picture.
  */
 
@@ -28,7 +29,10 @@ export function picKey(url: string) {
   }
   return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0');
 }
-export const depthUrl = (picture: string) => `${BASE}/storage/v1/object/public/covers/depth/${picKey(picture)}.jpg`;
+const OURS = '/storage/v1/object/public/';
+/** The depth map sits next to its picture: on Cloudflare R2 when the picture is there (store.py), else on Supabase. */
+export const depthUrl = (picture: string) =>
+  `${picture.includes(OURS) ? picture.split(OURS)[0] : BASE}${OURS}covers/depth/${picKey(picture)}.jpg`;
 
 let reduceMotion = false;
 AccessibilityInfo.isReduceMotionEnabled?.().then((v) => { reduceMotion = !!v; }).catch(() => {});
