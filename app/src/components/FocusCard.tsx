@@ -11,6 +11,7 @@ import { toggleTip, useTipDone } from '../lib/tips';
 import type { Story } from '../lib/types';
 import { F, type Palette, useTheme } from '../theme';
 import { Cover } from './Cover';
+import { ErrorBoundary } from './ErrorBoundary';
 import { SpatialPicture } from './SpatialPicture';
 import { TipWater } from './TipWater';
 import { WaveText } from './WaveText';
@@ -282,7 +283,9 @@ export function FocusFace(p: Props) {
                 onError={p.onImageError}
                 accessibilityIgnoresInvertColors
               />
-              <SpatialPicture uri={story.image_url!} active={!!active} />
+              <ErrorBoundary resetKey={story.id} fallback={() => null}>
+                <SpatialPicture uri={story.image_url!} active={!!active} />
+              </ErrorBoundary>
             </Animated.View>
           ) : (
             <Cover story={story} height={imgH} width={width - 4} iconSize={L.iconSize} />

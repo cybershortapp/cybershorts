@@ -92,19 +92,19 @@ export function WaveText({ text, style, lines, active, colors }: Props) {
         <View key={w.key} style={{ flexDirection: 'row' }} importantForAccessibility="no-hide-descendants">
           {w.letters.map((l, k) => {
             const range = [0, l.at, l.at + 0.05, l.at + 0.1, l.at + 0.16, 1];
+            // the lift (run off the JS thread) and the colour (run on it) sit on different views: React Native
+            // can't mix the two kinds of animation on one view, and doing so crashes the app
             return (
-              <Animated.Text
+              <Animated.View
                 key={k}
-                style={[
-                  style,
-                  on && {
-                    color: glow.interpolate({ inputRange: range, outputRange: [ink, ink, colors[0], colors[1], ink, ink] }),
-                    transform: [{ translateY: lift.interpolate({ inputRange: range, outputRange: [0, 0, -3, 1.2, 0, 0] }) }],
-                  },
-                ]}
+                style={on ? { transform: [{ translateY: lift.interpolate({ inputRange: range, outputRange: [0, 0, -3, 1.2, 0, 0] }) }] } : undefined}
               >
-                {l.c}
-              </Animated.Text>
+                <Animated.Text
+                  style={[style, on && { color: glow.interpolate({ inputRange: range, outputRange: [ink, ink, colors[0], colors[1], ink, ink] }) }]}
+                >
+                  {l.c}
+                </Animated.Text>
+              </Animated.View>
             );
           })}
           {w.space && <Text style={style}> </Text>}

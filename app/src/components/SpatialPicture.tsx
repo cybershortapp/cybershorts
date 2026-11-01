@@ -1,7 +1,7 @@
 import { Asset } from 'expo-asset';
 import { type ExpoWebGLRenderingContext, GLView } from 'expo-gl';
 import { DeviceMotion } from 'expo-sensors';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Image as RNImage, Platform, StyleSheet } from 'react-native';
 
 /**
@@ -109,13 +109,11 @@ async function textureSource(uri: string): Promise<unknown> {
 
 export function SpatialPicture({ uri, active }: { uri: string; active: boolean }) {
   const [depth, setDepth] = useState<string | null>(null);
-  const fade = useRef(new Animated.Value(0)).current;
 
   // is there a depth map for this picture yet? (a quick check, so a missing one never shows a broken picture)
   useEffect(() => {
     let live = true;
     setDepth(null);
-    fade.setValue(0);
     if (!active || reduceMotion || !uri || !BASE) return;
     const d = depthUrl(uri);
     fetch(d, { method: 'HEAD' })
@@ -124,35 +122,48 @@ export function SpatialPicture({ uri, active }: { uri: string; active: boolean }
     return () => {
       live = false;
     };
-  }, [uri, active, fade]);
-
-  const stop = useRef<() => void>(() => {});
-  useEffect(() => () => stop.current(), []);
-  useEffect(() => {
-    if (!depth) stop.current();
-  }, [depth]);
+  }, [uri, active]);
 
   if (!depth || !active) return null;
+  return <SpatialGL key={depth} uri={uri} depth={depth} />;
+}
+
+/**
+ * The drawing itself. Its GL context is destroyed the moment this view goes (the reader swipes on), so every
+ * use of it is guarded: the layout-effect clean-up runs before the view is removed and stops the drawing, and
+ * code that resumes after a download checks that it is still wanted. Touching a destroyed context crashes the
+ * app, which is what build 3 of the 1.0.6 test app did.
+ */
+function SpatialGL({ uri, depth }: { uri: string; depth: string }) {
+  const fade = useRef(new Animated.Value(0)).current;
+  const gone = useRef(false);
+  const stop = useRef<() => void>(() => {});
+  useLayoutEffect(
+    () => () => {
+      gone.current = true;
+      stop.current();
+    },
+    [],
+  );
 
   const onContextCreate = async (gl: ExpoWebGLRenderingContext) => {
+    if (gone.current) return;
     let raf = 0;
-    let dead = false;
     let motion = false;
-    const textures: WebGLTexture[] = [];
     stop.current = () => {
-      dead = true;
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
       if (motion) stopMotion();
       motion = false;
-      try { textures.forEach((t) => gl.deleteTexture(t)); } catch {}
     };
     try {
+      const [imgSrc, depSrc, aspect] = await Promise.all([textureSource(uri), textureSource(depth), sizeOf(uri)]);
+      if (gone.current) return;
       const sh = (type: number, src: string) => {
         const s = gl.createShader(type)!;
         gl.shaderSource(s, src);
         gl.compileShader(s);
-        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? 'shader');
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader');
         return s;
       };
       const prog = gl.createProgram()!;
@@ -166,12 +177,8 @@ export function SpatialPicture({ uri, active }: { uri: string; active: boolean }
       const pos = gl.getAttribLocation(prog, 'aPos');
       gl.enableVertexAttribArray(pos);
       gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-
-      const [imgSrc, depSrc, aspect] = await Promise.all([textureSource(uri), textureSource(depth), sizeOf(uri)]);
-      if (dead) return;
       const upload = (unit: number, src: unknown) => {
-        const t = gl.createTexture()!;
-        textures.push(t);
+        const t = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0 + unit);
         gl.bindTexture(gl.TEXTURE_2D, t);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -186,14 +193,12 @@ export function SpatialPicture({ uri, active }: { uri: string; active: boolean }
       gl.uniform1i(gl.getUniformLocation(prog, 'uImg'), 0);
       gl.uniform1i(gl.getUniformLocation(prog, 'uDep'), 1);
       const uTilt = gl.getUniformLocation(prog, 'uTilt');
-      const uK = gl.getUniformLocation(prog, 'uK');
-      const uScale = gl.getUniformLocation(prog, 'uScale');
       const w = gl.drawingBufferWidth;
       const h = gl.drawingBufferHeight;
       const ca = w / Math.max(1, h);
       // fill the frame like the normal picture does ("cover")
-      gl.uniform2f(uScale, aspect > ca ? ca / aspect : 1, aspect > ca ? 1 : aspect / ca);
-      gl.uniform1f(uK, 0.035);
+      gl.uniform2f(gl.getUniformLocation(prog, 'uScale'), aspect > ca ? ca / aspect : 1, aspect > ca ? 1 : aspect / ca);
+      gl.uniform1f(gl.getUniformLocation(prog, 'uK'), 0.035);
       gl.viewport(0, 0, w, h);
 
       startMotion();
@@ -202,14 +207,16 @@ export function SpatialPicture({ uri, active }: { uri: string; active: boolean }
       let last = 0;
       let shown = false;
       const draw = (t: number) => {
-        if (dead) return;
+        raf = 0;
+        if (gone.current) return;
         raf = requestAnimationFrame(draw);
         if (t - last < 30) return; // about 30 frames a second is plenty and easy on the battery
         last = t;
         // the phone's tilt, plus a very gentle sway so the picture never looks frozen
-        const sway = { x: Math.sin(t / 1600) * 0.3, y: Math.sin(t / 2400 + 1.3) * 0.2 };
-        now.x += (tilt.x + sway.x - now.x) * 0.15;
-        now.y += (tilt.y + sway.y - now.y) * 0.15;
+        const sx = Math.sin(t / 1600) * 0.3;
+        const sy = Math.sin(t / 2400 + 1.3) * 0.2;
+        now.x += (tilt.x + sx - now.x) * 0.15;
+        now.y += (tilt.y + sy - now.y) * 0.15;
         gl.uniform2f(uTilt, clamp(now.x), -clamp(now.y));
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         gl.endFrameEXP();
@@ -218,7 +225,7 @@ export function SpatialPicture({ uri, active }: { uri: string; active: boolean }
           Animated.timing(fade, { toValue: 1, duration: 450, useNativeDriver: true }).start();
         }
       };
-      raf = requestAnimationFrame(draw);
+      if (!gone.current) raf = requestAnimationFrame(draw);
     } catch {
       stop.current();
     }
