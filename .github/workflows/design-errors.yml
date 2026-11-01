@@ -1,0 +1,30 @@
+name: Design errors
+# Only on the design-samples branch. Read-only: the latest app problem reports.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/errors.py", ".github/workflows/design-errors.yml"]
+permissions:
+  contents: write
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q "supabase>=2.9.0"
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: mkdir -p out && python design/errors.py > out/errors.txt 2>&1; cat out/errors.txt
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -q && git checkout -q -b design-errors-out && git add -A
+          git -c user.name="design-errors" -c user.email="actions@users.noreply.github.com" commit -qm "errors ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-errors-out
