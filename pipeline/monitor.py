@@ -8,7 +8,13 @@ One email when a problem starts (it has just crossed its limit), then a reminder
 No state is stored: the timing works from how long the problem has lasted.
 If GitHub Actions itself is down this check can't run either, but GitHub emails failed runs on its own.
 Sends from the app Gmail to ALERT_EMAIL (default: the app Gmail itself). Run: python monitor.py
+
+Card reports ("Report an error" in the app) are emailed too:
+  - every morning at 9am UK time: the cards reported in the last 24 hours, with the reasons and links
+  - straight away (within the hour): a card that 2 or more people have reported, when a new report arrives
+python monitor.py --reports-preview prints the morning email without sending it.
 """
+import html
 import os, sys
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -76,10 +82,99 @@ def due(problem, now):
     return over < timedelta(hours=1) or (over.total_seconds() // 3600) % 24 == 0
 
 
+REPORT_ALERT_AT = 2   # this many reports on one card in a day: email straight away
+
+
+def reported_cards(db, now, hours=24):
+    """Cards reported in the last `hours`, most reported first: [{story, reasons, count, last}]."""
+    rows = (db.table("reports").select("story_id,reason,created_at")
+            .gte("created_at", (now - timedelta(hours=hours)).isoformat()).order("created_at", desc=True).limit(500).execute().data)
+    if not rows:
+        return []
+    by = {}
+    for r in rows:
+        c = by.setdefault(r["story_id"], {"reasons": {}, "count": 0, "last": r["created_at"]})
+        c["count"] += 1
+        c["reasons"][r["reason"]] = c["reasons"].get(r["reason"], 0) + 1
+    ids = list(by)
+    stories = {}
+    for i in range(0, len(ids), 100):
+        for st in db.table("stories").select("id,headline,source,url,category,country,created_at").in_("id", ids[i:i + 100]).execute().data:
+            stories[st["id"]] = st
+    out = [dict(c, story=stories.get(sid, {"id": sid, "headline": f"(card {sid} no longer exists)", "source": "", "url": ""}))
+           for sid, c in by.items()]
+    return sorted(out, key=lambda c: (-c["count"], c["last"]), reverse=False)
+
+
+def report_email(cards, title):
+    """Plain text and HTML for a list of reported cards."""
+    def reasons(c):
+        return ", ".join(f"{k} x{v}" if v > 1 else k for k, v in sorted(c["reasons"].items(), key=lambda x: -x[1]))
+    text = title + "\n\n" + "\n\n".join(
+        f"- {c['story'].get('headline', '')}\n  {c['count']} report{'s' if c['count'] != 1 else ''}: {reasons(c)}\n"
+        f"  {c['story'].get('source', '')} {c['story'].get('url', '')}\n  card id: {c['story'].get('id', '')}" for c in cards)
+    text += "\n\nTo hide or fix a card, find its card id in Supabase > Table Editor > stories."
+    items = "".join(
+        f"<li style='margin-bottom:12px'><b>{html.escape(c['story'].get('headline', ''))}</b><br>"
+        f"<span style='color:#B42318'>{c['count']} report{'s' if c['count'] != 1 else ''}: {html.escape(reasons(c))}</span><br>"
+        f"<span style='color:#6B7389'>{html.escape(c['story'].get('source', ''))} · card id {html.escape(str(c['story'].get('id', '')))}</span>"
+        + (f"<br><a href='{html.escape(c['story']['url'])}'>Open the article</a>" if c["story"].get("url") else "") + "</li>"
+        for c in cards)
+    body = (f"<div style='font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#0A0F1F'><h2 style='margin:0 0 8px'>"
+            f"Cyber<span style='color:#2563F5'>Sid</span> card reports</h2><p>{html.escape(title)}</p><ul>{items}</ul>"
+            f"<p style='color:#6B7389;font-size:13px'>To hide or fix a card, find its card id in Supabase, Table Editor, stories.</p></div>")
+    return text, body
+
+
+def report_alerts(db, now, force_morning=False):
+    """(subject, text, html) emails due now about card reports."""
+    emails = []
+    london = now.astimezone(ZoneInfo("Europe/London"))
+    if force_morning or london.hour == 9:
+        cards = reported_cards(db, now, 24)
+        if cards:
+            n = sum(c["count"] for c in cards)
+            title = f"{n} report{'s' if n != 1 else ''} on {len(cards)} card{'s' if len(cards) != 1 else ''} in the last 24 hours."
+            emails.append((f"CyberSid: {len(cards)} card{'s' if len(cards) != 1 else ''} reported in the last day", *report_email(cards, title)))
+    # straight away: a card several people reported, when a new report came in this past hour
+    hot = [c for c in reported_cards(db, now, 24) if c["count"] >= REPORT_ALERT_AT
+           and datetime.fromisoformat(c["last"]) > now - timedelta(hours=1)]
+    if hot and not force_morning:
+        title = f"{len(hot)} card{'s have' if len(hot) != 1 else ' has'} been reported by {REPORT_ALERT_AT} or more people today."
+        emails.append((f"CyberSid: card reported by several people: {hot[0]['story'].get('headline', '')[:50]}", *report_email(hot, title)))
+    return emails
+
+
+def send_report_alerts(db, now):
+    emails = report_alerts(db, now)
+    if not emails:
+        return
+    mailer = Mailer()
+    if not mailer.ready:
+        print("No SMTP settings, can't email the card reports.")
+        return
+    to = os.getenv("ALERT_EMAIL", "").strip() or mailer.user
+    try:
+        for subject, text, body in emails:
+            mailer.send(to, subject, text, body)
+            print(f"Emailed {to}: {subject}")
+        mailer.close()
+    except Exception as ex:
+        print(f"::error title=Card report email could not be sent::{str(ex)[:200]}")
+
+
 def main():
     from supabase import create_client
     now = datetime.now(timezone.utc)
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
+    if "--reports-preview" in sys.argv:
+        for subject, text, _ in report_alerts(db, now, force_morning=True) or [("(no reports in the last 24 hours)", "", "")]:
+            print(subject + "\n" + text)
+        return
+    try:
+        send_report_alerts(db, now)
+    except Exception as ex:
+        print(f"::warning title=Card reports check failed::{str(ex)[:200]}")
     problems = check(db, now)
     for p in problems:
         print(f"PROBLEM: {p[3]}")
