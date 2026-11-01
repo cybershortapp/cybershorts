@@ -4,6 +4,8 @@ For each picture shown on a card in the last 3 days, a depth map (white = near, 
 free Depth Anything V2 Small model and saved as covers/depth/<key>.jpg, where <key> comes from the picture's
 address (pic_key below; the app works out the same key). Old depth maps are deleted after 5 days.
 A picture without a depth map simply shows without the effect, so nothing breaks if this job is late or off.
+When the picture itself is on Cloudflare R2 (store.py), its depth map is saved there too, next to it: from build 7
+of 1.0.6 the app loads the depth map from the picture's own address. A copy stays on Supabase for older test builds.
 Run by .github/workflows/depth.yml every hour. Needs SUPABASE_URL and SUPABASE_SERVICE_KEY.
 """
 import io
@@ -15,6 +17,8 @@ from datetime import datetime, timedelta, timezone
 
 from PIL import Image
 from supabase import create_client
+
+import store as pic_store
 
 BUCKET = "covers"
 FOLDER = "depth"
@@ -78,6 +82,8 @@ def main():
                 d.save(buf, "JPEG", quality=82)
                 store.upload(f"{FOLDER}/{pic_key(u)}.jpg", buf.getvalue(),
                              {"content-type": "image/jpeg", "cache-control": "31536000", "upsert": "true"})
+                if pic_store.on_r2(u) and pic_store.r2_on():
+                    pic_store.put(db, BUCKET, f"{FOLDER}/{pic_key(u)}.jpg", buf.getvalue())
                 made += 1
             except Exception as ex:
                 failed += 1
@@ -88,6 +94,9 @@ def main():
     old = [f"{FOLDER}/{n}" for n, at in have.items() if at and at < cut]
     for i in range(0, len(old), 100):
         store.remove(old[i:i + 100])
+    if old and pic_store.r2_on():
+        base = pic_store.public_base()
+        pic_store.remove(db, [f"{base}/{pic_store.PREFIX}{BUCKET}/{p}" for p in old])
     note = f"{made} depth maps made, {failed} failed, {len(old)} old ones deleted, {max(0, len(todo) - made - failed)} waiting"
     print(f"::notice title=Depth maps::{note}")
 

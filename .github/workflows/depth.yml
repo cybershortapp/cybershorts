@@ -29,10 +29,14 @@ jobs:
       - name: Install (the CPU-only build of the AI library keeps the download small)
         run: |
           pip install -q torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -q transformers "supabase>=2.9.0" pillow
+          pip install -q transformers "supabase>=2.9.0" pillow boto3
       - name: Make depth maps
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}           # depth maps next to pictures on Cloudflare R2
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          PICTURES_URL: ${{ secrets.PICTURES_URL }}
           HF_HUB_DISABLE_TELEMETRY: "1"
         run: python depth.py

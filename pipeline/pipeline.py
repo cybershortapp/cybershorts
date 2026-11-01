@@ -1670,16 +1670,9 @@ def dedupe_existing():
         match["also_reported"] = also
         db.table("stories").update({"also_reported": also}).eq("id", match["id"]).execute()
         db.table("seen_links").upsert({"id": r["id"], "reason": "duplicate", "story_id": match["id"]}).execute()
-        if r.get("image_url") and "/object/public/covers/" in r["image_url"] and not is_library(r["image_url"]):
-            try:   # its AI picture is no longer needed
-                db.storage.from_("covers").remove([r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0]])
-            except Exception:
-                pass
-        if r.get("image_url") and "/object/public/pictures/" in r["image_url"]:
-            try:   # nor its picture copy
-                db.storage.from_("pictures").remove([r["image_url"].split("/object/public/pictures/", 1)[1].split("?")[0]])
-            except Exception:
-                pass
+        if r.get("image_url") and is_ours(r["image_url"]) and not is_library(r["image_url"]):
+            import store
+            store.remove(db, [r["image_url"]])   # its AI picture or picture copy is no longer needed
         db.table("stories").delete().eq("id", r["id"]).execute()
         removed += 1
         print(f"[merged] {r['source']}: {r['orig_title'][:60]}\n         -> kept: {match['source']}: {match['orig_title'][:60]}")

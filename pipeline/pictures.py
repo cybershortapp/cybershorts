@@ -15,6 +15,8 @@ from datetime import datetime, timedelta, timezone
 
 from PIL import Image, ImageOps
 
+import store
+
 BUCKET = "pictures"
 MAX_W, MAX_H = 1080, 1080
 MAX_BYTES = 25_000_000     # never download more than this
@@ -88,8 +90,8 @@ def copy_pictures(db, since, limit=40, deadline=None):
     todo = theirs[:limit]
     if not todo:
         return "none needed"
-    _bucket(db)
-    store = db.storage.from_(BUCKET)
+    if not store.r2_on():
+        _bucket(db)
     with ThreadPoolExecutor(6) as pool:
         files = list(pool.map(lambda r: _download(r["image_url"]), todo))
     copied, skipped = 0, 0
@@ -102,8 +104,7 @@ def copy_pictures(db, since, limit=40, deadline=None):
             continue
         path = f"{r['id']}.jpg"
         try:
-            store.upload(path, jpg, {"content-type": "image/jpeg", "cache-control": "31536000", "upsert": "true"})
-            url = store.get_public_url(path).rstrip("?")
+            url = store.put(db, BUCKET, path, jpg)   # Cloudflare R2 when set up, else Supabase storage
             db.table("stories").update({"image_url": url}).eq("id", r["id"]).eq("image_url", r["image_url"]).execute()
             copied += 1
         except Exception as ex:
@@ -120,7 +121,7 @@ def cleanup_old_copies(db, days=KEEP_DAYS, limit=60):
             .or_("category.is.null,category.neq.History").lt("published_at", before).limit(limit).execute().data)
     if not rows:
         return 0
-    db.storage.from_(BUCKET).remove([f"{r['id']}.jpg" for r in rows])
+    store.remove(db, [r["image_url"] for r in rows])
     for r in rows:
         db.table("stories").update({"image_url": None}).eq("id", r["id"]).execute()
     return len(rows)
