@@ -257,6 +257,9 @@ Rules:
 - Only list steps when the article itself describes at least 3 separate steps of how the attackers got in and what they did next, in order.
 - The steps must be different stages of the attack (for example Initial Access, then Credential Access, then Exfiltration).
 - Use only these stage names: {", ".join(TACTICS)}.
+- Only what the attackers did in this one attack. Never the victim's or defenders' response (disconnecting systems,
+  investigating, notifying people, patching) and never what attackers could do with a flaw if no real attack is described.
+- A yearly report or summary of many different attacks is not a chain: return "chain": [].
 - Never guess or add steps the article does not describe. A breach notice that only says data was taken is not a chain: return "chain": [].
 - If unsure, return "chain": []."""
 
