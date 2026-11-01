@@ -1,0 +1,4 @@
+29501:11-01 20:11:22.511 W/MessageQueue( 5637): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {67a15e2} sending message to a Handler on a dead thread
+29509:11-01 20:11:22.514 W/MessageQueue( 5637): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {67a15e2} sending message to a Handler on a dead thread
+29517:11-01 20:11:22.514 W/MessageQueue( 5637): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {67a15e2} sending message to a Handler on a dead thread
+29525:11-01 20:11:22.514 W/MessageQueue( 5637): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {67a15e2} sending message to a Handler on a dead thread
