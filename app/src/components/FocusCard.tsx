@@ -11,6 +11,9 @@ import { toggleTip, useTipDone } from '../lib/tips';
 import type { Story } from '../lib/types';
 import { F, type Palette, useTheme } from '../theme';
 import { Cover } from './Cover';
+import { SpatialPicture } from './SpatialPicture';
+import { TipWater } from './TipWater';
+import { WaveText } from './WaveText';
 
 /**
  * Focus: the default story card (release 1.0.6), designed around how people actually read.
@@ -18,6 +21,9 @@ import { Cover } from './Cover';
  * 2. One loud thing: only the headline is big and bold.
  * 3. Key facts highlighted: numbers, danger words and products get a soft marker. The words never change.
  * 4. The tip stands out: the only coloured box on the card, with a tick to feel "done".
+ * Living touches on the card on screen (1.0.6): the picture is spatial (near things move against the background
+ * as the phone tilts, on top of the slow zoom), a wave of light ripples through the headline every 6 seconds,
+ * and water drifts in the tip box, filling it green when the tip is ticked.
  * 5. Every button sits where the thumb already rests.
  */
 type Props = {
@@ -219,6 +225,20 @@ export function FocusFace(p: Props) {
     return () => a.stop();
   }, [active, drift]);
 
+  // the tip's bulb bobs gently on the card on screen
+  const bob = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!active) return;
+    const a = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bob, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(bob, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    a.start();
+    return () => a.stop();
+  }, [active, bob]);
+
   // ticking the tip: a little pop
   const pop = useRef(new Animated.Value(1)).current;
   const tick = () => {
@@ -262,6 +282,7 @@ export function FocusFace(p: Props) {
                 onError={p.onImageError}
                 accessibilityIgnoresInvertColors
               />
+              <SpatialPicture uri={story.image_url!} active={!!active} />
             </Animated.View>
           ) : (
             <Cover story={story} height={imgH} width={width - 4} iconSize={L.iconSize} />
@@ -298,13 +319,14 @@ export function FocusFace(p: Props) {
             {p.meta}
           </Text>
         </View>
-        <Pressable onPress={p.onOpen}>
-          <Text
-            numberOfLines={3}
-            style={{ color: K.ink, fontFamily: F.brand, fontSize: headSize, lineHeight: headLine, letterSpacing: -0.5, marginTop: 6 }}
-          >
-            {story.headline}
-          </Text>
+        <Pressable onPress={p.onOpen} style={{ marginTop: 6 }}>
+          <WaveText
+            text={story.headline}
+            lines={3}
+            active={!!active}
+            colors={C.dark || C.glass ? ['#8FB0FF', '#7FE3FF'] : ['#2F6BFF', '#16B4E8']}
+            style={{ color: K.ink, fontFamily: F.brand, fontSize: headSize, lineHeight: headLine, letterSpacing: -0.5 }}
+          />
         </Pressable>
 
         {/* 3. the summary, key facts marked; it ends with "..." when there's no more room */}
@@ -352,9 +374,10 @@ export function FocusFace(p: Props) {
       {/* 4. the tip: the only coloured box, with a tick */}
       {!!tip && (
         <View style={[styles.tip, { backgroundColor: tipDone && doable ? (C.dark || C.glass ? 'rgba(52,199,89,0.18)' : '#DDF5E4') : K.tipBg, borderColor: tipDone && doable ? 'rgba(22,163,74,0.35)' : K.tipBorder }]}>
-          <View style={[styles.bulb, { backgroundColor: tipDone && doable ? '#22C55E' : '#FFD84D' }]}>
+          <TipWater active={!!active} done={tipDone && doable} dim={!!(C.dark || C.glass)} />
+          <Animated.View style={[styles.bulb, { backgroundColor: tipDone && doable ? '#22C55E' : '#FFD84D', transform: [{ translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }] }]}>
             <MaterialCommunityIcons name={!doable ? 'information-variant' : tipDone ? 'check-bold' : 'lightbulb-on-outline'} size={15} color={tipDone && doable ? '#FFFFFF' : '#5A4300'} />
-          </View>
+          </Animated.View>
           {/* the label sits in the same line as the tip, so the box takes less room from the story */}
           <Text style={{ flex: 1, color: K.tipInk, fontFamily: F.label, fontSize: 13.5 * Math.min(scale, 1.2), lineHeight: 18.5 * Math.min(scale, 1.2) }} numberOfLines={short ? 2 : 3}>
             <Text style={{ fontFamily: F.brand, color: tipDone && doable ? (C.dark || C.glass ? '#86EFAC' : '#15803D') : K.tipLabel }}>
@@ -448,6 +471,7 @@ const styles = StyleSheet.create({
   action: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 1 },
   // compact: small icon and tick, the label in the text line, so the story above gets more lines
   tip: {
+    overflow: 'hidden', // the water stays inside the box
     flexDirection: 'row', alignItems: 'center', gap: 9, marginHorizontal: 4, marginTop: 8,
     paddingVertical: 8, paddingLeft: 9, paddingRight: 8, borderRadius: 16, borderWidth: 1,
   },
