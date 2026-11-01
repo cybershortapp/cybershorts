@@ -194,24 +194,29 @@ def main():
         for subject, text, _ in report_alerts(db, now, force_morning=True) or [("(no reports in the last 24 hours)", "", "")]:
             print(subject + "\n" + text)
         return
-    try:
-        send_report_alerts(db, now)
-    except Exception as ex:
-        print(f"::warning title=Card reports check failed::{str(ex)[:200]}")
-    try:
-        send_growth(db, now)
-    except Exception as ex:
-        print(f"::warning title=Growth check failed::{str(ex)[:200]}")
+    mail_failed = []
+    for name, job in (("Card reports", send_report_alerts), ("Growth check", send_growth)):
+        try:
+            job(db, now)
+        except Exception as ex:
+            print(f"::warning title={name} failed::{str(ex)[:200]}")
+            if "SMTP" in type(ex).__name__ or "connection" in str(ex).lower():
+                mail_failed.append(name)
+    if mail_failed:
+        # email is how this watch reaches the owner, so a failed email fails the run: GitHub then shows it red
+        # (and emails the account owner about the failed run), which still reaches him when Gmail doesn't
+        print(f"::error title=Email could not be sent::{', '.join(mail_failed)}. Gmail refused the login: make a new "
+              "app password for the app Gmail and put it in the SMTP_PASS secret (or move to an email service).")
     problems = check(db, now)
     for p in problems:
         print(f"PROBLEM: {p[3]}")
     if not problems:
         print("All fine: runs and news are up to date.")
-        return
+        sys.exit(1 if mail_failed else 0)
     send = [p for p in problems if due(p, now)]
     if not send:
         print("Already emailed about these; next reminder within the day.")
-        return
+        sys.exit(1 if mail_failed else 0)
     mailer = Mailer()
     if not mailer.ready:
         print("No SMTP settings, can't email.")
