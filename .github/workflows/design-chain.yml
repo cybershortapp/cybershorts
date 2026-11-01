@@ -1,0 +1,37 @@
+name: Design chain check
+# Only on the design-samples branch. Read-only: why serious stories have no attack chain (nothing is written).
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/chain_check.py", ".github/workflows/design-chain.yml"]
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - run: pip install -q -r pipeline/requirements.txt
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          AI_PROVIDER: "nvidia,ovh"
+        run: mkdir -p "$GITHUB_WORKSPACE/out" && python ds/design/chain_check.py "$GITHUB_WORKSPACE/out"
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$GITHUB_WORKSPACE/out" || exit 0
+          git init -q && git checkout -q -b design-chain-out && git add -A
+          git -c user.name="design-chain" -c user.email="actions@users.noreply.github.com" commit -qm "chain check ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-chain-out
