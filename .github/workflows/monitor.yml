@@ -1,11 +1,21 @@
 name: health-watch
 
 # Every hour: checks news runs are working and news is arriving, and emails the owner if not.
+# Also emails card reports, and once a day the growth check (free limits and the best action).
 # Separate from the news pipeline, so a broken pipeline can't hide its own problem.
 on:
   schedule:
     - cron: "41 * * * *"
   workflow_dispatch:
+    inputs:
+      growth:
+        description: "Email the growth check now (normally once a day at 9am UK time)"
+        type: boolean
+        default: false
+      check_r2:
+        description: "Test Cloudflare R2: save, load and delete a test picture"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,6 +33,13 @@ jobs:
         with:
           python-version: "3.14"
       - run: pip install -r requirements.txt
+      - if: inputs.check_r2
+        run: python store.py --check
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          PICTURES_URL: ${{ secrets.PICTURES_URL }}
       - run: python monitor.py
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -30,4 +47,9 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          GROWTH_NOW: ${{ inputs.growth && 'true' || '' }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}               # growth check: R2 storage size
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          PICTURES_URL: ${{ secrets.PICTURES_URL }}
           DAILY_AI_CAP: "2000"

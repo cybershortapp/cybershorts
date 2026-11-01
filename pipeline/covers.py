@@ -330,10 +330,8 @@ class CoverMaker:
         return self._upload(story_id, jpg)
 
     def _upload(self, story_id, jpg):
-        path = f"{story_id}-{int(time.time())}.jpg"
-        store = self.db.storage.from_(BUCKET)
-        store.upload(path, jpg, {"content-type": "image/jpeg", "cache-control": "31536000", "upsert": "true"})
-        return store.get_public_url(path).rstrip("?")
+        import store
+        return store.put(self.db, BUCKET, f"{story_id}-{int(time.time())}.jpg", jpg)   # R2 when set up, else Supabase
 
 
 def covers_made_today(db, day_start):
@@ -355,10 +353,8 @@ def cleanup_old_covers(db, days=120, limit=50):
             .or_("category.is.null,category.neq.History").lt("published_at", before).limit(limit).execute().data)
     if not rows:
         return 0
-    paths = [r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0] for r in rows]
-    paths = [p for p in paths if not is_library(p)]   # shared by many stories: kept
-    if paths:
-        db.storage.from_(BUCKET).remove(paths)
+    import store
+    store.remove(db, [r["image_url"] for r in rows if not is_library(r["image_url"])])   # library pictures are shared: kept
     for r in rows:
         db.table("stories").update({"image_url": None}).eq("id", r["id"]).execute()
     return len(rows)

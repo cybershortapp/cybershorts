@@ -13,6 +13,9 @@ Card reports ("Report an error" in the app) are emailed too:
   - every morning at 9am UK time: the cards reported in the last 24 hours, with the reasons and links
   - straight away (within the hour): a card that 2 or more people have reported, when a new report arrives
 python monitor.py --reports-preview prints the morning email without sending it.
+
+Growth (growth.py): every day at 9am UK time it checks the free limits (data sent to phones, database, file
+storage, email list, R2) and emails the best action when one is getting close. python growth.py --preview.
 """
 import html
 import os, sys
@@ -163,6 +166,26 @@ def send_report_alerts(db, now):
         print(f"::error title=Card report email could not be sent::{str(ex)[:200]}")
 
 
+def send_growth(db, now):
+    """Once a day at 9am UK time: the growth check, emailed when there is something to say (see growth.py)."""
+    now_asked = os.getenv("GROWTH_NOW", "").lower() == "true"   # "Run workflow" with the growth box ticked
+    if now.astimezone(ZoneInfo("Europe/London")).hour != 9 and not now_asked:
+        return
+    from growth import growth_email
+    e = growth_email(db, now, weekly=now_asked)
+    if not e:
+        print("Growth check: all within limits, no email today.")
+        return
+    mailer = Mailer()
+    if not mailer.ready:
+        print("No SMTP settings, can't email the growth check.")
+        return
+    to = os.getenv("ALERT_EMAIL", "").strip() or mailer.user
+    mailer.send(to, e[0], e[1], e[2])
+    mailer.close()
+    print(f"Emailed {to}: {e[0]}")
+
+
 def main():
     from supabase import create_client
     now = datetime.now(timezone.utc)
@@ -175,6 +198,10 @@ def main():
         send_report_alerts(db, now)
     except Exception as ex:
         print(f"::warning title=Card reports check failed::{str(ex)[:200]}")
+    try:
+        send_growth(db, now)
+    except Exception as ex:
+        print(f"::warning title=Growth check failed::{str(ex)[:200]}")
     problems = check(db, now)
     for p in problems:
         print(f"PROBLEM: {p[3]}")

@@ -120,14 +120,11 @@ def remove_old_cards(db):
     pictures, so they don't sit at the bottom of the feed. They go back into the list and get posted again."""
     rows = db.table("stories").select("id,image_url").eq("category", "History").limit(500).execute().data
     old = [r for r in rows if r["id"].count(":") == 1]
-    files = [r["image_url"].split("/object/public/covers/", 1)[1].split("?")[0]
-             for r in old if r.get("image_url") and "/object/public/covers/" in r["image_url"]
+    files = [r["image_url"] for r in old if r.get("image_url") and "/object/public/covers/" in r["image_url"]
              and "/object/public/covers/library/" not in r["image_url"]]   # backup pictures are shared: kept
     if files:
-        try:
-            db.storage.from_("covers").remove(files)
-        except Exception:
-            pass
+        import store
+        store.remove(db, files)
     for r in old:
         db.table("stories").delete().eq("id", r["id"]).execute()
     return len(old)
