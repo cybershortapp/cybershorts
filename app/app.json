@@ -54,7 +54,8 @@
         {
           "android": {
             "enableMinifyInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# expo-gl's GLView is a TextureView, not an ExpoView, so Expo's own rules don't keep its\n# (Context, AppContext) constructor; without this the code shrinker removes it and the app crashes\n# when a spatial picture appears (test build 3/4 of 1.0.6).\n-keep class expo.modules.gl.** { *; }\n-keep class expo.modules.sensors.** { *; }\n"
           }
         }
       ],
