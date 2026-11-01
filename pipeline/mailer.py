@@ -30,9 +30,18 @@ class Mailer:
         return bool(self.user and self.password)
 
     def send(self, to, subject, text, html_body, unsubscribe=None):
-        if self.server is None:
-            self.server = smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=30)
-            self.server.login(self.user, self.password)
+        try:
+            if self.server is None:
+                self.server = smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=30)
+                self.server.login(self.user, self.password)
+            self._send(to, subject, text, html_body, unsubscribe)
+        except Exception:
+            # a dropped connection is not reused: the next email starts a new one (on 13 Oct 2026 one failure made
+            # every later email fail with "please run connect() first")
+            self.close()
+            raise
+
+    def _send(self, to, subject, text, html_body, unsubscribe=None):
         msg = EmailMessage()
         msg["From"] = formataddr(("CyberSid", self.user))
         msg["To"] = to
@@ -49,6 +58,7 @@ class Mailer:
                 self.server.quit()
             except Exception:
                 pass
+        self.server = None
 
 
 def _page(inner, unsub=None):
