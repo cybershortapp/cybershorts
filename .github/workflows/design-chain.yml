@@ -1,11 +1,11 @@
 name: Design chain check
-# Only on the design-samples branch. Read-only: why serious stories have no attack chain (nothing is written).
+# Only on the design-samples branch. Read-only: dry run of the chain second try (nothing is written).
 on:
   push:
     branches: [design-samples]
-    paths: ["design/chain_check.py", ".github/workflows/design-chain.yml"]
+    paths: ["design/chain_dry.py", ".github/workflows/design-chain.yml"]
 permissions:
-  contents: write
+  contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: chain-catchup
       - uses: actions/checkout@v5
         with:
           path: ds
@@ -24,14 +24,9 @@ jobs:
       - env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          AI_PROVIDER: "nvidia,ovh"
-        run: mkdir -p "$GITHUB_WORKSPACE/out" && python ds/design/chain_check.py "$GITHUB_WORKSPACE/out"
-      - if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          cd "$GITHUB_WORKSPACE/out" || exit 0
-          git init -q && git checkout -q -b design-chain-out && git add -A
-          git -c user.name="design-chain" -c user.email="actions@users.noreply.github.com" commit -qm "chain check ${{ github.run_id }}" || exit 0
-          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-chain-out
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AI_PROVIDER: "gemini,nvidia,ovh,gemini-lite,groq,mistral"
+        run: python ds/design/chain_dry.py 2>&1 | tee out.txt; echo "::notice::$(grep -E 'WOULD WRITE|RESULT|chain\]' out.txt | cut -c1-230 | tr '\n' '#')"
