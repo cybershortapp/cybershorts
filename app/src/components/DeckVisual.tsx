@@ -80,6 +80,7 @@ export function VisualDeck({ deck, width, height, onDone, active = true }: { dec
   const iRef = useRef(0);
   iRef.current = i;
   const go = (d: number) => {
+    nudge.setValue(0); // a tap or swipe during the nudge: the slide snaps back into place
     const to = Math.max(0, Math.min(n - 1, iRef.current + d));
     if (to !== iRef.current) buzz.tick();
     setI(to);
@@ -112,7 +113,12 @@ export function VisualDeck({ deck, width, height, onDone, active = true }: { dec
       Animated.spring(nudge, { toValue: 0, friction: 6, tension: 60, useNativeDriver: true }),
     ]);
     a.start();
-    return () => a.stop();
+    // stopped early (the reader swiped on, or the card was re-laid out): put the slide straight back,
+    // or it stays shifted to the side with the arrow strip showing (seen on a phone in test build 5)
+    return () => {
+      a.stop();
+      nudge.setValue(0);
+    };
   }, [active, nudge, width]);
   const s = deck.slides[i];
   const kind = kindOf(s, i);
