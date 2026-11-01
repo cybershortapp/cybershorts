@@ -1,4 +1,4 @@
-"""Dry run of the ai-catchup branch's chain_catchup on the live database: nothing is written (updates are printed)."""
+"""Dry run (2) of the chain-catchup branch's chain_catchup on the live database: nothing is written (updates are printed)."""
 import os, sys
 ROOT = os.path.abspath("pipeline")
 sys.path.insert(0, ROOT)
