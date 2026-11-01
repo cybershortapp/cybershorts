@@ -215,22 +215,19 @@ export function severityOf(s: Severity | null | undefined, C: Palette = LIGHT) {
   return C.sev[s ?? 'Info'] ?? C.sev.Info;
 }
 
-// ---- the reader's card style: Focus (default), Standard, Magazine, Newspaper, Terminal or Ronin ----
+// ---- the reader's card style: Focus (default), Magazine, Newspaper, Terminal or Ronin ----
+// 'standard' stays a known value only so an old saved choice can be read and moved on.
 export type CardStyle = 'focus' | 'standard' | 'magazine' | 'newspaper' | 'terminal' | 'ronin';
-export const CARD_STYLES: CardStyle[] = ['focus', 'standard', 'magazine', 'newspaper', 'terminal', 'ronin'];
+/** The styles readers can pick. Standard was retired in 1.0.6: Focus replaced it. */
+export const CARD_STYLES: CardStyle[] = ['focus', 'magazine', 'newspaper', 'terminal', 'ronin'];
 const STYLE_KEY = 'card-style';
-// Focus became the default in 1.0.6: readers still on the old default (Standard) move to it once.
-// Anyone who picked another style keeps it, and anyone can go back to Standard in Preferences.
-const FOCUS_MOVE_KEY = 'card-style-focus-moved';
 let cardStyle: CardStyle = 'focus';
-AsyncStorage.multiGet([STYLE_KEY, FOCUS_MOVE_KEY])
-  .then(([[, v], [, moved]]) => {
-    if (!moved) {
-      AsyncStorage.setItem(FOCUS_MOVE_KEY, '1').catch(() => {});
-      if (!v || v === 'standard') {
-        if (v) AsyncStorage.setItem(STYLE_KEY, 'focus').catch(() => {});
-        return;
-      }
+AsyncStorage.getItem(STYLE_KEY)
+  .then((v) => {
+    if (v === 'standard') {
+      // Standard is gone: anyone still on it moves to Focus
+      AsyncStorage.setItem(STYLE_KEY, 'focus').catch(() => {});
+      return;
     }
     if (v && (CARD_STYLES as string[]).includes(v)) {
       cardStyle = v as CardStyle;

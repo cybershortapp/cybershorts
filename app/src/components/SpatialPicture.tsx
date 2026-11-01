@@ -55,8 +55,9 @@ function startMotion() {
       // the "level" position follows slowly, so however the phone is held, the picture settles back to centre
       rest.b += (b - rest.b) * 0.01;
       rest.g += (g - rest.g) * 0.01;
-      tilt.x = clamp((g - rest.g) / 0.3);
-      tilt.y = clamp((b - rest.b) / 0.3);
+      // a small tilt (about 10 degrees) already moves the picture fully
+      tilt.x = clamp((g - rest.g) / 0.18);
+      tilt.y = clamp((b - rest.b) / 0.18);
     });
   } catch {
     sub = null;
@@ -80,7 +81,7 @@ uniform vec2 uTilt;
 uniform float uK;
 uniform vec2 uScale;
 void main() {
-  vec2 p = 0.5 + (vec2(vUv.x, 1.0 - vUv.y) - 0.5) * uScale / 1.015;
+  vec2 p = 0.5 + (vec2(vUv.x, 1.0 - vUv.y) - 0.5) * uScale / 1.035;
   vec2 q = p;
   for (int i = 0; i < 6; i++) {
     float d = texture2D(uDep, q).r;
@@ -198,7 +199,7 @@ function SpatialGL({ uri, depth }: { uri: string; depth: string }) {
       const ca = w / Math.max(1, h);
       // fill the frame like the normal picture does ("cover")
       gl.uniform2f(gl.getUniformLocation(prog, 'uScale'), aspect > ca ? ca / aspect : 1, aspect > ca ? 1 : aspect / ca);
-      gl.uniform1f(gl.getUniformLocation(prog, 'uK'), 0.035);
+      gl.uniform1f(gl.getUniformLocation(prog, 'uK'), 0.06); // how far near things move: 0.035 in build 5 was too subtle
       gl.viewport(0, 0, w, h);
 
       startMotion();
@@ -213,10 +214,11 @@ function SpatialGL({ uri, depth }: { uri: string; depth: string }) {
         if (t - last < 30) return; // about 30 frames a second is plenty and easy on the battery
         last = t;
         // the phone's tilt, plus a very gentle sway so the picture never looks frozen
-        const sx = Math.sin(t / 1600) * 0.3;
-        const sy = Math.sin(t / 2400 + 1.3) * 0.2;
-        now.x += (tilt.x + sx - now.x) * 0.15;
-        now.y += (tilt.y + sy - now.y) * 0.15;
+        // a gentle sway on its own too (about one slow sway every 6 seconds), so the depth is easy to see
+        const sx = Math.sin(t / 950) * 0.55;
+        const sy = Math.sin(t / 1400 + 1.3) * 0.35;
+        now.x += (tilt.x + sx - now.x) * 0.22;
+        now.y += (tilt.y + sy - now.y) * 0.22;
         gl.uniform2f(uTilt, clamp(now.x), -clamp(now.y));
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         gl.endFrameEXP();
