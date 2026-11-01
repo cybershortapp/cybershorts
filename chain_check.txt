@@ -1,0 +1,65 @@
+== Last 48 hours: 226 news stories, 39 with a chain. Serious ransomware/breach/vulnerability: 60, 13 with a chain ==
+   by category (serious): Breaches 6/37, Ransomware 4/8, Vulnerabilities 3/15
+AI for this check: nvidia:minimaxai/minimax-m3.1-flash -> nvidia:openai/gpt-oss-20b -> ovh:Mistral-Small-3.2-24B-Instruct-2506 -> ovh:Mistral-Nemo-Instruct-2407
+
+-- 10-31T23:02 Breaches/Critical note | Japan reports 260 million personal records leaked in 2026
+   article text read: 3000 chars; also reported by 0
+   main: 3000 chars -> chain now: 3 steps (Initial Access, Collection, Impact)
+
+-- 10-31T19:03 Ransomware/High note | Saga University ransomware incident may expose 80,000 records
+   article text read: 3000 chars; also reported by 0
+   main: 3000 chars -> chain now: 3 steps (Impact, Collection, Impact)
+
+-- 10-31T18:31 Breaches/High BleepingComputer | Northflank breach exposes customer AI API keys
+   article text read: 3000 chars; also reported by 0
+   main: 3000 chars -> chain now: 0 steps
+
+-- 10-31T18:03 Vulnerabilities/High Microsoft Security Res | Microsoft fixes 3 high severity Chromium flaws in Edge
+   article text read: 0 chars; also reported by 0
+   main: only 0 chars, AI would see the feed summary only
+
+-- 10-31T12:59 Breaches/High whalesbook | Unifinz Capital reports Rs 15 crore cyber fraud
+   article text read: 2634 chars; also reported by 0
+   main: 2634 chars -> chain now: 0 steps
+
+-- 10-31T09:34 Vulnerabilities/Critical note | PHP2Shell Vulnerability Exposes 36M Sites, Threatens Firewalls
+   article text read: 3000 chars; also reported by 0
+   main: 3000 chars -> chain now: 3 steps (Initial Access, Execution, Privilege Escalation)
+
+-- 10-31T06:03 Breaches/High almeidalawgroup.com | Trimera Health discloses breach exposing psychiatric patient records
+   article text read: 2660 chars; also reported by 0
+   main: 2660 chars -> chain now: 0 steps
+
+-- 10-31T03:01 Breaches/High Cyber Security News | Chainalysis breach exposes customer details via offensive agentic techniques
+   article text read: 3000 chars; also reported by 5
+   main: 3000 chars -> chain now: 0 steps
+   Coingape: 3000 chars -> chain now: 0 steps
+   Crypto Briefing: 3000 chars -> chain now: 0 steps
+
+-- 10-31T02:32 Breaches/High Dimsum Daily | Hong Kong exam authority breach exposes 16,900 mainland applicants
+   article text read: 1496 chars; also reported by 0
+   main: 1496 chars -> chain now: 0 steps
+
+-- 10-31T00:04 Breaches/High The420.in | PNB insider fraud: ₹35 crore allegedly stolen
+   article text read: 3000 chars; also reported by 0
+   main: 3000 chars -> chain now: 3 steps (Initial Access, Execution, Exfiltration)
+
+-- 10-30T22:02 Vulnerabilities/High Microsoft Security Res | Microsoft Outlook RCE Vulnerability CVE-2026-70125 Updated CVSS Scores
+   article text read: 0 chars; also reported by 0
+   main: only 0 chars, AI would see the feed summary only
+
+-- 10-30T19:36 Breaches/High note | Berlin City Data Stolen, 5.8TB, 30 BTC Ransom Refused
+   article text read: 1586 chars; also reported by 0
+   main: 1586 chars -> chain now: 3 steps (Initial Access, Collection, Impact)
+
+-- 10-30T19:35 Breaches/High Law.com | Canadian law firms hit by industry‑wide cyberattack
+   article text read: 0 chars (could not read the page); also reported by 0
+   main: only 0 chars, AI would see the feed summary only
+
+-- 10-30T19:33 Breaches/High San Antonio Express-Ne | Data breach hits South Texas nuclear plant operator
+   article text read: 0 chars; also reported by 2
+   main: only 0 chars, AI would see the feed summary only
+   Government Technolog: only 0 chars, AI would see the feed summary only
+   shattered.io: 3000 chars -> chain now: 0 steps
+
+== Summary of 14 serious stories without a chain: {'no_text': 4, 'short': 0, 'now_chain': 5, 'still_none': 9, 'other_outlet_chain': 0}; AI used {'nvidia:minimaxai/minimax-m3.1-flash': 9, 'ovh:Mistral-Small-3.2-24B-Instruct-2506': 2, 'ovh:Mistral-Nemo-Instruct-2407': 2} in 13 calls ==
