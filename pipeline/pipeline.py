@@ -74,6 +74,12 @@ TACTIC_ALIASES = {"Defense Evasion": "Stealth", "Defence Evasion": "Stealth", "C
 TECHNIQUE_RE = re.compile(r"\bT1\d{3}(?:\.\d{3})?\b")
 
 
+# a step that describes the victim's or investigators' response, not something the attackers did
+RESPONSE_STEP = re.compile(r"\b(disconnect\w*|suspend\w*|notif\w+|investigat\w*|restor\w*|reported (it|the)|alerted|informed|"
+                           r"engaged|hired|called in|reset passwords|rotated)\b", re.I)
+ATTACKER_WORDS = re.compile(r"\b(attackers?|hackers?|threat actors?|criminals?|gang|operators?|intruders?|adversar\w+|ransomware|malware)\b", re.I)
+
+
 def clean_chain(raw, source_text):
     """Keep only steps that use a real MITRE tactic. Technique IDs are kept only if the article itself names them."""
     if not isinstance(raw, list):
@@ -87,6 +93,8 @@ def clean_chain(raw, source_text):
         detail = str(item.get("detail", "")).strip()
         if stage not in TACTICS or not detail:
             continue
+        if RESPONSE_STEP.search(detail) and not ATTACKER_WORDS.search(detail):
+            continue   # e.g. "University disconnected the NAS": the victim's response, not an attack step
         step = {"stage": stage, "tactic": TACTICS[stage], "detail": detail[:140]}
         tech = str(item.get("technique", "") or "").strip().upper()
         if TECHNIQUE_RE.fullmatch(tech) and tech in (source_text or ""):
