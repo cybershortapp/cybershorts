@@ -1,0 +1,60 @@
+appId: app.cybersid.news
+name: Open the app and swipe through cards (crash check)
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- extendedWaitUntil:
+    visible: "(Skip|Next|Read full story.*)"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+- extendedWaitUntil:
+    visible: "Read full story.*"
+    timeout: 60000
+- takeScreenshot: a-first-card
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 400
+- takeScreenshot: b-second-card
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 400
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 400
+- takeScreenshot: c-fourth-card
+- swipe:
+    start: "50%, 25%"
+    end: "50%, 80%"
+    duration: 400
+- swipe:
+    start: "50%, 25%"
+    end: "50%, 80%"
+    duration: 400
+- takeScreenshot: d-back
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 300
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 300
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 300
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 25%"
+    duration: 300
+- takeScreenshot: e-after-fast-swipes
+- assertVisible: "Read full story.*"

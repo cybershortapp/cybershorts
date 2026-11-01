@@ -1,0 +1,53 @@
+name: Design emulator crash check
+# Only on the design-samples branch: installs a test app release on an Android emulator, swipes through cards
+# and saves the phone log (any crash) to the design-emu-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/emu/**", ".github/workflows/design-emu.yml"]
+permissions:
+  contents: write
+jobs:
+  emu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download the test app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$(cat design/emu/tag.txt)" --repo ${{ github.repository }} --pattern 'cybersid-test.apk' --output app.apk && ls -la app.apk
+      - name: Allow the emulator to use the processor directly
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: bash design/emu/run.sh "$GITHUB_WORKSPACE/app.apk" "$GITHUB_WORKSPACE/out"
+      - if: always()
+        run: |
+          echo "::notice title=Result::$(cat out/result.txt 2>/dev/null) pid $(cat out/pid.txt 2>/dev/null | tr '\n' ' ') install $(tail -1 out/install.txt 2>/dev/null)"
+          echo "::notice title=Crash lines::$(head -12 out/crash.txt 2>/dev/null | cut -c1-220 | tr '\n' '#')"
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out || exit 0
+          find . -name '*.png' -size +1500k -delete
+          tail -c 3000000 logcat.txt > logcat-tail.txt && rm -f logcat.txt
+          git init -q && git checkout -q -b design-emu-out && git add -A
+          git -c user.name="design-emu" -c user.email="actions@users.noreply.github.com" commit -qm "emu ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-emu-out
