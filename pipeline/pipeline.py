@@ -125,6 +125,10 @@ Given an article title and excerpt, reply with ONLY a JSON object:
   "zero_day": true only if the text says a flaw was exploited before a fix existed, or is being actively exploited in the wild, else false,
   "scene": "max 20 words: one simple visual scene that illustrates this story as a picture, using objects only (servers, locks, phones, shields, buildings, data). No people, no brand names, no logos, no text" }}
 
+Writing rules:
+- Write only what the story says. Never mention the excerpt, the article, the text or the source, and never say
+  what it does not tell you (no "The excerpt does not identify..."). If a detail is unknown, leave it out.
+
 Chain rules:
 - Only fill "chain" when the text itself describes at least 3 separate steps of how the attackers got in and what they did next, in order.
 - Use only these stage names: {", ".join(TACTICS)}.
@@ -570,12 +574,24 @@ def summarise_ai(client, title, excerpt, kind=None):
     if not isinstance(data.get("why"), str):
         data["why"] = ""
     data["is_news"] = data.get("is_news") is not False
-    data["technical"] = fit_summary(data["technical"])
+    data["technical"] = fit_summary(drop_meta(data["technical"]))
     data["products"] = [str(x) for x in data.get("products") or [] if isinstance(x, str)][:5]
     data["zero_day"] = data.get("zero_day") is True
     data["chain"] = clean_chain(data.get("chain"), f"{title} {excerpt}")
     data["incident"] = clean_incident(data, f"{title} {excerpt}")
     return data
+
+
+# a sentence about the AI's input instead of the story ("The excerpt does not identify the bank.")
+META_SENTENCE = re.compile(r"\b(the|this) (excerpt|article|text|snippet|source|report|summary) (does not|doesn't|did not|provides? no|"
+                           r"gives? no|lacks?|offers? no|is unclear|do(es)? not (say|state|mention|name|identify|specify|include|provide))", re.I)
+
+
+def drop_meta(text):
+    """Remove sentences where the AI talks about what it was given rather than about the story."""
+    parts = re.split(r"(?<=[.!?])\s+", (text or "").strip())
+    kept = [x for x in parts if not META_SENTENCE.search(x)]
+    return " ".join(kept) if kept else (text or "")
 
 
 def fit_summary(text, max_words=70):

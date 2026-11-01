@@ -18,6 +18,7 @@ GAMES_PER_RUN = 1       # one at a time, so games keep coming all day for the ne
 GAMES_PER_DAY = 12      # a pool to pick from; each phone shows at most 3 a day
 SIMILAR = 0.72          # a new game this close to a recent one is a repeat
 REPEAT_DAYS = 60
+TURN_WINDOW = 24        # styles take turns based on the last 24 games made (about two days)
 
 # everyday products people have on their own phones and computers: their Critical flaws get a quiz
 CONSUMER = {
@@ -174,7 +175,10 @@ def style_for(story, recent_styles):
     cat = story.get("category") or ""
     if cat in ("Tips", "History", "Other") or story.get("source", "").startswith("CyberSid"):
         return None
-    turn = lambda options: sorted(options, key=lambda s: recent_styles.count(s))[0]   # take turns
+    # take turns, counted over the latest games only: counting the whole 60 days meant a style made often weeks
+    # ago (First steps) lost every turn to the house game until the house game caught up, for weeks
+    latest = recent_styles[:TURN_WINDOW]
+    turn = lambda options: sorted(options, key=lambda s: latest.count(s))[0]
     if HOT_SEAT.search(text):
         return "hot_seat"
     if APPROVE.search(text):
@@ -185,7 +189,7 @@ def style_for(story, recent_styles):
     if scammy:
         options = ["scam_or_legit", "red_flags"] + (["real_link"] if _brand(text)[0] else [])
         # take turns with the styles used most recently
-        options.sort(key=lambda s: recent_styles.count(s))
+        options.sort(key=lambda s: latest.count(s))
         return options[0]
     if cat == "Breaches":
         if re.search(r"\bpasswords?\b", text) and "crack_meter" not in recent_styles[:6]:
