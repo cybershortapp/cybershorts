@@ -17,6 +17,12 @@ name: Open the app and swipe through cards (crash check)
     visible: "Read full story.*"
     timeout: 60000
 - takeScreenshot: a-first-card
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: a2-first-card-later
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: a3-first-card-later
 - swipe:
     start: "50%, 80%"
     end: "50%, 25%"
