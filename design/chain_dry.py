@@ -1,4 +1,4 @@
-"""Dry run (3) of the chain-catchup branch's chain_catchup on the live database: nothing is written (updates are printed)."""
+"""Dry run (4) of the chain-catchup branch's chain_catchup on the live database: nothing is written (updates are printed)."""
 import os, sys
 ROOT = os.path.abspath("pipeline")
 sys.path.insert(0, ROOT)
@@ -35,3 +35,8 @@ ai = AI()
 print("AI:", ai.describe()[:300])
 note, calls = P.chain_catchup(DB(), ai, 25, datetime.now(timezone.utc) + timedelta(minutes=10))
 print("RESULT", note, "| calls", calls, "| used", ai.used)
+
+# how many chains already saved in the last 7 days would the new rules turn down?
+rows = real.table("stories").select("id,headline,attack_chain").gte("created_at", (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()).not_.is_("attack_chain", "null").limit(500).execute().data
+bad = [r for r in rows if not P.clean_chain(r["attack_chain"], "")]
+print(f"RESULT old chains, last 7 days: {len(rows)}, {len(bad)} would now be turned down: " + " / ".join(f"{r['headline'][:40]} ({', '.join(s['stage'] for s in r['attack_chain'])})" for r in bad[:4]))
