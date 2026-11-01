@@ -91,8 +91,11 @@ def clean_chain(raw, source_text):
         tech = str(item.get("technique", "") or "").strip().upper()
         if TECHNIQUE_RE.fullmatch(tech) and tech in (source_text or ""):
             step["technique"] = tech
+        if steps and steps[-1]["stage"] == stage and steps[-1]["detail"].lower() == detail.lower():
+            continue   # the same step twice
         steps.append(step)
-    return steps if len(steps) >= 3 else None
+    # a real chain moves through at least 3 different stages ("Impact, Collection, Impact" is not one)
+    return steps if len(steps) >= 3 and len({x["stage"] for x in steps}) >= 3 else None
 
 
 PROMPT = f"""You write short cyber security news cards for a UK mobile app read by IT and security people.
@@ -238,6 +241,81 @@ def match_group(index, *texts):
         if rx.search(blob):
             return gid
     return None
+
+
+# ---- second try at the attack chain for serious stories that got none (Nov 2026) ----
+# A story gets one try at a chain when its card is written. That try can miss: a cautious backup model wrote
+# the card, the steps were further down than the first 3,000 characters, or a later outlet described the attack
+# better. So once, between 1 and 48 hours after a serious story arrives, the strong models read the whole
+# article (and up to 2 other outlets' reports of it) and are asked only for the chain. Same rules: only steps
+# the text describes, never guessed. Each story is tried once (marked in incident.chain_retry).
+CHAIN_RETRY_PER_RUN = int(os.getenv("CHAIN_RETRY_PER_RUN", "2"))
+CHAIN_PROMPT = f"""You read a cyber attack news article and list how the attack happened, for an attack chain diagram.
+Reply with ONLY a JSON object:
+{{"chain": [ {{"stage": one MITRE ATT&CK tactic name, "detail": "max 15 words, what the attackers did", "technique": "T-number only if written in the text, else empty"}} ]}}
+Rules:
+- Only list steps when the article itself describes at least 3 separate steps of how the attackers got in and what they did next, in order.
+- The steps must be different stages of the attack (for example Initial Access, then Credential Access, then Exfiltration).
+- Use only these stage names: {", ".join(TACTICS)}.
+- Never guess or add steps the article does not describe. A breach notice that only says data was taken is not a chain: return "chain": [].
+- If unsure, return "chain": []."""
+
+
+def chain_catchup(db, ai, budget, deadline):
+    """Second try at a chain for serious stories without one. Returns (note, ai_calls)."""
+    if budget < 1:
+        return "skipped (no AI left)", 0
+    now = datetime.now(timezone.utc)
+    rows = (db.table("stories").select("id,created_at,source,url,headline,category,severity,attack_chain,also_reported,incident")
+            .gte("created_at", (now - timedelta(hours=48)).isoformat()).lte("created_at", (now - timedelta(hours=1)).isoformat())
+            .in_("category", ["Ransomware", "Breaches", "Vulnerabilities"]).in_("severity", ["Critical", "High"])
+            .is_("attack_chain", "null").order("created_at", desc=True).limit(200).execute().data)
+    todo = [r for r in rows if not (r.get("source") or "").startswith("CyberSid")
+            and not (isinstance(r.get("incident"), dict) and r["incident"].get("chain_retry"))]
+    if not todo:
+        return "none due", 0
+    from ai import is_lite
+    # only the strong models: the lite ones rarely write chains
+    saved = ai.chain
+    ai.chain = [c for c in saved if not (c[0] == "gemini" and is_lite(c[1]))]
+    tried = added = calls = 0
+    try:
+        for r in todo:
+            if tried >= CHAIN_RETRY_PER_RUN or calls >= budget or datetime.now(timezone.utc) > deadline:
+                break
+            tried += 1
+            texts = []
+            for url in [r["url"]] + [a.get("url") for a in (r.get("also_reported") or [])[:2] if isinstance(a, dict)]:
+                if not url:
+                    continue
+                page, _ = fetch_article(url)
+                body = article_text(page, limit=8000)
+                if len(body) >= 600:
+                    texts.append(body)
+            chain = None
+            for body in sorted(texts, key=len, reverse=True)[:2]:
+                if calls >= budget:
+                    break
+                try:
+                    calls += 1
+                    raw = ai.json(CHAIN_PROMPT, f"Title: {r['headline']}\nArticle: {body}", 900)
+                except Exception as ex:
+                    print(f"[warn] chain second try for {r['id'][:10]}: {str(ex)[:80]}")
+                    continue
+                chain = clean_chain(raw.get("chain") if isinstance(raw, dict) else None, f"{r['headline']} {body}")
+                if chain:
+                    break
+            inc = r["incident"] if isinstance(r.get("incident"), dict) else {}
+            update = {"incident": {**inc, "chain_retry": now.isoformat(timespec="seconds")}}
+            if chain:
+                update["attack_chain"] = chain
+                added += 1
+            db.table("stories").update(update).eq("id", r["id"]).execute()
+            print(f"[chain] second try: {'CHAIN ' + str(len(chain)) if chain else 'none   '} "
+                  f"({len(texts)} readable report{'s' if len(texts) != 1 else ''}) {r['headline'][:60]}")
+    finally:
+        ai.chain = saved
+    return f"{added} added of {tried} tried ({len(todo)} waiting)", calls
 
 
 # ---- research: fill in the attack chain from trusted sources ----
@@ -1258,11 +1336,16 @@ def main():
             tint_note = f"problem: {str(ex)[:80]}"
 
     # ---- 3c. awareness games for some stories, and one trending deck a day (release 1.0.4) ----
-    games_note = deck_note = explain_note = "off"
+    games_note = deck_note = explain_note = chain_note = "off"
     if db and ai and not TEST_MODE:
         from extras import make_games, make_trending
         from explain import explain_chains
         deadline = started + timedelta(seconds=RUN_SECONDS)
+        try:
+            chain_note, used = chain_catchup(db, ai, max(0, ai_budget - ai_calls), deadline)
+            ai_calls += used
+        except Exception as ex:
+            chain_note = f"problem: {str(ex)[:100]}"
         try:
             explain_note, used = explain_chains(db, ai, max(0, ai_budget - ai_calls), deadline)
             ai_calls += used
@@ -1337,7 +1420,7 @@ def main():
     gh_note("Run summary", f"{totals['added']} new, {totals['merged']} merged, {totals['seen']} already seen, "
             f"{totals['old']} too old, {totals['skipped']} not news, {totals['failed']} failed | "
             f"{ai_calls} AI calls | sources {ok_sources}/{len(health)} | new from: {', '.join(titles) or 'none'} | "
-            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | copies: {copies_note[:80]} | colours: {tint_note} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
+            f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | copies: {copies_note[:80]} | colours: {tint_note} | chain second try: {chain_note[:60]} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
             f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
             f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
     print(f"Tip card: {tip_note}")
