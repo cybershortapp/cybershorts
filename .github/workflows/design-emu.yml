@@ -11,6 +11,10 @@ jobs:
   emu:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        motion: ["on", "off"]   # off = the phone's animations turned off (no 3D picture, no wave), to compare
     steps:
       - uses: actions/checkout@v5
       - name: Download the test app
@@ -36,10 +40,10 @@ jobs:
           disk-size: 6000M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: false
-          script: bash design/emu/run.sh "$GITHUB_WORKSPACE/app.apk" "$GITHUB_WORKSPACE/out"
+          script: MOTION=${{ matrix.motion }} bash design/emu/run.sh "$GITHUB_WORKSPACE/app.apk" "$GITHUB_WORKSPACE/out"
       - if: always()
         run: |
-          echo "::notice title=Result::$(cat out/result.txt 2>/dev/null) pid $(cat out/pid.txt 2>/dev/null | tr '\n' ' ') install $(tail -1 out/install.txt 2>/dev/null)"
+          echo "::notice title=Result (motion ${{ matrix.motion }})::$(cat out/result.txt 2>/dev/null | tr '\n' ' ') pid $(cat out/pid.txt 2>/dev/null | tr '\n' ' ') install $(tail -1 out/install.txt 2>/dev/null)"
           echo "::notice title=Crash lines::$(head -12 out/crash.txt 2>/dev/null | cut -c1-220 | tr '\n' '#')"
       - if: always()
         env:
@@ -50,6 +54,6 @@ jobs:
           if command -v mogrify > /dev/null; then (cd shots && mogrify -format jpg -resize 50% -quality 70 *.png && rm -f *.png) || true; fi
           find . -name '*.png' -size +1500k -delete
           grep -E "$(adb_pid=x; echo 'cybersid|ReactNative|AndroidRuntime|libc|DEBUG|SoLoader|ExpoGL|EXGL|expo|unknown:|Fatal')" logcat.txt | tail -c 3000000 > logcat-app.txt; rm -f logcat.txt
-          git init -q && git checkout -q -b design-emu-out && git add -A
+          git init -q && git checkout -q -b design-emu-out-${{ matrix.motion }} && git add -A
           git -c user.name="design-emu" -c user.email="actions@users.noreply.github.com" commit -qm "emu ${{ github.run_id }}"
-          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-emu-out
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-emu-out-${{ matrix.motion }}

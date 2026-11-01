@@ -9,6 +9,12 @@ PKG=app.cybersid.news
 sleep 25
 adb shell settings put global hide_error_dialogs 1 || true
 adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+if [ "${MOTION:-on}" = "off" ]; then
+  # the phone's "remove animations": the app reads it as Reduce Motion, so no 3D picture and no wave
+  adb shell settings put global window_animation_scale 0
+  adb shell settings put global transition_animation_scale 0
+  adb shell settings put global animator_duration_scale 0
+fi
 adb install -r -g "$APK" > "$OUT/install.txt" 2>&1; cat "$OUT/install.txt"
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" 2>&1 &
@@ -35,5 +41,8 @@ if grep -qE "^[0-9]+" "$OUT/pid.txt" && ! grep -qE "FATAL EXCEPTION|ANR in $PKG|
 else
   echo "FAILED" > "$OUT/result.txt"
 fi
+APP=$(grep -oE "^[0-9]+" "$OUT/pid.txt" | head -1)
+grep -E "Choreographer\( *${APP:-0}\).*Skipped" "$OUT/logcat.txt" > "$OUT/skipped.txt" || true
+echo "skipped-frame warnings: $(wc -l < "$OUT/skipped.txt"), worst: $(grep -oE "Skipped [0-9]+" "$OUT/skipped.txt" | sort -k2 -n | tail -1)" >> "$OUT/result.txt"
 echo "== result: $(cat "$OUT/result.txt"), open: $(cat "$OUT/open.txt"), pid: $(tr '\n' ' ' < "$OUT/pid.txt")"
 head -60 "$OUT/crash.txt"
