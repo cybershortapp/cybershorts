@@ -1,0 +1,7 @@
+1923:11-01 19:59:20.749 W/RcsClientLib( 4259): java.lang.IllegalStateException: JibeService Not Initialized
+1975:11-01 19:59:20.787 W/RcsClientLib( 4259): java.lang.IllegalStateException: JibeService Not Initialized
+25077:11-01 20:01:23.744 E/AmbientMusicServiceMana( 1624): Caused by: java.lang.IllegalStateException: No underlying SoundTriggerModule available
+34091:11-01 20:01:49.497 W/MessageQueue( 5246): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {6d95ac8} sending message to a Handler on a dead thread
+34099:11-01 20:01:49.499 W/MessageQueue( 5246): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {6d95ac8} sending message to a Handler on a dead thread
+34107:11-01 20:01:49.499 W/MessageQueue( 5246): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {6d95ac8} sending message to a Handler on a dead thread
+34115:11-01 20:01:49.499 W/MessageQueue( 5246): java.lang.IllegalStateException: Handler (android.media.MediaCodec$EventHandler) {6d95ac8} sending message to a Handler on a dead thread
