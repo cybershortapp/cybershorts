@@ -1,5 +1,7 @@
 appId: app.cybersid.news
-name: Open the app and swipe through cards (crash check)
+name: Open the app and reach the first card (crash check, part 1)
+# Only the start: Maestro waits for the screen to go still between steps, and the card's moving picture and
+# wave never stop, so it hung after a few swipes. The swiping is done with plain adb in run.sh instead.
 ---
 - launchApp:
     clearState: true
@@ -7,7 +9,7 @@ name: Open the app and swipe through cards (crash check)
       notifications: deny
 - extendedWaitUntil:
     visible: "(Skip|Next|Read full story.*)"
-    timeout: 60000
+    timeout: 90000
 - runFlow:
     when:
       visible: "Skip"
@@ -15,52 +17,5 @@ name: Open the app and swipe through cards (crash check)
       - tapOn: "Skip"
 - extendedWaitUntil:
     visible: "Read full story.*"
-    timeout: 60000
+    timeout: 90000
 - takeScreenshot: a-first-card
-- waitForAnimationToEnd:
-    timeout: 1500
-- takeScreenshot: a2-first-card-later
-- waitForAnimationToEnd:
-    timeout: 1500
-- takeScreenshot: a3-first-card-later
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 400
-- takeScreenshot: b-second-card
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 400
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 400
-- takeScreenshot: c-fourth-card
-- swipe:
-    start: "50%, 25%"
-    end: "50%, 80%"
-    duration: 400
-- swipe:
-    start: "50%, 25%"
-    end: "50%, 80%"
-    duration: 400
-- takeScreenshot: d-back
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 300
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 300
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 300
-- swipe:
-    start: "50%, 80%"
-    end: "50%, 25%"
-    duration: 300
-- takeScreenshot: e-after-fast-swipes
-- assertVisible: "Read full story.*"

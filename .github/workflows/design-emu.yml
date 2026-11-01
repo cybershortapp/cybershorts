@@ -46,6 +46,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd out || exit 0
+          # smaller pictures: half size, as jpg
+          if command -v mogrify > /dev/null; then (cd shots && mogrify -format jpg -resize 50% -quality 70 *.png && rm -f *.png) || true; fi
           find . -name '*.png' -size +1500k -delete
           grep -E "$(adb_pid=x; echo 'cybersid|ReactNative|AndroidRuntime|libc|DEBUG|SoLoader|ExpoGL|EXGL|expo|unknown:|Fatal')" logcat.txt | tail -c 3000000 > logcat-app.txt; rm -f logcat.txt
           git init -q && git checkout -q -b design-emu-out && git add -A
