@@ -1,0 +1,21 @@
+name: Design SMTP probe
+# Only on the design-samples branch: which step of sending email through Gmail fails (no secrets printed).
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/smtp/**", ".github/workflows/design-smtp.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python design/smtp/smtp_probe.py
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
