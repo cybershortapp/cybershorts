@@ -1,0 +1,38 @@
+name: depth-maps
+
+# Every hour, between the news runs: depth maps for new card pictures, for the app's spatial picture effect.
+# Free (Depth Anything V2 Small on GitHub's own computer). If it is late or off, cards just show the plain picture.
+on:
+  schedule:
+    - cron: "22 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: depth-maps
+  cancel-in-progress: false
+
+jobs:
+  depth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install (the CPU-only build of the AI library keeps the download small)
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q transformers "supabase>=2.9.0" pillow
+      - name: Make depth maps
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: python depth.py
