@@ -1,0 +1,34 @@
+name: Design depth maps
+# Only on the design-samples branch: depth maps for a few of our own AI pictures, for a design prototype.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/depth.py", ".github/workflows/design-depth.yml"]
+permissions:
+  contents: write
+jobs:
+  depth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -q torch --index-url https://download.pytorch.org/whl/cpu && pip install -q transformers pillow
+      - env:
+          URLS: >-
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/068b035eee8a84cb-1793446349.jpg
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/a6cc03b85dd7abd5-1793435673.jpg
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/325115f7f4692a-1793469834.jpg
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/33a58f1e66b6659a-1793426638.jpg
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/de8fd3f7ebeb9916-1793401484.jpg
+            https://upnoikgyjagsogvigmij.supabase.co/storage/v1/object/public/covers/7b310c119f825d95-1793374624.jpg
+        run: mkdir -p out && python design/depth.py out
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -q && git checkout -q -b design-depth-out && git add -A
+          git -c user.name="design-depth" -c user.email="actions@users.noreply.github.com" commit -qm "depth ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-depth-out
