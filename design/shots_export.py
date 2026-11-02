@@ -31,6 +31,7 @@ except Exception as ex:
 index = {}
 urls = [s["image_url"] for s in snap["stories"] + snap["daily"] if s.get("image_url")]
 urls += [g["stories"]["image_url"] for g in snap["games"] if (g.get("stories") or {}).get("image_url")]
+urls += [sl["image"] for d in snap["decks"] for sl in (d.get("slides") or []) if isinstance(sl, dict) and sl.get("image")]
 for u in dict.fromkeys(urls):
     name = hashlib.sha1(u.encode()).hexdigest()[:16] + ".jpg"
     try:
