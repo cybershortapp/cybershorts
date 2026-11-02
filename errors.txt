@@ -1,0 +1,11 @@
+5 reports
+{"message": "screen: Attempting to run JS driven animation on animated node that has been moved to \"native\" earlier by starting an animation with `useNativeDriver: true`", "fatal": "False", "app_version": "1.0.4", "android_version": "27.0.1", "device": "iPhone 13 Pro", "created_at": "2026-10-22T22:34:36.104866+00:00"}
+{"message": "screen: Attempting to run JS driven animation on animated node that has been moved to \"native\" earlier by starting an animation with `useNativeDriver: true`", "fatal": "False", "app_version": "1.0.4", "android_version": "27.0.1", "device": "iPhone 13 Pro", "created_at": "2026-10-22T22:33:33.40424+00:00"}
+{"message": "screen: Attempting to run JS driven animation on animated node that has been moved to \"native\" earlier by starting an animation with `useNativeDriver: true`", "fatal": "False", "app_version": "1.0.4", "android_version": "27.0.1", "device": "iPhone 13 Pro", "created_at": "2026-10-22T22:32:36.233458+00:00"}
+{"message": "screen: Attempting to run JS driven animation on animated node that has been moved to \"native\" earlier by starting an animation with `useNativeDriver: true`", "fatal": "False", "app_version": "1.0.4", "android_version": "27.0.1", "device": "iPhone 13 Pro", "created_at": "2026-10-22T22:32:25.213402+00:00"}
+{"message": "screen: Attempting to run JS driven animation on animated node that has been moved to \"native\" earlier by starting an animation with `useNativeDriver: true`", "fatal": "False", "app_version": "1.0.4", "android_version": "27.0.1", "device": "iPhone 13 Pro", "created_at": "2026-10-22T22:32:03.07884+00:00"}
+usage_sizes OK: database 30 MB
+  storage pictures/(top): 901 files, 67 MB, avg 76 KB
+  storage covers/depth: 448 files, 3 MB, avg 7 KB
+  storage covers/library: 121 files, 4 MB, avg 31 KB
+  storage covers/(top): 1612 files, 77 MB, avg 49 KB
