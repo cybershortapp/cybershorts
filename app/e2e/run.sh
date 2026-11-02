@@ -11,6 +11,11 @@ mkdir -p "$OUT"
 
 adb install -r -g "$APK" > "$OUT/install.txt" 2>&1 || { echo "::error title=Install failed::$(tail -c 800 "$OUT/install.txt")"; exit 1; }
 adb shell settings put system screen_off_timeout 1800000
+# the emulator's own home screen often freezes on GitHub's slow machines, and its "isn't responding" popup
+# then covers our app in every test: hide those popups (the app's own crashes still show in the phone log)
+adb shell settings put global hide_error_dialogs 1 || true
+sleep 20
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" 2>&1 &
 LOGPID=$!
@@ -23,6 +28,7 @@ for f in "$FLOWS"/*.yaml; do
   start=$(date +%s)
   # the big-text flow runs with the phone's text set to 130% (the accessibility setting many people use)
   case "$name" in *big-text*) adb shell settings put system font_scale 1.3; sleep 2;; esac
+  adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
   # screenshots from takeScreenshot land in the working folder
   if (cd "$OUT/$name" && timeout 900 maestro test "$f" --test-output-dir "$OUT/$name/maestro" > "$OUT/$name/maestro.log" 2>&1); then
     result="passed"
