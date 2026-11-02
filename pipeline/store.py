@@ -21,6 +21,7 @@ import os
 PREFIX = "storage/v1/object/public/"
 _client = None
 _failed = False
+_verified = False
 
 
 def _cfg():
@@ -33,9 +34,26 @@ def _cfg():
     }
 
 
+def _public_ok(url):
+    """Phones can open this address: the bucket's private S3 API address and r2.dev (testing only) don't count."""
+    return (url.startswith("https://") and "r2.cloudflarestorage.com" not in url and ".r2.dev" not in url
+            and url.count("/") == 2)
+
+
 def r2_on():
     c = _cfg()
-    return bool(c["account"] and c["key"] and c["secret"] and c["url"].startswith("https://")) and not _failed
+    return bool(c["account"] and c["key"] and c["secret"] and _public_ok(c["url"])) and not _failed
+
+
+def _serves(url):
+    """The saved picture can be loaded from its public address (checked once per run, before any card uses R2)."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "okhttp/4.12.0"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status == 200
+    except Exception:
+        return False
 
 
 def public_base():
@@ -62,12 +80,24 @@ def on_r2(url):
 
 def put(db, bucket, path, data, content_type="image/jpeg"):
     """Save a picture and return its public address (R2 if set up, else Supabase)."""
-    global _failed
+    global _failed, _verified
     if r2_on():
         try:
-            _s3().put_object(Bucket=_cfg()["bucket"], Key=PREFIX + f"{bucket}/{path}", Body=data, ContentType=content_type,
+            key = PREFIX + f"{bucket}/{path}"
+            _s3().put_object(Bucket=_cfg()["bucket"], Key=key, Body=data, ContentType=content_type,
                              CacheControl="public, max-age=31536000, immutable")
-            return f"{public_base()}/{PREFIX}{bucket}/{path}"
+            url = f"{public_base()}/{key}"
+            if not _verified:
+                # the first picture of each run: can phones open it? If not, R2 is switched off for this run
+                if not _serves(url):
+                    try:
+                        _s3().delete_object(Bucket=_cfg()["bucket"], Key=key)
+                    except Exception:
+                        pass
+                    raise RuntimeError("PICTURES_URL does not serve the saved picture (custom domain not active, "
+                                       "or not the bucket's public custom domain)")
+                _verified = True
+            return url
         except Exception as ex:
             # one failure (wrong key, bucket missing) switches R2 off for the rest of this run
             _failed = True
@@ -143,7 +173,15 @@ def check():
     """python store.py --check: save, read back and delete a test picture on R2 (used after setting it up)."""
     import urllib.request
     if not r2_on():
-        print("R2 is not set up: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and PICTURES_URL are needed.")
+        base = public_base()
+        if base and not _public_ok(base):
+            print("PICTURES_URL is not a public address: "
+                  + ("it's the bucket's private S3 API address (r2.cloudflarestorage.com)" if "r2.cloudflarestorage.com" in base
+                     else "it's an r2.dev address (testing only)" if ".r2.dev" in base
+                     else "it should be only https://img.yourdomain, with nothing after the domain")
+                  + ". Set it to the bucket's custom domain. Until then pictures stay on Supabase.")
+        else:
+            print("R2 is not set up: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and PICTURES_URL are needed.")
         return False
     data = b"\xff\xd8\xff\xe0" + b"cybersid r2 check" * 20
     try:
@@ -187,4 +225,6 @@ if __name__ == "__main__":
     assert _split(u) == ("pictures", "abc.jpg") and on_r2(u) and not on_r2(s)
     assert _split(s) == ("covers", "library/a-1.jpg") and _split("https://news.example/a.jpg") is None
     assert not r2_on()
+    assert _public_ok("https://img.example.com") and not _public_ok("https://abc.r2.cloudflarestorage.com/cybersid-pictures")
+    assert not _public_ok("https://pub-1.r2.dev") and not _public_ok("https://img.example.com/x") and not _public_ok("http://img.example.com")
     print("store.py offline checks passed")
