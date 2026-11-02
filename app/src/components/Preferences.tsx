@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
-import { lastError, type AppError } from '../lib/crash';
+import { clearError, lastError, type AppError } from '../lib/crash';
 import { alertsAvailable, alertsConnected, alertsProblem, disableAlerts, enableAlerts, syncAlerts } from '../lib/notifications';
 import { cleanTerm, setPrefs, usePrefs } from '../lib/prefs';
 import { PRODUCTS } from '../lib/products';
@@ -422,9 +422,19 @@ export function Preferences({ onDone, onShowWelcome }: Props) {
           </Pressable>
         )}
         {!!appError && (
-          <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]} selectable>
-            Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}
-          </Text>
+          <Pressable
+            onPress={() => {
+              clearError();
+              setAppError(null);
+            }}
+            accessibilityRole="button"
+            accessibilityHint="Clears this message"
+          >
+            <Text style={[styles.small, { textAlign: 'center', marginTop: 10, opacity: 0.7 }]}>
+              Last app problem ({new Date(appError.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}): {appError.message}
+              {'\n'}Tap to clear
+            </Text>
+          </Pressable>
         )}
       </View>
     </ScrollView>
