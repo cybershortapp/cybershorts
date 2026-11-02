@@ -159,7 +159,19 @@ def check():
             print(f"Saved and read back from {url.split('/' + PREFIX)[0]}: {'OK' if ok else 'different bytes'} "
                   f"(cache: {r.headers.get('cf-cache-status') or 'n/a'})")
     except Exception as ex:
+        body = ""
+        try:
+            body = ex.read().decode(errors="ignore")[:300]   # an HTTP error's own message
+        except Exception:
+            pass
+        base = public_base()
+        kind = ("the bucket's private S3 API address (r2.cloudflarestorage.com): use the custom domain instead, "
+                "e.g. https://img.yourdomain" if "r2.cloudflarestorage.com" in base else
+                "an r2.dev address (for testing only): use the custom domain instead" if ".r2.dev" in base else
+                "has a path after the domain: it should be only https://img.yourdomain" if base.count("/") > 2 else
+                "a custom domain (check it shows Active in the bucket's Custom Domains)")
         print(f"Saved to R2, but the public address doesn't serve it yet: {str(ex)[:150]}")
+        print(f"PICTURES_URL looks like {kind}. Reply: {body}")
     remove(None, [url])
     return ok
 
