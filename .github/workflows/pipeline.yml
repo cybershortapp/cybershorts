@@ -34,7 +34,8 @@ jobs:
         with:
           python-version: "3.14"
       - run: pip install -r requirements.txt
-      - run: python pipeline.py
+      - id: news
+        run: python pipeline.py
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -59,3 +60,11 @@ jobs:
           USE_AI: "true"
           MAX_AI_CALLS: "40"
           DAILY_AI_CAP: "2000"
+      # new pictures: start the 3D depth maps now (about 5 minutes) instead of waiting for depth.yml's hourly
+      # timer, which GitHub often skips. That hourly run stays as the backup.
+      - name: Start the 3D depth maps for the new pictures
+        if: success() && steps.news.outputs.new_pictures != '' && steps.news.outputs.new_pictures != '0'
+        working-directory: .
+        run: gh workflow run depth.yml --repo "${{ github.repository }}" --ref "${{ github.ref_name }}" || echo "Could not start the 3D job now; its hourly run will catch up"
+        env:
+          GH_TOKEN: ${{ github.token }}
