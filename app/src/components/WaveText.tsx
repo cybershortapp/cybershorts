@@ -39,7 +39,10 @@ export function WaveText({ text, style, lines, active, colors }: Props) {
       key: `${wi}-${w}`,
       space: wi < parts.length - 1,
       letters: Array.from(w).map((c) => {
-        const at = (i++ / total) * 0.62; // where in the sweep this letter's moment comes
+        // where in the sweep this letter's moment comes. Never exactly 0: the first letter's points would then be
+        // [0, 0, ...], and the phone's own animation (iPhone) divides by that zero gap, so the first letter vanished
+        // between waves (when the wave rests at 0)
+        const at = 0.02 + (i++ / total) * 0.6;
         return { c, at };
       }),
     }));
