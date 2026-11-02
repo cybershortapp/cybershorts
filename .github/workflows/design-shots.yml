@@ -1,0 +1,34 @@
+name: Design shots export
+# Only on the design-samples branch. Read-only (the app's public key): today's real cards and their pictures,
+# for making the Play Store screenshots. Saved to the design-shots-out branch.
+on:
+  push:
+    branches: [design-samples]
+    paths: ["design/shots_export.py", ".github/workflows/design-shots.yml"]
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: ds
+      - uses: actions/checkout@v5
+        with:
+          ref: release-1.0.4
+          path: rel
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -q "supabase>=2.9.0"
+      - run: mkdir -p out && cd rel && python ../ds/design/shots_export.py ../out
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -q && git checkout -q -b design-shots-out && git add -A
+          git -c user.name="design-shots" -c user.email="actions@users.noreply.github.com" commit -qm "shots ${{ github.run_id }}" || exit 0
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" design-shots-out
