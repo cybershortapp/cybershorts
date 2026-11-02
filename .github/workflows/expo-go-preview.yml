@@ -87,3 +87,23 @@ jobs:
               echo ""
             } >> "$GITHUB_STEP_SUMMARY"
           done
+      # One link that always opens the newest preview: a channel of its own ("expo-go-preview", never preview or
+      # production) pointing at this branch. The per-publish links above open that one version only.
+      - name: Stable Expo Go link
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli channel:view expo-go-preview --non-interactive > /dev/null 2>&1 \
+            || npx eas-cli channel:create expo-go-preview --non-interactive
+          npx eas-cli channel:edit expo-go-preview --branch expo-go-preview --non-interactive || true
+          P=$(jq -r '.expo.updates.url' app.json | sed 's|.*/||')
+          RV=$(jq -r '.[0].runtimeVersion' update.json)
+          G=$(jq -r '[.[] | select(.platform == "ios")][0].group' update.json)
+          RVE=$(echo "$RV" | sed 's/:/%3A/g')
+          LINK="exp://u.expo.dev/${P}?runtime-version=${RVE}&channel-name=expo-go-preview"
+          # does the channel serve the update just published?
+          curl -s -H "expo-platform: ios" -H "expo-runtime-version: $RV" -H "expo-channel-name: expo-go-preview" \
+            -H "accept: application/expo+json,application/json,multipart/mixed" "https://u.expo.dev/${P}" > manifest.txt || true
+          if grep -q "$G" manifest.txt; then echo "::notice title=Stable link serves the newest update::$LINK"
+          else echo "::warning title=Stable link not serving this update yet::$LINK $(head -c 300 manifest.txt)"; fi
+          { echo "### Always the newest (Expo Go)"; echo ""; echo "Link: \`$LINK\`"; } >> "$GITHUB_STEP_SUMMARY"

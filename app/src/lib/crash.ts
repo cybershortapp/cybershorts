@@ -31,13 +31,27 @@ export function rememberError(message: string) {
   AsyncStorage.setItem(KEY, JSON.stringify(e)).catch(() => {});
 }
 
+const SHOW_FOR_MS = 3 * 24 * 3600 * 1000;
+
+/** The last problem, for Preferences: only if it happened in the last 3 days (older ones were from earlier versions). */
 export async function lastError(): Promise<AppError | null> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as AppError) : null;
+    if (!raw) return null;
+    const e = JSON.parse(raw) as AppError;
+    if (!(Date.now() - new Date(e.at).getTime() < SHOW_FOR_MS)) {
+      AsyncStorage.removeItem(KEY).catch(() => {});
+      return null;
+    }
+    return e;
   } catch {
     return null;
   }
+}
+
+/** Tapping the problem note in Preferences clears it. */
+export function clearError() {
+  AsyncStorage.removeItem(KEY).catch(() => {});
 }
 
 // crash reports: only the error message, app version, Android version and phone model, nothing about the reader
