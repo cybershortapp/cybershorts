@@ -1,4 +1,4 @@
-"""Which step of sending through Gmail fails? Prints only steps and Gmail's replies, never the address or password."""
+"""(re-run 2 Nov) Which step of sending through Gmail fails? Prints only steps and Gmail's replies, never the address or password."""
 import os, smtplib, socket, ssl
 user = os.getenv("SMTP_USER", "").strip()
 pw = os.getenv("SMTP_PASS", "").replace(" ", "").strip()
