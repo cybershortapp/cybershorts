@@ -1203,6 +1203,7 @@ def main():
     # ---- 2b. the daily cards: one tip (9am local time) and one cyber history card (9am UK), never repeated ----
     # Their pictures go to the front of the queue, so they always have one, even on busy news days.
     daily_cover, tip_note, history_note = [], "off", "off"
+    daily_posted = 0
     if db and not TEST_MODE:
         for name, module, func, category in (("tip", "tips", "post_daily_tip", "Tips"),
                                              ("history", "history", "post_daily_history", "Other")):
@@ -1211,6 +1212,7 @@ def main():
                 ai_calls += calls
                 daily_cover += [(sid, cover_prompt(scene, category), headline) for sid, scene, headline in waiting]
                 if story:
+                    daily_posted += 1
                     print(f"[{name}] {note}")
             except Exception as ex:
                 note = f"failed: {str(ex)[:80]}"
@@ -1448,6 +1450,14 @@ def main():
             f"tip: {tip_note} | history: {history_note} | pictures: {covers_note[:160]} | copies: {copies_note[:80]} | colours: {tint_note} | chain second try: {chain_note[:60]} | chain explainers: {explain_note[:80]} | games: {games_note[:120]} | deck: {deck_note[:80]} | alerts: {alerts_note[:120]} | email: {email_note[:100]} | "
             f"stopped early: {stopped} | took {int((datetime.now(timezone.utc) - started).total_seconds())}s, "
             f"AI used: {', '.join(f'{k} x{v}' for k, v in (ai.used if ai else {}).items()) or 'none'}{top_note}")
+    # new pictures this run (new cards, AI pictures, picture copies): the workflow then starts the 3D depth-map
+    # job straight away, instead of waiting for its hourly timer, which GitHub often skips (see pipeline.yml)
+    copied = re.match(r"(\d+) copied", str(copies_note))
+    new_pictures = totals["added"] + daily_posted + covers_made + (int(copied.group(1)) if copied else 0)
+    if os.getenv("GITHUB_OUTPUT"):
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"new_pictures={new_pictures}\n")
+    print(f"New pictures this run: {new_pictures}")
     print(f"Tip card: {tip_note}")
     print(f"Phone alerts: {alerts_note}")
     print(f"Email: {email_note}")
