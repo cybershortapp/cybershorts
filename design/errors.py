@@ -1,9 +1,9 @@
-"""Read-only: app problems reported by phones in the last 6 hours (full messages)."""
+"""Read-only: app problems reported by phones in the last 72 hours (full messages)."""
 import os, json
 from datetime import datetime, timedelta, timezone
 from supabase import create_client
 db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
-since = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+since = (datetime.now(timezone.utc) - timedelta(hours=72)).isoformat()
 rows = db.table("app_errors").select("*").gte("created_at", since).order("created_at", desc=True).limit(30).execute().data
 print(f"{len(rows)} reports")
 for r in rows:
