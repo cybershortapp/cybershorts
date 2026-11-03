@@ -1,0 +1,11 @@
+Running on test
+ > Flow Games and the trending deck between the news cards
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Run flow...
+  Repeat while "30 SECOND GAME" is not visible (up to 30 times)...
+    Swipe from (50%, 80%) to (50%, 20%) in 300 ms... COMPLETED
+    Wait for animation to end within 2500 ms... COMPLETED

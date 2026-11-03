@@ -1,0 +1,13 @@
+Running on test
+ > Flow Large phone text (accessibility) - feed, chain, settings, Play
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot A0-big-text-feed... COMPLETED
+Run flow...
+  Repeat while "Show attack chain" is not visible (up to 30 times)...
+  Repeat while "Show attack chain" is not visible (up to 30 times)... SKIPPED
+  Assert that "Show attack chain" is visible... COMPLETED
+  Tap on "Show attack chain"...

@@ -1,0 +1,26 @@
+Running on test
+ > Flow Reading the news, tabs, saved, search, share, report, full story
+Launch app "app.cybersid.news"... COMPLETED
+Assert that "(Read full story.*|Skip)" is visible... COMPLETED
+Run flow when "Skip" is visible...
+Run flow when "Skip" is visible... SKIPPED
+Assert that "Read full story.*" is visible... COMPLETED
+Take screenshot 10-feed-story-1... COMPLETED
+Assert that "(01 / .*|1 of .*)" is visible... COMPLETED
+Swipe from (50%, 78%) to (50%, 22%) in 350 ms... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot 11-feed-story-2... COMPLETED
+Assert that "(02 / .*|2 of .*)" is visible... FAILED
+
+Assertion is false: "(02 / .*|2 of .*)" is visible
+
+Assertion '"(02 / .*|2 of .*)" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/home/runner/work/cybershorts/cybershorts/results/02-reading/maestro-retry/2026-11-03_013308
