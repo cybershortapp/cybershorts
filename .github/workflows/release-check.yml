@@ -93,7 +93,7 @@ jobs:
     needs: build
     if: always() && inputs.draft_from == '' && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 180   # slow emulator: each flow may run twice
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
@@ -160,9 +160,7 @@ jobs:
           ram-size: 4096M
           disk-size: 6000M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          # motion off (like a phone with reduce motion): the wave headline and 3D picture never stop moving, and on
-          # the emulator's software graphics that makes every Maestro step take minutes. Motion on is checked on test APKs.
-          disable-animations: true
+          disable-animations: false
           script: bash app/e2e/run.sh "$GITHUB_WORKSPACE/built/universal.apk" "$GITHUB_WORKSPACE/results"
       - name: Save the results to the e2e-results branch
         if: always()

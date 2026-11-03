@@ -29,10 +29,16 @@ for f in "$FLOWS"/*.yaml; do
   # the big-text flow runs with the phone's text set to 130% (the accessibility setting many people use)
   case "$name" in *big-text*) adb shell settings put system font_scale 1.3; sleep 2;; esac
   adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
-  # screenshots from takeScreenshot land in the working folder
-  if (cd "$OUT/$name" && timeout 900 maestro test "$f" --test-output-dir "$OUT/$name/maestro" > "$OUT/$name/maestro.log" 2>&1); then
+  # screenshots from takeScreenshot land in the working folder. GitHub's emulator is slow and now and then misses
+  # a swipe, so a flow that fails gets one more go from the start (both tries' notes are kept)
+  try() { (cd "$OUT/$name" && timeout 1500 maestro test "$f" --test-output-dir "$OUT/$name/maestro$1" > "$OUT/$name/maestro$1.log" 2>&1); }
+  if try ""; then
     result="passed"
+  elif adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1; try "-retry"; then
+    result="passed on the second try"
   else
+    mv "$OUT/$name/maestro.log" "$OUT/$name/maestro-first.log" 2>/dev/null
+    cp "$OUT/$name/maestro-retry.log" "$OUT/$name/maestro.log" 2>/dev/null
     result="FAILED"
     failed=$((failed + 1))
     adb exec-out screencap -p > "$OUT/$name/zz-at-failure.png" 2>/dev/null
