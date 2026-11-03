@@ -130,9 +130,9 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
 - takeScreenshot: 65-card-ronin
 - tapOn: "Preferences"
 - scrollUntilVisible:
-    element: "Standard card style"
+    element: "Focus card style"
     direction: DOWN
-- tapOn: "Standard card style"
+- tapOn: "Focus card style"
 - scrollUntilVisible:
     element: "How CyberSid works"
     direction: DOWN
@@ -144,4 +144,4 @@ name: Settings - alerts on/off, region, themes, card styles, games, sound
 - extendedWaitUntil:
     visible: "Read full story.*"
     timeout: 15000
-- takeScreenshot: 67-back-to-standard
+- takeScreenshot: 67-back-to-focus
