@@ -16,7 +16,6 @@ SITE = os.getenv("SITE_URL", "https://cybershortapp.github.io/cybershorts").rstr
 DIGEST_HOUR = int(os.getenv("DIGEST_HOUR", "8"))
 DAILY_MAX = int(os.getenv("EMAIL_DAILY_MAX", "400"))
 RANK = {"Critical": 4, "High": 3, "Medium": 2, "Info": 1}
-SEV_COLOUR = {"Critical": "#C62F2E", "High": "#C77A0E", "Medium": "#6A3FE0", "Info": "#7A8197"}
 
 
 class Mailer:
@@ -61,11 +60,50 @@ class Mailer:
         self.server = None
 
 
-def _page(inner, unsub=None):
-    foot = (f'<p style="color:#7A8197;font-size:12px;margin-top:28px">You get this because you subscribed in the CyberSid app. '
-            f'<a href="{unsub}" style="color:#7A8197">Unsubscribe</a></p>') if unsub else ""
-    return (f'<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#0A0F1F">'
-            f'<h2 style="margin:0 0 4px">Cyber<span style="color:#2563F5">Sid</span></h2>{inner}{foot}</div>')
+PLAY = "https://play.google.com/store/apps/details?id=app.cybersid.news"
+FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+# light badge colours for each severity: (background, text)
+SEV_BADGE = {"Critical": ("#FDE7E7", "#C62F2E"), "High": ("#FFF1DC", "#B4660A"), "Medium": ("#EFE8FF", "#6A3FE0"),
+             "Info": ("#EEF1F6", "#5B6478")}
+
+
+def _page(inner, unsub=None, subtitle="", summary=""):
+    """The email frame: colourful header, the content, a button to open the app, and the footer.
+    Built from tables with inline styles so it looks the same in Gmail, Outlook and phone mail apps."""
+    box = (f'<div style="margin-top:16px;background:rgba(255,255,255,.16);border-radius:12px;padding:12px 14px;'
+           f'color:#FFFFFF;font-size:14px;line-height:20px">{summary}</div>') if summary else ""
+    foot = ('You get this because you subscribed in the CyberSid app.<br>'
+            f'<a href="{unsub}" style="color:#7A8197">Unsubscribe</a> &middot; ') if unsub else ""
+    return f'''<!doctype html><html><body style="margin:0;padding:0;background:#F2F4FA">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F4FA"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;font-family:{FONT}">
+<tr><td style="background-color:#2563F5;background-image:linear-gradient(135deg,#2563F5 0%,#7C3AED 55%,#EC4899 100%);border-radius:20px;padding:26px 24px">
+<div style="font-size:26px;font-weight:900;color:#FFFFFF;letter-spacing:-.5px">CyberSid</div>
+<div style="font-size:14px;color:#E6ECFF;margin-top:2px">{subtitle}</div>{box}
+</td></tr>
+<tr><td style="height:18px;line-height:18px">&nbsp;</td></tr>
+{inner}
+<tr><td style="padding:6px 0 0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0A0F1F;border-radius:16px"><tr><td style="padding:20px 22px">
+<div style="color:#FFFFFF;font-size:16px;font-weight:800">See the attack chain and play the 30-second game</div>
+<div style="color:#AEB6CC;font-size:13px;line-height:19px;margin:4px 0 14px">Every story in the app shows how the attack happened, step by step.</div>
+<a href="{PLAY}" style="background:#FFFFFF;color:#0A0F1F;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:800;text-decoration:none;display:inline-block">Open CyberSid</a>
+</td></tr></table></td></tr>
+<tr><td style="padding:18px 6px;font-size:12px;line-height:18px;color:#7A8197;text-align:center">
+{foot}<a href="{SITE}/" style="color:#7A8197">CyberSid website</a></td></tr>
+</table></td></tr></table></body></html>'''
+
+
+def _section(title, icon, inner):
+    return (f'<tr><td style="padding:10px 4px;font-size:13px;font-weight:800;letter-spacing:1px;color:#5B6478">'
+            f'{icon} {title}</td></tr>{inner}')
+
+
+def _panel(inner):
+    """A white rounded box in the email body."""
+    return (f'<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+            f'style="background:#FFFFFF;border-radius:16px;border:1px solid #E6E9F2"><tr><td style="padding:18px 20px">'
+            f'{inner}</td></tr></table></td></tr>')
 
 
 def send_confirmations(db, mailer, limit=20):
@@ -75,10 +113,14 @@ def send_confirmations(db, mailer, limit=20):
     for r in rows:
         link = f"{SITE}/confirm.html?t={r['token']}"
         text = f"Please confirm you want CyberSid news by email:\n{link}\n\nIf this wasn't you, ignore this email and nothing will be sent."
-        body = _page(f'<p>Please confirm you want the CyberSid daily digest by email.</p>'
-                     f'<p><a href="{link}" style="background:#2563F5;color:#fff;padding:10px 18px;border-radius:8px;'
-                     f'text-decoration:none;display:inline-block">Confirm my email</a></p>'
-                     f'<p style="color:#7A8197;font-size:13px">If this wasn\'t you, ignore this email and nothing will be sent.</p>')
+        body = _page(_panel(
+            '<div style="font-size:18px;font-weight:800;color:#0A0F1F">One tap to confirm</div>'
+            '<div style="font-size:14px;line-height:21px;color:#3A4256;margin:6px 0 16px">Please confirm you want the '
+            'CyberSid daily digest by email: the top cyber stories and the ones about your products, every morning.</div>'
+            f'<a href="{link}" style="background:#2563F5;color:#FFFFFF;padding:11px 18px;border-radius:10px;font-size:14px;'
+            'font-weight:800;text-decoration:none;display:inline-block">Confirm my email</a>'
+            '<div style="color:#7A8197;font-size:13px;margin-top:14px">If this wasn\'t you, ignore this email and nothing '
+            'will be sent.</div>'), subtitle="Confirm your daily cyber briefing")
         try:
             mailer.send(r["email"], "Confirm your CyberSid email digest", text, body)
             sent += 1
@@ -98,13 +140,32 @@ def _digest_for(sub, stories):
 
 def _item(s, hit=None):
     sev = s.get("severity") or "Info"
-    label = f"{sev}" + (f" &middot; {html.escape(hit)}" if hit else "")
-    why = f'<div style="color:#3A4256;font-size:14px;margin-top:3px">{html.escape(s["why_it_matters"])}</div>' if s.get("why_it_matters") else ""
-    return (f'<div style="border-left:3px solid {SEV_COLOUR.get(sev, "#7A8197")};padding:4px 12px;margin:14px 0">'
-            f'<div style="font-size:12px;color:{SEV_COLOUR.get(sev, "#7A8197")};font-weight:bold">{label}</div>'
-            f'<a href="{html.escape(s["url"])}" style="color:#0A0F1F;font-size:16px;font-weight:bold;text-decoration:none">'
-            f'{html.escape(s["headline"])}</a>{why}'
-            f'<div style="color:#7A8197;font-size:12px;margin-top:3px">{html.escape(s["source"])}</div></div>')
+    bg, fg = SEV_BADGE.get(sev, SEV_BADGE["Info"])
+    badge = (f'<span style="background:{bg};color:{fg};border-radius:20px;padding:3px 10px;font-size:11px;'
+             f'font-weight:800;letter-spacing:.4px">{html.escape(sev.upper())}</span>')
+    if hit:
+        badge += (f' <span style="background:#E6F0FF;color:#1D4ED8;border-radius:20px;padding:3px 10px;font-size:11px;'
+                  f'font-weight:700">For you: {html.escape(hit)}</span>')
+    why = (f'<div style="font-size:14px;line-height:21px;color:#3A4256"><b style="color:#0A0F1F">Why it matters:</b> '
+           f'{html.escape(s["why_it_matters"])}</div>') if s.get("why_it_matters") else ""
+    url = html.escape(s["url"])
+    return _panel(
+        f'{badge}<div style="font-size:18px;line-height:24px;font-weight:800;margin:10px 0 6px">'
+        f'<a href="{url}" style="color:#0A0F1F;text-decoration:none">{html.escape(s["headline"])}</a></div>{why}'
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px"><tr>'
+        f'<td style="font-size:12px;color:#7A8197">{html.escape(s["source"])}</td>'
+        f'<td align="right"><a href="{url}" style="color:#2563F5;font-size:13px;font-weight:700;text-decoration:none">'
+        f'Read the story &rarr;</a></td></tr></table>')
+
+
+def _summary(mine, top):
+    """'1 story for your products, 1 critical, 2 high' for the header."""
+    parts = [f"{len(mine)} {'story' if len(mine) == 1 else 'stories'} for your products"] if mine else []
+    for sev in ("Critical", "High"):
+        n = sum(1 for s in mine + top if s.get("severity") == sev)
+        if n:
+            parts.append(f"{n} {sev.lower()}")
+    return "<b>Today:</b> " + ", ".join(parts) if parts else ""
 
 
 def send_digests(db, mailer, force=False):
@@ -134,15 +195,16 @@ def send_digests(db, mailer, force=False):
         unsub = f"{SITE}/unsubscribe.html?t={sub['token']}"
         parts = []
         if mine:
-            parts.append('<h3 style="margin:22px 0 0">Your products</h3>' +
-                         "".join(_item(s, matches(s, sub.get("products"), sub.get("terms"))) for s in mine))
+            parts.append(_section("FOR YOUR PRODUCTS", "&#127919;",
+                                  "".join(_item(s, matches(s, sub.get("products"), sub.get("terms"))) for s in mine)))
         if top:
-            parts.append('<h3 style="margin:22px 0 0">Top stories</h3>' + "".join(_item(s) for s in top))
+            parts.append(_section("TOP STORIES", "&#128293;", "".join(_item(s) for s in top)))
         date = now.astimezone(ZoneInfo("Europe/London")).strftime("%a %d %b")
         subject = f"CyberSid daily: {len(mine)} for your products" if mine else f"CyberSid daily: {top[0]['headline'][:60]}"
         text = "\n\n".join(f"[{s.get('severity')}] {s['headline']}\n{s['url']}" for s in mine + top) + f"\n\nUnsubscribe: {unsub}"
         try:
-            mailer.send(sub["email"], subject, text, _page(f'<p style="color:#7A8197;margin:0">{date}</p>' + "".join(parts), unsub), unsub)
+            body = _page("".join(parts), unsub, f"Your daily cyber briefing &middot; {date}", _summary(mine, top))
+            mailer.send(sub["email"], subject, text, body, unsub)
             db.table("subscribers").update({"last_sent_at": now.isoformat()}).eq("email", sub["email"]).execute()
             sent += 1
         except Exception as ex:
