@@ -1,0 +1,25 @@
+name: history-calendar-check
+
+# Checks the dated events in pipeline/history_calendar.json against Wikipedia when they change. Needs no keys.
+on:
+  pull_request:
+    paths:
+      - pipeline/history_calendar.json
+      - pipeline/history_calendar_check.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Check every event
+        working-directory: pipeline
+        run: python history_calendar_check.py
