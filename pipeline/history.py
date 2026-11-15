@@ -4,8 +4,10 @@ a famous attack, breach or turning point, with its real date and a link to read 
 
 The hand-written events in history.json come first, each used once only. An event whose anniversary is today
 is posted on its day ("On this day" in the app); otherwise the event whose anniversary is furthest away is used,
-so the others are kept for their own day. When the list runs out, the AI suggests an event (preferring today's
-date), the pipeline reads its Wikipedia article, and the card is written only from that article. The date is
+so the others are kept for their own day. When the list runs out, history_calendar.json is tried next: real
+events listed by date, used only on their anniversary, and only when the Wikipedia article confirms the exact day.
+On days the calendar has nothing, the AI suggests an event (preferring today's date). Either way the pipeline
+reads the Wikipedia article and the card is written only from that article. The date is
 checked against the article text too. The card id carries the event date: history:<YYYY-MM-DD>:<key>.
 History cards never trigger phone alerts or appear in the daily email.
 
@@ -36,7 +38,8 @@ WRITE_PROMPT = """Write a cyber history card for CyberSid using ONLY facts from 
 gives you. UK English, plain words, no hype, no em dashes. The card is about ONE moment with a date: the headline,
 the summary and the date must all be about that same moment (for malware or a group, pick its best-known dated
 event, e.g. its discovery or takedown). If the article is not about a cyber security event, reply
-{"ok": false}. Reply with ONLY JSON:
+{"ok": false}. A leak of documents to journalists, a tax, political or business scandal, or a privacy row is NOT
+a cyber security event unless hacking, malware or a security failure was at its heart: reply {"ok": false}. Reply with ONLY JSON:
 {"ok": true,
  "headline": "what happened, max 12 words, e.g. 'WannaCry ransomware hits the NHS and the world'",
  "technical": "40 to 55 words: what happened, how, and what it led to",
@@ -142,6 +145,76 @@ def pick_from_list(entries, today):
     return on_day[0] if on_day else max(entries, key=days_until)
 
 
+def write_from_article(ai, name, hint_date, used_urls, avoid, exact_only=False):
+    """Read the Wikipedia article for `name` and have the AI write the card from it.
+    Returns (card or None, ai_calls, checked) where checked says whether the AI was asked to write."""
+    w = wikipedia(name)
+    if not w:
+        print(f"  [history] no Wikipedia article: {name}")
+        return None, 0, False
+    url, title, text = w
+    if norm_url(url) in used_urls or too_similar(title, avoid, 0.6):
+        print(f"  [history] already used: {title}")
+        return None, 0, False
+    if len(text) < 500 or len(CYBER.findall(text[:6000])) < 2:
+        print(f"  [history] not a cyber security article: {title}")
+        return None, 0, False
+    if exact_only and not date_in_text(hint_date, text)[1]:
+        print(f"  [history] {hint_date} not confirmed in the article: {title}")
+        return None, 0, False
+    calls = 1
+    try:
+        card = ai.json(WRITE_PROMPT, f"Article: {title}\n\n{text[:6000]}", 600)
+    except Exception as ex:
+        print(f"  [history] AI write failed: {str(ex)[:80]}")
+        return None, calls, True
+    if card.get("ok") is False or not card_ok(card) or too_similar(card["headline"], avoid):
+        print(f"  [history] card rejected: {str(card)[:120]}")
+        return None, calls, True
+    if exact_only:
+        when = hint_date      # the calendar's day, already confirmed in the article
+    else:
+        # the exact day if either the card or the suggestion gives one the article confirms, else the month
+        found = [date_in_text(str(d or ""), text) for d in (card.get("date"), hint_date)]
+        when = next((d for d, exact in found if exact), None) or next((d for d, _ in found if d), None)
+    if not when:
+        print(f"  [history] date {card.get('date')} not confirmed in the article: {title}")
+        return None, calls, True
+    calls += 1
+    if is_repeat(ai, card, avoid):
+        print(f"  [history] repeats an earlier card: {card['headline']}")
+        avoid.append(card["headline"])
+        return None, calls, True
+    card.update(url=url, date=when, key=slug(title, 40))
+    return card, calls, True
+
+
+def load_calendar():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "history_calendar.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return []
+
+
+def calendar_event(ai, today, used_urls, used_headlines, tries=3):
+    """A real event from history_calendar.json whose anniversary is today. Returns (card or None, ai_calls)."""
+    avoid, calls, checked = list(used_headlines), 0, 0
+    for e in load_calendar():
+        d = e.get("date", "")
+        if d[5:] != f"{today.month:02d}-{today.day:02d}" or int(d[:4]) >= today.year:
+            continue
+        print(f"  [history] calendar: {d} {e['wikipedia']}")
+        card, c, asked = write_from_article(ai, e["wikipedia"], d, used_urls, avoid, exact_only=True)
+        calls += c
+        if card:
+            return card, calls
+        checked += asked
+        if checked >= tries:
+            break
+    return None, calls
+
+
 def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
     """Ask the AI for events, then write the card from the Wikipedia article. Returns (card or None, ai_calls)."""
     calls, avoid = 0, list(used_headlines)
@@ -161,42 +234,13 @@ def new_ai_event(ai, today, used_urls, used_headlines, rounds=2, per_round=4):
         checked = 0
         for p in picks:
             tried.append(str(p["wikipedia"]))
-            w = wikipedia(str(p["wikipedia"]))
-            if not w:
-                print(f"  [history] no Wikipedia article: {p['wikipedia']}")
-                continue
-            url, title, text = w
-            if norm_url(url) in used_urls or too_similar(title, avoid, 0.6):
-                print(f"  [history] already used: {title}")
-                continue
-            if len(text) < 500 or len(CYBER.findall(text[:6000])) < 2:
-                print(f"  [history] not a cyber security article: {title}")
-                continue
             if checked >= per_round:
                 break
-            checked += 1
-            calls += 1
-            try:
-                card = ai.json(WRITE_PROMPT, f"Article: {title}\n\n{text[:6000]}", 600)
-            except Exception as ex:
-                print(f"  [history] AI write failed: {str(ex)[:80]}")
-                continue
-            if card.get("ok") is False or not card_ok(card) or too_similar(card["headline"], avoid):
-                print(f"  [history] card rejected: {str(card)[:120]}")
-                continue
-            # the exact day if either the card or the suggestion gives one the article confirms, else the month
-            found = [date_in_text(str(d or ""), text) for d in (card.get("date"), p.get("date"))]
-            when = next((d for d, exact in found if exact), None) or next((d for d, _ in found if d), None)
-            if not when:
-                print(f"  [history] date {card.get('date')} not confirmed in the article: {title}")
-                continue
-            calls += 1
-            if is_repeat(ai, card, avoid):
-                print(f"  [history] repeats an earlier card: {card['headline']}")
-                avoid.append(card["headline"])
-                continue
-            card.update(url=url, date=when, key=slug(title, 40))
-            return card, calls
+            card, c, asked = write_from_article(ai, str(p["wikipedia"]), str(p.get("date") or ""), used_urls, avoid)
+            calls += c
+            checked += asked
+            if card:
+                return card, calls
     return None, calls
 
 
@@ -241,10 +285,15 @@ def post_daily_history(db, ai=None, now=None, dry_run=False):
     else:
         if not ai:
             return None, "list used up, AI off", calls, retry
-        origin = "AI"
-        e, c = new_ai_event(ai, today, urls | {norm_url(x["url"]) for x in entries},
-                                headlines + [x["headline"] for x in entries])
+        all_urls = urls | {norm_url(x["url"]) for x in entries}
+        all_headlines = headlines + [x["headline"] for x in entries]
+        origin = "calendar"
+        e, c = calendar_event(ai, today, all_urls, all_headlines)
         calls += c
+        if not e:
+            origin = "AI"
+            e, c = new_ai_event(ai, today, all_urls, all_headlines)
+            calls += c
         if not e:
             return None, f"AI could not find a new event ({calls} calls)", calls, retry
     e = dict(e)
