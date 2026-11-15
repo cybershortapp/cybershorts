@@ -1,23 +1,11 @@
 [
  {
-  "date": "2018-01-03",
-  "wikipedia": "Aadhaar"
- },
- {
-  "date": "2013-01-14",
-  "wikipedia": "Red October (malware)"
- },
- {
   "date": "2022-01-14",
   "wikipedia": "2022 Ukraine cyberattack"
  },
  {
   "date": "2007-01-17",
   "wikipedia": "Storm Worm"
- },
- {
-  "date": "2019-01-17",
-  "wikipedia": "Collection No. 1"
  },
  {
   "date": "1986-01-19",
@@ -32,16 +20,8 @@
   "wikipedia": "Mydoom"
  },
  {
-  "date": "2018-01-26",
-  "wikipedia": "Coincheck"
- },
- {
   "date": "2023-01-26",
   "wikipedia": "Hive (ransomware)"
- },
- {
-  "date": "2021-01-27",
-  "wikipedia": "Emotet"
  },
  {
   "date": "2015-02-04",
@@ -52,28 +32,12 @@
   "wikipedia": "MafiaBoy"
  },
  {
-  "date": "2015-02-14",
-  "wikipedia": "Carbanak"
- },
- {
   "date": "1995-02-15",
   "wikipedia": "Kevin Mitnick"
  },
  {
-  "date": "2015-02-16",
-  "wikipedia": "Equation Group"
- },
- {
-  "date": "2013-02-18",
-  "wikipedia": "PLA Unit 61398"
- },
- {
   "date": "2024-02-19",
   "wikipedia": "LockBit"
- },
- {
-  "date": "2024-02-21",
-  "wikipedia": "Change Healthcare ransomware attack"
  },
  {
   "date": "2025-02-21",
@@ -108,14 +72,6 @@
   "wikipedia": "RSA SecurID"
  },
  {
-  "date": "2013-03-18",
-  "wikipedia": "Spamhaus"
- },
- {
-  "date": "2004-03-20",
-  "wikipedia": "Witty (computer worm)"
- },
- {
   "date": "2013-03-20",
   "wikipedia": "2013 South Korea cyberattack"
  },
@@ -132,14 +88,6 @@
   "wikipedia": "Hydra Market"
  },
  {
-  "date": "2023-04-05",
-  "wikipedia": "Genesis Market"
- },
- {
-  "date": "2015-04-08",
-  "wikipedia": "TV5Monde"
- },
- {
   "date": "2022-04-17",
   "wikipedia": "2022 Costa Rican ransomware attack"
  },
@@ -150,10 +98,6 @@
  {
   "date": "1999-04-26",
   "wikipedia": "CIH (computer virus)"
- },
- {
-  "date": "2004-04-30",
-  "wikipedia": "Sasser (computer worm)"
  },
  {
   "date": "2019-05-07",
@@ -172,10 +116,6 @@
   "wikipedia": "Flame (malware)"
  },
  {
-  "date": "2014-06-02",
-  "wikipedia": "Gameover ZeuS"
- },
- {
   "date": "2024-06-03",
   "wikipedia": "Synnovis"
  },
@@ -192,16 +132,8 @@
   "wikipedia": "Operation Trojan Shield"
  },
  {
-  "date": "2016-06-14",
-  "wikipedia": "Democratic National Committee cyber attacks"
- },
- {
   "date": "2016-06-17",
   "wikipedia": "The DAO"
- },
- {
-  "date": "2020-07-02",
-  "wikipedia": "EncroChat"
  },
  {
   "date": "2009-07-04",
@@ -216,10 +148,6 @@
   "wikipedia": "Dan Kaminsky"
  },
  {
-  "date": "2015-07-15",
-  "wikipedia": "Ashley Madison data breach"
- },
- {
   "date": "2021-07-18",
   "wikipedia": "Pegasus Project (investigation)"
  },
@@ -232,48 +160,20 @@
   "wikipedia": "Stagefright (bug)"
  },
  {
-  "date": "2017-08-02",
-  "wikipedia": "Marcus Hutchins"
- },
- {
-  "date": "2011-08-03",
-  "wikipedia": "Operation Shady RAT"
- },
- {
   "date": "2008-08-08",
   "wikipedia": "Cyberattacks during the Russo-Georgian War"
- },
- {
-  "date": "2012-08-09",
-  "wikipedia": "Gauss (malware)"
  },
  {
   "date": "2021-08-10",
   "wikipedia": "Poly Network exploit"
  },
  {
-  "date": "2018-08-11",
-  "wikipedia": "Cosmos Co-operative Bank"
- },
- {
   "date": "2005-08-13",
   "wikipedia": "Zotob"
  },
  {
-  "date": "2003-08-19",
-  "wikipedia": "Sobig (computer worm)"
- },
- {
-  "date": "2023-08-29",
-  "wikipedia": "Qakbot"
- },
- {
   "date": "2011-09-01",
   "wikipedia": "Duqu"
- },
- {
-  "date": "2020-09-11",
-  "wikipedia": "Zerologon"
  },
  {
   "date": "2023-09-11",
@@ -288,22 +188,6 @@
   "wikipedia": "Mirai (malware)"
  },
  {
-  "date": "2013-10-02",
-  "wikipedia": "Silk Road (marketplace)"
- },
- {
-  "date": "2014-10-02",
-  "wikipedia": "2014 JPMorgan Chase data breach"
- },
- {
-  "date": "2020-10-12",
-  "wikipedia": "2020 Mumbai power outage"
- },
- {
-  "date": "2020-10-12",
-  "wikipedia": "Trickbot"
- },
- {
   "date": "2022-10-13",
   "wikipedia": "Medibank"
  },
@@ -316,44 +200,20 @@
   "wikipedia": "KRACK"
  },
  {
-  "date": "2016-10-20",
-  "wikipedia": "Dirty COW"
- },
- {
   "date": "2002-10-21",
   "wikipedia": "Distributed denial-of-service attacks on root nameservers"
- },
- {
-  "date": "2015-10-21",
-  "wikipedia": "TalkTalk Group"
  },
  {
   "date": "2010-10-25",
   "wikipedia": "Bredolab botnet"
  },
  {
-  "date": "2019-10-30",
-  "wikipedia": "Kudankulam Nuclear Power Plant"
- },
- {
   "date": "2005-10-31",
   "wikipedia": "Sony BMG copy protection rootkit scandal"
  },
  {
-  "date": "2016-11-05",
-  "wikipedia": "Tesco Bank"
- },
- {
-  "date": "2014-11-06",
-  "wikipedia": "Operation Onymous"
- },
- {
   "date": "2011-11-08",
   "wikipedia": "Operation Ghost Click"
- },
- {
-  "date": "1983-11-10",
-  "wikipedia": "Fred Cohen"
  },
  {
   "date": "2008-11-11",
@@ -368,14 +228,6 @@
   "wikipedia": "Conficker"
  },
  {
-  "date": "2014-11-23",
-  "wikipedia": "Regin (malware)"
- },
- {
-  "date": "2022-11-23",
-  "wikipedia": "All India Institute of Medical Sciences, New Delhi"
- },
- {
   "date": "2016-11-30",
   "wikipedia": "Avalanche (phishing group)"
  },
@@ -388,16 +240,8 @@
   "wikipedia": "Operation Payback"
  },
  {
-  "date": "2017-12-14",
-  "wikipedia": "Triton (malware)"
- },
- {
   "date": "2016-12-17",
   "wikipedia": "Industroyer"
- },
- {
-  "date": "2022-12-22",
-  "wikipedia": "LastPass"
  },
  {
   "date": "2014-12-25",
