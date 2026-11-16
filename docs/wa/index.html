@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get CyberSid</title>
+<meta name="description" content="CyberSid: your pocket cyber awareness. Cyber news in quick cards, attack chains and 30-second scam games.">
+<meta property="og:title" content="CyberSid: your pocket cyber awareness">
+<meta property="og:description" content="Cyber news in quick cards, how each hack happened, and 30-second games to spot scams. Free.">
+<script>
+  // Android goes straight to Google Play (tagged "whatsapp" so Play Console shows where installs came from).
+  // iPhone and computers stay on this page. No tracking or cookies.
+  var PLAY = "https://play.google.com/store/apps/details?id=app.cybersid.news&referrer=utm_source%3Dwhatsapp%26utm_medium%3Dstatus";
+  if (/android/i.test(navigator.userAgent)) location.replace(PLAY);
+</script>
+<style>
+  :root { --ink: #0A0F1F; --muted: #5B6478; --blue: #2563F5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); background: #F2F4FA; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 40px; }
+  .hero { border-radius: 24px; padding: 28px 24px; color: #fff;
+          background: #2563F5 linear-gradient(135deg, #2563F5 0%, #7C3AED 55%, #EC4899 100%); }
+  .hero h1 { margin: 0; font-size: 32px; letter-spacing: -.5px; }
+  .hero p { margin: 6px 0 0; font-size: 17px; color: #E6ECFF; }
+  .card { background: #fff; border: 1px solid #E6E9F2; border-radius: 20px; padding: 20px; margin-top: 16px; }
+  .card h2 { margin: 0 0 6px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); line-height: 1.5; }
+  ul { margin: 0; padding-left: 20px; line-height: 1.8; color: #3A4256; }
+  .btn { display: inline-block; margin-top: 14px; background: var(--ink); color: #fff; text-decoration: none;
+         font-weight: 800; padding: 12px 18px; border-radius: 12px; }
+  .ios, .desk { display: none; }
+  .is-ios .ios, .is-desk .desk { display: block; }
+  .qr { width: 180px; height: 180px; display: block; margin: 12px 0 0; }
+  footer { margin-top: 24px; text-align: center; font-size: 13px; color: var(--muted); }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>CyberSid</h1>
+    <p>Your pocket cyber awareness</p>
+  </div>
+
+  <div class="card ios">
+    <h2>iPhone version coming soon</h2>
+    <p>CyberSid is on Android for now. Know someone with an Android phone? Send them this link.</p>
+  </div>
+
+  <div class="card desk">
+    <h2>Scan with your Android phone</h2>
+    <img class="qr" src="qr.png" alt="QR code to get CyberSid on Google Play">
+    <a class="btn" href="https://play.google.com/store/apps/details?id=app.cybersid.news&referrer=utm_source%3Dwhatsapp%26utm_medium%3Dstatus">Get it on Google Play</a>
+  </div>
+
+  <div class="card">
+    <h2>Cyber news, the quick way</h2>
+    <ul>
+      <li>Cyber news in quick swipe cards</li>
+      <li>See how each hack happened, step by step</li>
+      <li>30-second games to spot scams</li>
+      <li>A daily safety tip</li>
+      <li>Free, with UK and India news</li>
+    </ul>
+  </div>
+
+  <footer><a href="../">Privacy policy</a></footer>
+</div>
+<script>
+  var ua = navigator.userAgent;
+  var ios = /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  document.body.className = ios ? "is-ios" : (/android/i.test(ua) ? "" : "is-desk");
+</script>
+</body>
+</html>
