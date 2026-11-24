@@ -46,6 +46,16 @@ lines.append(f"App errors in the last 7 days: {len(recent)} ({sum(1 for e in rec
 reps = rows(db, "reports", "created_at")
 lines.append(f"Stories reported by readers: {len(reps)} in total, {sum(1 for r in reps if now - when(r['created_at']) <= timedelta(days=7))} this week")
 
+reps_full = rows(db, "reports", "story_id,reason,created_at")
+heads = {}
+ids = list({r["story_id"] for r in reps_full})
+for i in range(0, len(ids), 100):
+    for st in db.table("stories").select("id,headline,source").in_("id", ids[i:i + 100]).execute().data:
+        heads[st["id"]] = f"{st['headline']} ({st['source']})"
+lines.append(f"Reasons: {dict(Counter(r['reason'] for r in reps_full).most_common())}")
+for r in sorted(reps_full, key=lambda r: r["created_at"], reverse=True):
+    print(f"  report {r['created_at'][:16]} | {r['reason']} | {heads.get(r['story_id'], '(card removed)')}"[:220])
+
 for l in lines:
     print(l)
 with open(os.environ.get("GITHUB_STEP_SUMMARY", os.devnull), "a") as f:
